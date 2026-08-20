@@ -1,6 +1,0 @@
-{
-  "name": "littlemindsuniverse",
-  "version": "3.0.0",
-  "description": "LittleMindsUniverse - CAPS PWA with Milo AI v3.0 linked to Llama API - no secrets in frontend",
-  "main": "index.html"
-}
