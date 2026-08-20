@@ -1,0 +1,4 @@
+{
+  "functions": { "api/milo.js": { "maxDuration": 10 } },
+  "cleanUrls": true
+}

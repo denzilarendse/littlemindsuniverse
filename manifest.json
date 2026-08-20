@@ -1,0 +1,30 @@
+{
+  "name": "LittleMindsUniverse - CAPS Learning",
+  "short_name": "LittleMinds",
+  "description": "South African CAPS aligned learning platform - Foundation, Discovery and Creator Islands with Milo the Owl",
+  "start_url": "./LittleMindsUniverse_PWA.html",
+  "display": "standalone",
+  "background_color": "#e0f2fe",
+  "theme_color": "#0284c7",
+  "orientation": "portrait-primary",
+  "lang": "en-ZA",
+  "categories": [
+    "education",
+    "kids",
+    "games"
+  ],
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
