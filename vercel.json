@@ -1,0 +1,3 @@
+{
+  "functions": { "api/milo.js": { "maxDuration": 10 } }
+}
