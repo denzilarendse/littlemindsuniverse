@@ -35,17 +35,20 @@ jobs:
           mkdir -p /tmp/lmu-release-source
           tar -xJf /tmp/lmu-release.tar.xz -C /tmp/lmu-release-source
 
-      - name: Materialize source tree
+      - name: Materialize source tree without mutating workflow permissions
         shell: bash
         run: |
           set -euo pipefail
+          cp .github/workflows/materialize-lmu-release.yml /tmp/materialize-lmu-release.yml
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -a /tmp/lmu-release-source/. .
+          rm -rf .github/workflows
+          mkdir -p .github/workflows
+          cp /tmp/materialize-lmu-release.yml .github/workflows/materialize-lmu-release.yml
           test -f package.json
           test -f package-lock.json
           test -f netlify.toml
           test -f netlify/functions/health.mjs
-          test -f .github/workflows/verify.yml
 
       - uses: actions/setup-node@v4
         with:
