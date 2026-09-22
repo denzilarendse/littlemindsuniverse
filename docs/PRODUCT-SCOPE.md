@@ -1,0 +1,14 @@
+# Product scope locked into this package
+- Ages 2–18 across six visibly distinct stages.
+- Country curriculum first, with CAPS, Cambridge and LMU global-extension mapping capability.
+- Mon–Thu teach/practise, Fri revise, Sat rest, Sun authentic assessment.
+- Authentic evidence rather than multiple-choice-first design.
+- Mastery estimates with evidence count, confidence, assisted/independent evidence and misconception history.
+- Role-specific Milo for learners, teachers and parents.
+- Teacher approval for Milo recommendations, academic publishing and weekly reports.
+- Temporary intervention/enrichment groups.
+- Coding/robotics/AI progression and Finance & Enterprise progression.
+- Parent/guardian progress, controls, consent and home support.
+- In-app messaging plus central WhatsApp Business routing concept.
+- Week 1 free forever, no-card trial capability, paid/sponsored entitlements.
+- PWA baseline for Android/iOS installability and future native wrappers.

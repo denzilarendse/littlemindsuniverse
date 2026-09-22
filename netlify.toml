@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
+    X-Frame-Options = "SAMEORIGIN"
+
+# This repository's authenticated/payment/WhatsApp API is implemented as Vercel Functions.
+# Netlify may be used only for static preview until apiBase is explicitly pointed at the
+# verified production API origin or the functions are ported and equivalently tested.

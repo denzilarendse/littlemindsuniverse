@@ -1,0 +1,30 @@
+name: release-verification
+
+on:
+  push:
+    branches: [main, release/**]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Verify deployable artifact has no repository backups
+        run: |
+          test -f dist/index.html
+          test -f dist/manifest.json
+          test -f dist/sw.js
+          ! find dist -type f | grep -E '\.(before|backup)-'

@@ -1,0 +1,47 @@
+name: preview-runtime-smoke
+
+on:
+  push:
+    branches: [release/lmu-20260922-source]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BASE_URL: https://littlemindsuniverse-git-release-6d3bee-denzilarendses-projects.vercel.app
+    steps:
+      - name: Diagnose preview HTTPS and verify root application
+        shell: bash
+        run: |
+          set -euo pipefail
+          code=$(curl -sS --max-time 20 -D /tmp/lmu-headers.txt -o /tmp/lmu-root.html -w '%{http_code}' "$BASE_URL/" || true)
+          echo "Preview HTTP status: $code"
+          grep -Ei '^(HTTP/|location:|server:|x-vercel-|content-type:)' /tmp/lmu-headers.txt || true
+          test "$code" = "200"
+          grep -q '<title>LittleMindsUniverse</title>' /tmp/lmu-root.html
+
+      - name: Verify deployed backend health
+        shell: bash
+        run: |
+          set -euo pipefail
+          code=$(curl -sS --max-time 20 -D /tmp/lmu-health-headers.txt -o /tmp/lmu-health.json -w '%{http_code}' "$BASE_URL/api/health" || true)
+          echo "Health HTTP status: $code"
+          grep -Ei '^(HTTP/|location:|server:|x-vercel-|content-type:)' /tmp/lmu-health-headers.txt || true
+          test "$code" = "200"
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const h = JSON.parse(fs.readFileSync('/tmp/lmu-health.json', 'utf8'));
+          if (h.ok !== true || h.service !== 'littlemindsuniverse') process.exit(1);
+          console.log(JSON.stringify({
+            ok: h.ok,
+            service: h.service,
+            miloConfigured: Boolean(h.miloConfigured),
+            whatsappConfigured: Boolean(h.whatsappConfigured),
+            payfastConfigured: Boolean(h.payfastConfigured)
+          }));
+          NODE
