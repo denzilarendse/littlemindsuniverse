@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-release-candidate:
@@ -22,8 +22,10 @@ jobs:
 
       - name: Extract candidate
         run: |
-          mkdir .release-work
-          tar -xJf /tmp/LMU-release-candidate-20260922.tar.xz -C .release-work
+          rm -rf /tmp/lmu-source
+          mkdir /tmp/lmu-source
+          tar -xJf /tmp/LMU-release-candidate-20260922.tar.xz -C /tmp/lmu-source
+          cp -a /tmp/lmu-source .release-work
 
       - uses: actions/setup-node@v4
         with:
@@ -45,3 +47,15 @@ jobs:
           test ! -f .env.local
           test ! -d .vercel
           ! find . -type f | grep -E '\.(before|backup)-'
+
+      - name: Publish verified source branch
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "littlemindsuniverse-release-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan lmu-verified-source
+          git rm -rf . >/dev/null 2>&1 || true
+          cp -a /tmp/lmu-source/. .
+          git add -A
+          git commit -m "Publish verified LMU RC1 source"
+          git push --force origin HEAD:refs/heads/release/lmu-20260922-source
