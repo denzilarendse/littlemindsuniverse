@@ -11,32 +11,28 @@ permissions:
 jobs:
   preview-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 5
     env:
       BASE_URL: https://littlemindsuniverse-git-release-6d3bee-denzilarendses-projects.vercel.app
     steps:
-      - name: Verify preview HTTPS and root application
+      - name: Diagnose preview HTTPS and verify root application
         shell: bash
         run: |
           set -euo pipefail
-          ok=0
-          for attempt in $(seq 1 36); do
-            code=$(curl -sS --max-time 12 -o /tmp/lmu-root.html -w '%{http_code}' "$BASE_URL/" || true)
-            if [ "$code" = "200" ]; then
-              ok=1
-              break
-            fi
-            sleep 5
-          done
-          test "$ok" = "1"
+          code=$(curl -sS --max-time 20 -D /tmp/lmu-headers.txt -o /tmp/lmu-root.html -w '%{http_code}' "$BASE_URL/" || true)
+          echo "Preview HTTP status: $code"
+          grep -Ei '^(HTTP/|location:|server:|x-vercel-|content-type:)' /tmp/lmu-headers.txt || true
+          test "$code" = "200"
           grep -q '<title>LittleMindsUniverse</title>' /tmp/lmu-root.html
-          curl -fsSI --max-time 12 "$BASE_URL/" >/tmp/lmu-root-headers.txt
 
       - name: Verify deployed backend health
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsS --max-time 15 "$BASE_URL/api/health" -o /tmp/lmu-health.json
+          code=$(curl -sS --max-time 20 -D /tmp/lmu-health-headers.txt -o /tmp/lmu-health.json -w '%{http_code}' "$BASE_URL/api/health" || true)
+          echo "Health HTTP status: $code"
+          grep -Ei '^(HTTP/|location:|server:|x-vercel-|content-type:)' /tmp/lmu-health-headers.txt || true
+          test "$code" = "200"
           node - <<'NODE'
           const fs = require('node:fs');
           const h = JSON.parse(fs.readFileSync('/tmp/lmu-health.json', 'utf8'));
