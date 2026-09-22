@@ -14,23 +14,31 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Verify candidate checksum
-        run: echo "c252997cd527fc93abf048384c67dbd09e93d43715d987c3d45a942ad6290a50  release/LMU-release-candidate-20260922.tar.xz" | sha256sum -c -
+
+      - name: Reconstruct exact release candidate
+        run: |
+          cat release/base64/part-* | base64 --decode > /tmp/LMU-release-candidate-20260922.tar.xz
+          echo "c252997cd527fc93abf048384c67dbd09e93d43715d987c3d45a942ad6290a50  /tmp/LMU-release-candidate-20260922.tar.xz" | sha256sum -c -
+
       - name: Extract candidate
         run: |
           mkdir .release-work
-          tar -xJf release/LMU-release-candidate-20260922.tar.xz -C .release-work
+          tar -xJf /tmp/LMU-release-candidate-20260922.tar.xz -C .release-work
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: .release-work/package-lock.json
+
       - name: Clean install
         working-directory: .release-work
         run: npm ci --ignore-scripts
+
       - name: Full release check
         working-directory: .release-work
         run: npm run check
+
       - name: Verify private/local material is absent
         working-directory: .release-work
         run: |
