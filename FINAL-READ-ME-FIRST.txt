@@ -1,0 +1,9 @@
+LITTLEMINDSUNIVERSE FINAL PRODUCTION ZIP
+
+1) Extract into your Development folder.
+2) In Termux run: npm test
+3) Start: npx serve . -l 5500
+4) Open: http://localhost:5500
+5) For real Milo/WhatsApp/PayFast deployment, set server-side secrets from .env.example in Vercel (never in frontend code).
+6) Supabase frontend connectivity is already pointed at the LMU project with the browser-safe publishable key.
+7) This package includes demo mode so every main product area can be inspected before creating test accounts.

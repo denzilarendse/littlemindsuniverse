@@ -1,3 +1,19 @@
 {
-  "functions": { "api/milo.js": { "maxDuration": 10 } }
+  "buildCommand":"npm run build",
+  "outputDirectory":"dist",
+  "functions":{
+    "api/milo.js":{"maxDuration":15},
+    "api/whatsapp.js":{"maxDuration":15},
+    "api/payfast.js":{"maxDuration":15},
+    "api/payfast-itn.js":{"maxDuration":15}
+  },
+  "headers":[{
+    "source":"/(.*)",
+    "headers":[
+      {"key":"X-Content-Type-Options","value":"nosniff"},
+      {"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},
+      {"key":"Permissions-Policy","value":"camera=(self), microphone=(self), geolocation=()"},
+      {"key":"X-Frame-Options","value":"SAMEORIGIN"}
+    ]
+  }]
 }

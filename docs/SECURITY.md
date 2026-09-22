@@ -1,0 +1,11 @@
+# Security and child-safety baseline
+- Browser uses only a Supabase publishable key; never a service-role/secret key.
+- RLS is required on all exposed user-data tables.
+- Authorization is based on database relationships/app-controlled claims, never user-editable metadata.
+- Teacher approval gates academic publishing, interventions, enrichment and reports.
+- Assessment help defaults to level 0 or 1 and assistance is auditable.
+- Learner Milo teaches, asks for attempts and avoids doing submitted work for the learner.
+- Guardian consent gates child media evidence. Pending evidence expires after 7 days; approved photo/video after 30 days; approved audio after 7 days according to the approved LMU retention policy.
+- WhatsApp uses opted-in routed 1:1 business messaging and avoids exposing personal teacher/family numbers.
+- Payment providers handle card details; LMU should not store them.
+- Harmful-content filtering, age-aware responses and adult escalation belong in the production Milo safety layer.
