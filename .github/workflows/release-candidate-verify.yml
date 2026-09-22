@@ -55,7 +55,9 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git checkout --orphan lmu-verified-source
           git rm -rf . >/dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -a /tmp/lmu-source/. .
+          rm -rf .github/workflows
           git add -A
           git commit -m "Publish verified LMU RC1 source"
           git push --force origin HEAD:refs/heads/release/lmu-20260922-source
