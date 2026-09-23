@@ -33,6 +33,8 @@ jobs:
           PY
       - name: Apply deterministic secure messaging UI
         run: node scripts/apply-secure-messaging-ui-run.mjs
+      - name: Remove temporary migration files before verification
+        run: rm -f scripts/apply-secure-messaging-ui.mjs scripts/apply-secure-messaging-ui-run.mjs
       - name: Clean install
         run: npm ci --ignore-scripts
       - name: Lint
