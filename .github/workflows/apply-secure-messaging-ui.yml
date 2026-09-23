@@ -1,0 +1,42 @@
+name: apply-secure-messaging-ui
+
+on:
+  push:
+    branches:
+      - fix/secure-messaging-ui-20260923
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/secure-messaging-ui-20260923
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Apply deterministic secure messaging UI
+        run: node scripts/apply-secure-messaging-ui.mjs
+      - name: Clean install
+        run: npm ci --ignore-scripts
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Commit verified messaging UI changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/app.js tests/messaging-ui.test.mjs dist
+          if git diff --cached --quiet; then
+            echo "No messaging UI changes to commit"
+            exit 0
+          fi
+          git commit -m "fix: wire secure in-app messaging"
+          git push origin HEAD:fix/secure-messaging-ui-20260923
