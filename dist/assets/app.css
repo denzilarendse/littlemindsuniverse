@@ -168,3 +168,11 @@ img,svg,video,canvas{
     min-height:280px;
   }
 }
+
+
+/* === LMU END-USER FRICTION HARDENING === */
+button:disabled{opacity:.62;cursor:wait}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+@media(max-width:680px){
+  button,.pill,.ghost,.primary,.danger,.tiny,.navbtn,.select,.input,.textarea{min-height:44px}
+}
