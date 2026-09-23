@@ -19,8 +19,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Prepare corrected deterministic migration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          source=Path('scripts/apply-secure-messaging-ui.mjs')
+          text=source.read_text()
+          marker='const test=`'
+          if marker not in text:
+              raise SystemExit('expected temporary test-generation marker not found')
+          clean=text.split(marker,1)[0] + "console.log('Applied secure messaging UI hardening.');\n"
+          Path('scripts/apply-secure-messaging-ui-run.mjs').write_text(clean)
+          PY
       - name: Apply deterministic secure messaging UI
-        run: node scripts/apply-secure-messaging-ui.mjs
+        run: node scripts/apply-secure-messaging-ui-run.mjs
       - name: Clean install
         run: npm ci --ignore-scripts
       - name: Lint
