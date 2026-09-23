@@ -40,3 +40,9 @@ test('high-risk async controls have duplicate-submit guards',()=>{
   assert.match(app,/id="signInBtn"/);
   assert.match(app,/id="signUpBtn"/);
 });
+
+
+test('password recovery survives an auth-event timing race and new signup uses a stronger minimum',()=>{
+  assert.match(app,/URLSearchParams\(location\.search\).*recovery/s);
+  assert.match(app,/password\.length<8/);
+});
