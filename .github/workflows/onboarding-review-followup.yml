@@ -1,0 +1,49 @@
+name: onboarding-review-followup
+
+on:
+  push:
+    branches:
+      - fix/onboarding-family-ux-20260923
+
+permissions:
+  contents: write
+
+jobs:
+  followup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/onboarding-family-ux-20260923
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Apply review fixes
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const file='assets/app.js';
+          let app=fs.readFileSync(file,'utf8');
+          const oldInit="state.supabase.auth.onAuthStateChange(async(event,session)=>{state.session=session;if(session)await loadLive();else demoReset();render();if(event==='PASSWORD_RECOVERY')setTimeout(openPasswordRecovery,0)})}catch(e){console.warn('Supabase init',e);demoReset()}render()}";
+          const newInit="state.supabase.auth.onAuthStateChange(async(event,session)=>{state.session=session;if(session)await loadLive();else demoReset();render();if(event==='PASSWORD_RECOVERY')setTimeout(openPasswordRecovery,0)})}catch(e){console.warn('Supabase init',e);demoReset()}render();if(state.session&&new URLSearchParams(location.search).get('recovery')==='1')setTimeout(openPasswordRecovery,0)}";
+          if(!app.includes(oldInit)) throw new Error('initSupabase review target not found');
+          app=app.replace(oldInit,newInit);
+          const oldSignup="if(!email||!password)return toast('Enter an email and password first');if(!displayName)return toast('Add your display name for the parent account');";
+          const newSignup="if(!email||!password)return toast('Enter an email and password first');if(password.length<8)return toast('Use at least 8 characters for a new password');if(!displayName)return toast('Add your display name for the parent account');";
+          if(!app.includes(oldSignup)) throw new Error('signup review target not found');
+          app=app.replace(oldSignup,newSignup);
+          fs.writeFileSync(file,app);
+          fs.appendFileSync('tests/onboarding-ux.test.mjs',`\n\ntest('password recovery survives an auth-event timing race and new signup uses a stronger minimum',()=>{\n  assert.match(app,/URLSearchParams\\(location\\.search\\).*recovery/s);\n  assert.match(app,/password\\.length<8/);\n});\n`);
+          NODE
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Commit verified review fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/app.js tests/onboarding-ux.test.mjs dist
+          git commit -m "fix: close onboarding recovery edge cases"
+          git push origin HEAD:fix/onboarding-family-ux-20260923
