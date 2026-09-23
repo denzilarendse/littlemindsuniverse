@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
+    X-Frame-Options = "SAMEORIGIN"
+
+# Production API routes are provided by thin Netlify function adapters under netlify/functions/.
+# They reuse the same tested API handlers as the Vercel-compatible /api implementation.
