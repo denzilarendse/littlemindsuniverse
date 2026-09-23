@@ -24,7 +24,9 @@ test('Milo preserves selected help level and blocks duplicate sends while pendin
 test('learner messaging is notification-only and live messaging never fakes delivery', () => {
   assert.match(app, /Learner accounts receive teacher-approved notifications here/);
   assert.match(app, /Learner accounts receive notifications but cannot send messages/);
-  assert.match(app, /Secure in-app sending is not enabled yet\. No message was sent\./);
+  assert.match(app, /rpc\('send_thread_message'/);
+  assert.match(app, /Message was not sent\. Please try again\./);
+  assert.match(app, /Demo message added on this device/);
   assert.doesNotMatch(app, /toast\('Message added'\)/);
 });
 
