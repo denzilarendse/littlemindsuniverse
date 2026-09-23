@@ -32,7 +32,7 @@ function optionalConfiguredHelp(contentJson) {
 }
 
 function normalizeBaseUrl(value) {
-  return String(value || 'http://127.0.0.1:20128/v1').replace(/\/+$/, '');
+  return String(value || 'https://api.groq.com/openai/v1').replace(/\/+$/, '');
 }
 
 function rateLimit() {
@@ -120,7 +120,7 @@ async function recordMiloEvent({ profileId, learnerId, learningItemId, role, ass
     p_actor_role: role,
     p_assessment_context: Boolean(assessment),
     p_effective_help_level: level,
-    p_provider: '9router',
+    p_provider: 'groq',
     p_model: model,
     p_outcome: outcome
   });
@@ -153,11 +153,14 @@ export async function createMiloReply(req) {
 
   await assertWithinMiloRateLimit(user.id);
 
-  const key = process.env.NINEROUTER_API_KEY;
+  // GROQ_* is the production contract. Legacy NineRouter names remain as a
+  // temporary compatibility fallback so existing non-production environments
+  // do not fail abruptly during migration.
+  const key = process.env.GROQ_API_KEY || process.env.NINEROUTER_API_KEY;
   if (!key) throw new HttpError(503, 'Milo is temporarily unavailable');
 
-  const baseUrl = normalizeBaseUrl(process.env.NINEROUTER_BASE_URL);
-  const model = process.env.MILO_MODEL || 'lmu-groq/openai/gpt-oss-120b';
+  const baseUrl = normalizeBaseUrl(process.env.GROQ_BASE_URL || process.env.NINEROUTER_BASE_URL);
+  const model = process.env.MILO_MODEL || 'openai/gpt-oss-120b';
   const role = profile.role;
   const trusted = await resolveTrustedLearningContext({
     user,
@@ -272,7 +275,7 @@ Do not request unnecessary personal data.`;
       helpLevel: level,
       assessment: trusted.assessment,
       learningItemId: trusted.learningItemId,
-      provider: '9router',
+      provider: 'groq',
       model
     }
   };
