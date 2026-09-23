@@ -37,7 +37,7 @@ const collect = dir => {
   }
 };
 collect(dist);
-const forbidden = /(SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|WHATSAPP_ACCESS_TOKEN|PAYFAST_MERCHANT_KEY|PAYFAST_PASSPHRASE|NINEROUTER_API_KEY)\s*[:=]\s*["']?[A-Za-z0-9_-]{12,}/;
+const forbidden = /(SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|WHATSAPP_ACCESS_TOKEN|PAYFAST_MERCHANT_KEY|PAYFAST_PASSPHRASE|NINEROUTER_API_KEY|GROQ_API_KEY)\s*[:=]\s*["']?[A-Za-z0-9_-]{12,}/;
 for (const file of deployable.filter(f => /\.(?:html|js|json|css|txt)$/i.test(f))) {
   const text = fs.readFileSync(file, 'utf8');
   if (forbidden.test(text)) throw new Error(`Potential server secret found in deployable static file: ${path.relative(root, file)}`);
