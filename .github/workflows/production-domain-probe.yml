@@ -23,5 +23,20 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
+      - name: Capture production DNS and response-header evidence
+        shell: bash
+        run: |
+          set -u
+          echo '=== DNS www ==='
+          dig +short www.littlemindsuniverse.co.za A || true
+          dig +short www.littlemindsuniverse.co.za AAAA || true
+          dig +short www.littlemindsuniverse.co.za CNAME || true
+          echo '=== DNS apex ==='
+          dig +short littlemindsuniverse.co.za A || true
+          dig +short littlemindsuniverse.co.za AAAA || true
+          dig +short littlemindsuniverse.co.za CNAME || true
+          echo '=== HTTPS response headers ==='
+          curl -sS -L --max-redirs 5 --connect-timeout 10 --max-time 20 \
+            -D - -o /dev/null https://www.littlemindsuniverse.co.za/ || true
       - name: Verify production domain, TLS, shells, headers, PWA boundary and server readiness
         run: npm run verify:production -- https://www.littlemindsuniverse.co.za
