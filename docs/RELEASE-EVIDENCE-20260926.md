@@ -2,7 +2,7 @@
 
 ## Decision
 
-**RELEASE HOLD — source/build/live-audited security and unsigned Android release-candidate layers are green; hosted authenticated E2E, recovery, owner signing, physical-device and store gates remain unevidenced.**
+**RELEASE HOLD — source/build/live-audited security, accessibility/PWA source hardening and unsigned Android release-candidate layers are green; hosted authenticated E2E, recovery, owner signing, physical-device and store gates remain unevidenced.**
 
 The engineering standard remains an evidence-earned manufactured pass:
 
@@ -14,7 +14,7 @@ A green source build, a successful hosting status or an unsigned Android bundle 
 
 - Repository: `denzilarendse/littlemindsuniverse`
 - Canonical branch: `main`
-- Application-code/security baseline evaluated in this record: `3c664b90bf7bbd66e9d59d197524ebc135c37e48`
+- Exact source SHA evaluated in this record: `efc14c1d003e4e51686c9c81d925cc04e99704db`
 - Generated `dist/` is not canonical source; CI/hosting rebuilds it.
 - Live Supabase project: the configured LMU production project, audited separately from source tests.
 
@@ -22,7 +22,7 @@ A green source build, a successful hosting status or an unsigned Android bundle 
 
 ### Repository / source verification
 
-Main release-verification run `36260791935` completed successfully on `3c664b90...`:
+Main release-verification run `36273655167` completed successfully on `efc14c1d...`:
 
 - locked dependency install: PASS
 - shipped runtime dependency audit: PASS
@@ -63,13 +63,37 @@ Two other advisor findings remain open:
 1. `pg_net` is reported in the public extension schema. Live catalog inspection shows the installed extension is **not relocatable**, so it has deliberately not been moved/dropped/reinstalled merely to silence the warning.
 2. Supabase Auth leaked-password protection is disabled. This remains a configuration hardening gate to enable through the supported Auth/project configuration surface.
 
+### Accessibility and PWA source hardening
+
+The LMU and LittleMinds Connect shells now share an explicit accessibility-hardening layer. Source regression coverage checks:
+
+- document language and mobile viewport metadata;
+- polite/atomic live-region semantics for status feedback;
+- semantic primary navigation and main landmark presence;
+- visible keyboard focus treatment;
+- checked 44px primary-control touch-target floor;
+- reduced-motion handling;
+- forced-colors/high-contrast handling.
+
+This is a source/runtime baseline, not a claim of full WCAG certification or assistive-technology device testing.
+
+The service worker now precaches both the LMU and Connect static shells and has an explicit data boundary:
+
+- cross-origin requests are not intercepted or placed in Cache Storage;
+- same-origin `/api/` requests are not intercepted;
+- runtime caching is restricted to the explicit static `CORE` allowlist;
+- the cache generation advanced to `lmu-production-v9`, causing the previous generation to be deleted on activation;
+- offline navigation preserves the dedicated Connect shell for `/connect` / `/connect.html` and the LMU shell for other navigation.
+
+This specifically prevents authenticated Supabase REST/Storage GET responses from being persisted by the PWA service-worker cache.
+
 ### Android/API-36 release-candidate evidence
 
-The Android identity is now frozen as:
+The Android identity is frozen as:
 
 `za.co.littlemindsuniverse`
 
-Main Android verification run `36260791928` completed successfully on `3c664b90...`:
+Main Android verification run `36273655182` completed successfully on `efc14c1d...`:
 
 - Node 22/JDK 21 setup: PASS
 - shipped runtime dependency audit: PASS
@@ -82,40 +106,38 @@ Main Android verification run `36260791928` completed successfully on `3c664b90.
 - API-36 release bundle generation: PASS
 - unsigned AAB artifact upload: PASS
 
-The current main workflow artifact is `littlemindsuniverse-android-api36-unsigned` (artifact id `10912381090`), with GitHub artifact digest:
+The exact main workflow artifact is `littlemindsuniverse-android-api36-unsigned` (artifact id `10916740215`), with GitHub artifact digest:
 
-`sha256:0fca44453d1d633f4787db2c11070d2ccc41a29fab40bb02e9b02a89bf03431e`
+`sha256:e48a2ba04b1375b36000f8f40d59c988b21760fec701acc971c8874a348ebf90`
 
 The extracted `app-release.aab` SHA-256 is:
 
-`732ad17ccf3d74274bdba6179a612a246acfbca6a75a9d318e66bb5627f19501`
+`f48c87538e0ac5b26a35f2ce40728a3906834e014d8eca6e12ea171928165630`
 
-Independent artifact inspection confirmed:
+Independent inspection of that exact AAB confirmed:
 
-- the bundle is intentionally unsigned at the CI stage;
 - packaged Capacitor application ID is `za.co.littlemindsuniverse`;
-- LittleMinds Connect assets are present in the packaged web payload;
-- no configured server-secret pattern was found in the packaged public web assets;
-- no WhatsApp provider endpoint/token dependency was found in the packaged public web assets.
+- environment metadata is `release-candidate`;
+- family display pricing metadata is USD 3 monthly / USD 30 annual / USD 1 introductory, matching the observed live billing-plan state while checkout authority remains server/database-side;
+- LittleMinds Connect and shared accessibility assets are present in the packaged web payload;
+- packaged service worker is `lmu-production-v9` with the explicit static cache allowlist;
+- no server-secret key variable patterns were found in the packaged public web assets.
 
-Owner-controlled signing support is now prepared through an ignored local `android/key.properties`; no key/password is committed. The Android manifest declares the canonical HTTPS app-link host with `android:autoVerify="true"`, and the repository contains a deterministic Digital Asset Links generator that rejects malformed/placeholder certificate fingerprints. See `docs/ANDROID-OWNER-SIGNING.md`.
+The bundle remains intentionally unsigned at the CI stage. Owner-controlled signing support uses an ignored local `android/key.properties`; no key/password is committed. The Android manifest declares the canonical HTTPS app-link host with `android:autoVerify="true"`, and the repository contains a deterministic Digital Asset Links generator that rejects malformed/placeholder certificate fingerprints. See `docs/ANDROID-OWNER-SIGNING.md`.
 
 ### Exact-AAB browser/mobile payload check
 
-The web payload extracted from the exact AAB above was rendered in headless Chromium at desktop `1440x900` and mobile `390x844` viewports. This is an artifact-level browser check, **not** hosted authenticated E2E.
+The earlier exact-AAB web payload was rendered in headless Chromium at desktop and mobile viewports as an artifact-level browser check. That evidence remains useful for the UI path, but **does not replace hosted authenticated E2E or physical Android WebView testing**.
 
-Observed PASS results:
+Observed PASS results included:
 
-- all eight primary navigation controls rendered, were hit-testable and activated on desktop;
-- all eight primary navigation controls rendered, scrolled into view where needed, were hit-testable and activated on mobile;
+- all eight primary navigation controls rendered and activated on desktop/mobile;
 - demo role switching across teacher, parent, admin and learner continued rendering non-empty UI;
-- mobile primary controls met the checked touch-target floor and the tested core shell had no page-level horizontal overflow;
+- checked mobile primary controls met the touch-target floor and the tested core shell had no page-level horizontal overflow;
 - LittleMinds Connect signed-out form rendered on desktop/mobile;
 - Connect email/password fields did not overlap;
 - failed-auth feedback surfaced visibly in the deterministic test harness;
 - Connect mobile shell had no tested page-level horizontal overflow.
-
-The first mobile hit-test attempt reported the horizontally off-screen Classroom button as covered. Root cause was the test attempting `elementFromPoint` before scrolling that horizontally scrollable navigation item into the viewport. The harness was corrected to scroll each control into view before hit-testing; desktop and mobile then passed. No application CSS/security rule was changed to manufacture that pass.
 
 ## Red -> repair -> green history retained
 
@@ -127,6 +149,8 @@ The first mobile hit-test attempt reported the horizontally off-screen Classroom
 6. An Android native test package still used the generated Capacitor identity; the package/assertion was moved to `za.co.littlemindsuniverse` and app-scoped instrumentation compilation was added to CI.
 7. Android instrumentation compilation exposed Kotlin duplicate-class conflicts when compiling plugin instrumentation suites. The gate was narrowed to `:app:assembleDebugAndroidTest`, which compiles the LMU app instrumentation target without pretending third-party plugin test suites are LMU tests; lint/unit/app instrumentation/AAB all reran green.
 8. Supabase advisor review identified an internal Connect relationship predicate that did not need direct client EXECUTE. Direct execution was revoked after source CI, then applied and reverified live; the higher-level authorization guards remained intact.
+9. Accessibility/offline hardening bumped the PWA cache generation. The first verification run failed because two existing tests hard-coded the prior cache version. Root cause was stale fixture specificity, not a runtime regression. Those tests were made version-agnostic while continuing to require a versioned cache; full release and Android verification then returned green before merge.
+10. The final offline sweep found a real privacy defect: the service worker excluded `/api/` but could still intercept and cache successful cross-origin authenticated GET responses such as Supabase REST/Storage traffic. The worker was changed to ignore all cross-origin requests and cache only the explicit static allowlist, the cache generation was bumped to invalidate the previous cache, regression coverage was added, and full web/Android/Vercel verification returned green before merge.
 
 At no point was a meaningful authorization condition, RLS rule or product safety restriction weakened merely to obtain green status.
 
@@ -140,12 +164,13 @@ At no point was a meaningful authorization condition, RLS rule or product safety
 | LittleMinds Connect source/runtime foundation | PASS | Hosted real-account parent/teacher/realtime E2E |
 | WhatsApp retirement | PASS | Do not reintroduce provider dependency |
 | Vercel build/status integration | PASS | Does not replace production-domain runtime verification |
-| Exact packaged AAB web payload browser smoke | PASS | Hosted browser/mobile + physical Android WebView behavior still required |
+| Accessibility source baseline | PASS | Real browser/device keyboard, screen-reader/high-contrast and responsive evidence |
+| PWA static shell + cache privacy boundary | PASS at source/build layer | Actual hosted install/update/offline exercise on real browser/device |
+| Exact packaged AAB source payload | PASS | Physical Android WebView behavior still required |
 | PayFast automated verification/ITN logic | PASS at automated layer | Provider-backed sandbox/live settlement + entitlement evidence |
 | Production domain / HTTPS | UNKNOWN | External DNS/TLS/fetch evidence for exact production candidate |
 | Hosted auth lifecycle | UNKNOWN | Real learner/parent/teacher/admin test sessions incl. recovery |
 | Hosted browser/mobile E2E | UNKNOWN | Role isolation, work/submission/review/reporting/Connect/payment on deployed candidate |
-| PWA install/update/offline | PARTIAL source-level PASS | Actual hosted install/update/offline exercise |
 | Backup / restore / rollback | UNKNOWN | Successful recovery/rollback drill and recorded outcome |
 | Supabase leaked-password protection | OPEN HARDENING | Enable through supported project Auth configuration and verify |
 | `pg_net` public-schema advisor | REVIEWED / NOT BLINDLY CHANGED | Managed-extension-safe remediation or documented accepted platform constraint |
@@ -161,7 +186,7 @@ At no point was a meaningful authorization condition, RLS rule or product safety
 
 ## Minimum owner input when autonomous work reaches the hard gate
 
-The repository is now prepared for owner-controlled Android signing without storing secrets. When independent engineering work is exhausted, the next owner action is to generate/protect the upload key in Termux (or another owner-controlled environment), then later provide the **Google Play app-signing certificate SHA-256** so Digital Asset Links can be generated and published.
+The repository is prepared for owner-controlled Android signing without storing secrets. When independent engineering work is exhausted, the next owner action is to generate/protect the upload key in Termux (or another owner-controlled environment), then later provide the **Google Play app-signing certificate SHA-256** so Digital Asset Links can be generated and published.
 
 Other external inputs may still be required for real hosted role credentials, PayFast provider-backed settlement evidence, production-domain access/verification, Supabase Auth leaked-password protection if no supported connector control is available, and Play Console declarations/submission.
 
