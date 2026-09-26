@@ -7,6 +7,11 @@ const sql = fs.readFileSync(
   'utf8'
 );
 
+const executableSql = sql
+  .split('\n')
+  .map(line => line.replace(/--.*$/, ''))
+  .join('\n');
+
 const wrappers = [
   'get_message_contacts\\(\\)',
   'get_my_message_threads\\(\\)',
@@ -17,10 +22,10 @@ const wrappers = [
 
 test('legacy message compatibility wrappers are SECURITY INVOKER', () => {
   for (const signature of wrappers) {
-    assert.match(sql, new RegExp(`alter function public\\.${signature} security invoker`, 'i'));
+    assert.match(executableSql, new RegExp(`alter function public\\.${signature} security invoker`, 'i'));
   }
 });
 
 test('hardening changes privilege mode only and does not replace authorization logic', () => {
-  assert.doesNotMatch(sql, /create\s+or\s+replace|grant\s+execute|security\s+definer/i);
+  assert.doesNotMatch(executableSql, /create\s+or\s+replace|grant\s+execute|security\s+definer/i);
 });
