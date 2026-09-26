@@ -42,6 +42,6 @@ test('teacher report module loads before app initialization and remains cached a
   const moduleIndex = html.indexOf('/assets/teacher-reports.js');
   const appIndex = html.indexOf('/assets/app.js');
   assert.ok(moduleIndex >= 0 && appIndex > moduleIndex);
-  assert.match(sw, /lmu-production-v6/);
+  assert.match(sw, /lmu-production-v7/);
   assert.match(sw, /\/assets\/teacher-reports\.js/);
 });
