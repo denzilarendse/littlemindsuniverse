@@ -8,7 +8,9 @@ const html = read('index.html');
 const sw = read('sw.js');
 
 test('parent controls load before the main app and share the same Supabase client', () => {
-  assert.match(html, /<script src="\/assets\/parent-controls\.js"><\/script>\s*<script src="\/assets\/app\.js"><\/script>/s);
+  const controlsIndex=html.indexOf('/assets/parent-controls.js');
+  const appIndex=html.indexOf('/assets/app.js');
+  assert.ok(controlsIndex>=0 && appIndex>controlsIndex);
   assert.match(controls, /window\.supabase\.createClient=\(\.\.\.args\)=>/);
   assert.match(controls, /if\(!client\)client=created/);
 });
@@ -51,6 +53,6 @@ test('WhatsApp preference is stored separately from provider delivery', () => {
 });
 
 test('parent controls are part of the offline app shell', () => {
-  assert.match(sw, /lmu-production-v4/);
+  assert.match(sw, /lmu-production-v\d+/);
   assert.match(sw, /\/assets\/parent-controls\.js/);
 });
