@@ -67,7 +67,7 @@ test('Connect standalone UI contains no WhatsApp or phone-number discovery depen
 test('production build and offline shell include Connect and its LMU bridge',()=>{
   assert.match(build,/['\"]connect\.html['\"]/);
   assert.match(build,/LittleMinds Connect shell is missing from production build/);
-  assert.match(sw,/lmu-production-v7/);
+  assert.match(sw,/const CACHE=['"]lmu-production-v\d+['"]/);
   for(const asset of ['/connect.html','/assets/connect.css','/assets/connect-app.js','/assets/connect-bridge.js'])assert.ok(sw.includes(`'${asset}'`),`service worker missing ${asset}`);
   assert.match(sw,/url\.pathname==='\/connect\.html'\|\|url\.pathname==='\/connect'/);
 });
