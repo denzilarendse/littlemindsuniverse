@@ -17,6 +17,8 @@ const gitignore = read('.gitignore');
 const androidWorkflow = read('.github/workflows/android-verification.yml');
 const instrumentation = read('android/app/src/androidTest/java/za/co/littlemindsuniverse/PackageIdentityInstrumentedTest.java');
 const unitTest = read('android/app/src/test/java/za/co/littlemindsuniverse/PackageIdentityUnitTest.java');
+const launcherForeground = read('android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml');
+const launcherBackground = read('android/app/src/main/res/values/ic_launcher_background.xml');
 
 test('Android application identity is frozen and consistent', () => {
   assert.equal(capacitor.appId, 'za.co.littlemindsuniverse');
@@ -57,6 +59,13 @@ test('native tests compile under the frozen application identity with no Capacit
   assert.match(unitTest, /^package za\.co\.littlemindsuniverse;/m);
   assert.equal(fs.existsSync(path.join(root, 'android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java')), false);
   assert.equal(fs.existsSync(path.join(root, 'android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java')), false);
+});
+
+test('Android adaptive launcher uses LittleMinds brand artwork instead of the Capacitor template', () => {
+  assert.match(launcherBackground, /#182235/i);
+  assert.match(launcherForeground, /#6558E8/i);
+  assert.match(launcherForeground, /M32,44 L54,32 L76,44 L54,56 Z/);
+  assert.doesNotMatch(launcherForeground, /66\.94,46\.02/);
 });
 
 test('Android CI reruns web checks, runtime dependency audit, native lint, unit/instrumentation compilation and AAB build', () => {
