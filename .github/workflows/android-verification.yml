@@ -80,11 +80,12 @@ jobs:
           test "$(grep -c '<uses-permission ' android/app/src/main/AndroidManifest.xml)" -eq 1
           grep -F 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml
           ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/app/src/main/AndroidManifest.xml
+          ! grep -R 'com\.getcapacitor\.app\|com\.getcapacitor\.myapp' android/app/src/test android/app/src/androidTest
 
-      - name: Android lint and unit verification
+      - name: Android lint, unit and instrumentation compile verification
         run: |
           cd android
-          ./gradlew lintRelease testReleaseUnitTest
+          ./gradlew lintRelease testReleaseUnitTest assembleReleaseAndroidTest
 
       - name: Build unsigned API 36 release bundle
         run: |
