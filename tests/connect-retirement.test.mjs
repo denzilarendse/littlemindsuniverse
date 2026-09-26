@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const migration=fs.readFileSync(new URL('../database/migrations/20260926_littleminds_connect_retire_whatsapp.sql',import.meta.url),'utf8');
+const vercel=fs.readFileSync(new URL('../vercel.json',import.meta.url),'utf8');
 
 test('legacy contact RPC is a narrow compatibility bridge to LittleMinds Connect',()=>{
   assert.match(migration,/create or replace function public\.get_message_contacts\(\)/);
@@ -24,4 +25,11 @@ test('retired WhatsApp RPCs are no longer executable by app or server API roles'
     assert.match(migration,new RegExp(`revoke all on function public\\.${fn}`));
   }
   assert.match(migration,/from anon, authenticated, service_role/);
+});
+
+test('Vercel no longer references the removed WhatsApp function',()=>{
+  assert.doesNotMatch(vercel,/api\/whatsapp\.js/);
+  assert.match(vercel,/api\/milo\.js/);
+  assert.match(vercel,/api\/payfast\.js/);
+  assert.match(vercel,/api\/payfast-itn\.js/);
 });
