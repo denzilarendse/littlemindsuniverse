@@ -10,7 +10,8 @@
     "check": "npm run lint && npm test && npm run build",
     "start": "npx serve . -l 5500",
     "android:sync": "npm run build && npx cap sync android",
-    "android:bundle": "npm run android:sync && cd android && ./gradlew bundleRelease"
+    "android:bundle": "npm run android:sync && cd android && ./gradlew bundleRelease",
+    "android:assetlinks": "node scripts/generate-assetlinks.mjs"
   },
   "dependencies": {
     "@capacitor/core": "8.5.2"
