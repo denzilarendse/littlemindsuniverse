@@ -1,0 +1,102 @@
+name: android-verification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'assets/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'index.html'
+      - 'connect.html'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android-verification.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'assets/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'index.html'
+      - 'connect.html'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android-verification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-android:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit shipped runtime dependencies
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Verify web source before native packaging
+        run: npm run check
+
+      - name: Sync production web bundle into Android
+        run: npm run android:sync
+
+      - name: Verify frozen identity, SDK levels and child-safe native defaults
+        run: |
+          grep -F '"appId": "za.co.littlemindsuniverse"' capacitor.config.json
+          grep -F 'applicationId "za.co.littlemindsuniverse"' android/app/build.gradle
+          grep -Eq 'compileSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
+          grep -Eq 'targetSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
+          grep -Eq 'minSdkVersion[[:space:]]*=[[:space:]]*24' android/variables.gradle
+          grep -F 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
+          grep -F 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
+          test "$(grep -c '<uses-permission ' android/app/src/main/AndroidManifest.xml)" -eq 1
+          grep -F 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml
+          ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/app/src/main/AndroidManifest.xml
+
+      - name: Android lint and unit verification
+        run: |
+          cd android
+          ./gradlew lintRelease testReleaseUnitTest
+
+      - name: Build unsigned API 36 release bundle
+        run: |
+          cd android
+          ./gradlew bundleRelease
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/jarsigner.txt
+          grep -F 'jar is unsigned.' /tmp/jarsigner.txt
+
+      - name: Upload unsigned release-candidate artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-android-api36-unsigned
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
