@@ -1,9 +1,12 @@
-LITTLEMINDSUNIVERSE FINAL PRODUCTION ZIP
+LITTLEMINDSUNIVERSE RELEASE-CANDIDATE CHECKLIST
 
-1) Extract into your Development folder.
-2) In Termux run: npm test
-3) Start: npx serve . -l 5500
-4) Open: http://localhost:5500
-5) For real Milo/WhatsApp/PayFast deployment, set server-side secrets from .env.example in Vercel (never in frontend code).
-6) Supabase frontend connectivity is already pointed at the LMU project with the browser-safe publishable key.
-7) This package includes demo mode so every main product area can be inspected before creating test accounts.
+1) Use the canonical GitHub main branch or an explicitly verified release artifact; do not substitute an unknown local tree.
+2) In Termux run: npm ci --ignore-scripts && npm run check
+3) Local browser preview: npx serve . -l 5500, then open http://localhost:5500
+4) LittleMinds Connect is the canonical communication system. WhatsApp provider configuration is retired and is not required.
+5) For real Milo and PayFast deployment, set server-side secrets from .env.example in the deployment provider; never place them in frontend/mobile files.
+6) Supabase browser/mobile connectivity uses the LMU browser-safe publishable key. Authorization remains RLS/RPC controlled.
+7) Android package ID is frozen as za.co.littlemindsuniverse and CI builds an unsigned API-36 release-candidate AAB.
+8) Owner-controlled signing, Play App Signing, Digital Asset Links, physical-device testing and Play internal/pre-launch evidence remain separate release gates. Follow docs/ANDROID-OWNER-SIGNING.md.
+9) Demo mode remains available for inspecting primary product areas, but demo behavior is not a substitute for hosted authenticated E2E evidence.
+10) Read docs/RELEASE-EVIDENCE-20260926.md before making any launch decision.

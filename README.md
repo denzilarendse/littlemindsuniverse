@@ -1,24 +1,55 @@
-# LittleMindsUniverse — Final Production Package
+# LittleMindsUniverse — Production Release Candidate
 
-This package is the deployable LMU web/PWA product shell for ages 2–18. It includes the six age stages, Learner/Teacher/Parent/Admin modes, authentic learning, mastery evidence, teacher-approved Milo recommendations, classroom/intervention concepts, weekly reports, messaging/WhatsApp architecture, access model, PWA support, Milo server API, PayFast server helper, Supabase live integration and a 40-week curriculum structure for every stage.
+LittleMindsUniverse is the deployable web/PWA learning platform for ages 2–18 with Learner, Teacher, Parent/Guardian and Admin roles. The current release candidate includes six age stages, authentic learning/evidence, mastery tracking, teacher-governed Milo workflows, classroom/reporting flows, LittleMinds Connect relationship-authorized messaging, Supabase live integration, PayFast server integration, PWA support and an Android Capacitor/API-36 wrapper.
 
-## Run on Android / Termux
+WhatsApp is historical only and is not a runtime or release dependency. LittleMinds Connect is the canonical communication layer.
+
+## Local Android-first development
+
 ```bash
 cd /storage/emulated/0/Development/LittleMindsUniverse
+npm ci --ignore-scripts
+npm run check
 npx serve . -l 5500
 ```
-Then open `http://localhost:5500`.
 
-## Test
+Open `http://localhost:5500`.
+
+## Verification
+
 ```bash
-npm test
+npm run check
 ```
 
-## Production environment variables
-Copy `.env.example` into your deployment provider settings. Never put secret keys in browser files.
+`npm run check` performs syntax/lint checks, the automated regression suite, smoke tests and the production web build. GitHub Actions additionally audits shipped dependencies and builds/verifies the Android API-36 release candidate.
 
-## Deployment
-- Vercel: import repository, set environment variables, deploy.
-- Netlify: static frontend works directly; API functions should be adapted to Netlify Functions or keep APIs on Vercel and set `apiBase` in `assets/runtime-config.js`.
+## Android
 
-See `docs/DEPLOYMENT.md` and `docs/SECURITY.md`.
+The permanent application ID is:
+
+```text
+za.co.littlemindsuniverse
+```
+
+Useful commands:
+
+```bash
+npm run android:sync
+npm run android:bundle
+```
+
+Owner-controlled release signing and Digital Asset Links are intentionally separate external gates. See `docs/ANDROID-OWNER-SIGNING.md`; never commit a keystore, `android/key.properties`, passwords or Play credentials.
+
+## Production configuration
+
+Use `.env.example` as the server-side deployment-variable template. Browser/mobile bundles may contain only the Supabase publishable credential; service-role/secret provider keys remain server-side.
+
+## Deployment and release evidence
+
+- `docs/DEPLOYMENT.md` — deployment and release gates
+- `docs/SECURITY.md` — security boundaries
+- `docs/LITTLEMinds-CONNECT-ARCHITECTURE.md` — LittleMinds Connect architecture
+- `docs/ANDROID-OWNER-SIGNING.md` — signing/App Links procedure
+- `docs/RELEASE-EVIDENCE-20260926.md` — current evidence-based release state
+
+A successful source build is not by itself a public-launch or store-approval decision. Hosted authenticated E2E, recovery/rollback, signing, physical-device and store gates remain evidence-driven.
