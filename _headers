@@ -1,0 +1,9 @@
+/*
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://zcokxljcsfkrlouzragv.supabase.co; media-src 'self' blob: https://zcokxljcsfkrlouzragv.supabase.co; font-src 'self' data:; connect-src 'self' https://zcokxljcsfkrlouzragv.supabase.co wss://zcokxljcsfkrlouzragv.supabase.co; worker-src 'self' blob:; manifest-src 'self'; form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=()
+  X-Frame-Options: SAMEORIGIN
+  Cross-Origin-Opener-Policy: same-origin
+  X-Permitted-Cross-Domain-Policies: none
+  Strict-Transport-Security: max-age=15552000
