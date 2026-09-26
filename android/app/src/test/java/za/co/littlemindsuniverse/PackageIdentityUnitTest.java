@@ -7,7 +7,7 @@ import org.junit.Test;
 public class PackageIdentityUnitTest {
 
     @Test
-    public void frozenApplicationIdRemainsCanonical() {
-        assertEquals("za.co.littlemindsuniverse", "za.co.littlemindsuniverse");
+    public void testClassLivesUnderFrozenPackageIdentity() {
+        assertEquals("za.co.littlemindsuniverse", PackageIdentityUnitTest.class.getPackageName());
     }
 }
