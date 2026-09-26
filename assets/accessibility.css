@@ -1,0 +1,58 @@
+/* Shared accessibility hardening for LMU and LittleMinds Connect. */
+
+:focus-visible {
+  scroll-margin: 16px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+[role="status"],
+[aria-live] {
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  button,
+  input,
+  textarea,
+  select,
+  .card,
+  .notice,
+  .chat,
+  .modal {
+    border: 1px solid CanvasText;
+  }
+
+  .navbtn.active,
+  .stage.selected {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

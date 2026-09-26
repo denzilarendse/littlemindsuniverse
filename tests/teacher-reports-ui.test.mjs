@@ -38,10 +38,10 @@ test('weekly report dates normalize to Monday', () => {
   assert.match(reports, /Weekly reports start on Monday; the date was adjusted/);
 });
 
-test('teacher report module loads before app initialization and remains cached after the Connect PWA revision', () => {
+test('teacher report module loads before app initialization and remains cached across PWA revisions', () => {
   const moduleIndex = html.indexOf('/assets/teacher-reports.js');
   const appIndex = html.indexOf('/assets/app.js');
   assert.ok(moduleIndex >= 0 && appIndex > moduleIndex);
-  assert.match(sw, /lmu-production-v7/);
+  assert.match(sw, /const CACHE=['"]lmu-production-v\d+['"]/);
   assert.match(sw, /\/assets\/teacher-reports\.js/);
 });
