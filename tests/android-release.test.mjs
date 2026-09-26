@@ -63,7 +63,7 @@ test('Android CI reruns web checks, runtime dependency audit, native lint, unit/
   assert.match(androidWorkflow, /npm audit --omit=dev --audit-level=moderate/);
   assert.match(androidWorkflow, /npm run check/);
   assert.match(androidWorkflow, /npm run android:sync/);
-  assert.match(androidWorkflow, /\.\/gradlew lintRelease testReleaseUnitTest assembleReleaseAndroidTest/);
+  assert.match(androidWorkflow, /\.\/gradlew lintRelease testReleaseUnitTest assembleDebugAndroidTest/);
   assert.match(androidWorkflow, /\.\/gradlew bundleRelease/);
   assert.match(androidWorkflow, /jarsigner -verify/);
 });
