@@ -38,5 +38,23 @@ jobs:
           echo '=== HTTPS response headers ==='
           curl -sS -L --max-redirs 5 --connect-timeout 10 --max-time 20 \
             -D - -o /dev/null https://www.littlemindsuniverse.co.za/ || true
+      - name: Capture non-secret production path evidence
+        shell: bash
+        run: |
+          set -u
+          origin='https://www.littlemindsuniverse.co.za'
+          for path in / /connect.html /manifest.json /sw.js /assets/runtime-config.js /api/health; do
+            echo "=== ${path} ==="
+            curl -sS -L --max-redirs 5 --connect-timeout 10 --max-time 20 \
+              -o /tmp/lmu-probe-body -w 'status=%{http_code} final=%{url_effective} type=%{content_type}\n' "${origin}${path}" || true
+            case "$path" in
+              /) grep -Eo 'LittleMindsUniverse|/assets/app\.js' /tmp/lmu-probe-body | sort -u || true ;;
+              /connect.html) grep -Eo 'LittleMinds Connect|/assets/connect-app\.js' /tmp/lmu-probe-body | sort -u || true ;;
+              /manifest.json) node -e "const fs=require('fs');try{const x=JSON.parse(fs.readFileSync('/tmp/lmu-probe-body','utf8'));console.log(JSON.stringify({name:x.name,start_url:x.start_url,display:x.display}))}catch{console.log('manifest-parse=FAIL')}" ;;
+              /sw.js) grep -Eo 'CACHEABLE_PATHS|url\.origin!==self\.location\.origin' /tmp/lmu-probe-body | sort -u || true ;;
+              /assets/runtime-config.js) grep -Eo 'supabasePublishableKey|environment|SUPABASE_(SECRET|SERVICE_ROLE)|GROQ_API_KEY|PAYFAST_(MERCHANT_KEY|PASSPHRASE)' /tmp/lmu-probe-body | sort -u || true ;;
+              /api/health) node -e "const fs=require('fs');try{const x=JSON.parse(fs.readFileSync('/tmp/lmu-probe-body','utf8'));console.log(JSON.stringify({ok:x.ok,service:x.service,miloConfigured:x.miloConfigured,connectConfigured:x.connectConfigured,payfastConfigured:x.payfastConfigured}))}catch{console.log('health-parse=FAIL')}" ;;
+            esac
+          done
       - name: Verify production domain, TLS, shells, headers, PWA boundary and server readiness
         run: npm run verify:production -- https://www.littlemindsuniverse.co.za
