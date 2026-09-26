@@ -10,10 +10,11 @@
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/assets/app.css" />
   <link rel="stylesheet" href="/assets/connect.css" />
+  <link rel="stylesheet" href="/assets/accessibility.css" />
 </head>
 <body>
   <div id="connectApp"></div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
   <script src="/assets/runtime-config.js"></script>
   <script src="/assets/connect-app.js"></script>
