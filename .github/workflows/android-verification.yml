@@ -85,7 +85,7 @@ jobs:
       - name: Android lint, unit and instrumentation compile verification
         run: |
           cd android
-          ./gradlew lintRelease testReleaseUnitTest assembleReleaseAndroidTest
+          ./gradlew lintRelease testReleaseUnitTest assembleDebugAndroidTest
 
       - name: Build unsigned API 36 release bundle
         run: |
