@@ -22,13 +22,16 @@ jobs:
           node-version: 22
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Install pinned Capacitor 8 toolchain
         run: npm install --ignore-scripts
+
+      - name: Audit shipped runtime dependencies
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Build production web bundle
         run: npm run build
@@ -44,11 +47,12 @@ jobs:
 
       - name: Verify frozen application ID and API 36
         run: |
-          grep -R "za.co.littlemindsuniverse" android/app/build.gradle android/app/build.gradle.kts android/app/src/main/AndroidManifest.xml 2>/dev/null || true
-          grep -Eq "compileSdkVersion[[:space:]]*=[[:space:]]*36|compileSdk[[:space:]]*=?[[:space:]]*36" android/variables.gradle android/app/build.gradle android/app/build.gradle.kts
-          grep -Eq "targetSdkVersion[[:space:]]*=[[:space:]]*36|targetSdk[[:space:]]*=?[[:space:]]*36" android/variables.gradle android/app/build.gradle android/app/build.gradle.kts
-          grep -Eq "minSdkVersion[[:space:]]*=[[:space:]]*24|minSdk[[:space:]]*=?[[:space:]]*24" android/variables.gradle android/app/build.gradle android/app/build.gradle.kts
-          grep -R "applicationId[[:space:]]*[= ]*[\"']za.co.littlemindsuniverse[\"']" android/app/build.gradle android/app/build.gradle.kts
+          test -f android/app/build.gradle
+          test -f android/variables.gradle
+          grep -F 'applicationId "za.co.littlemindsuniverse"' android/app/build.gradle
+          grep -Eq 'compileSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
+          grep -Eq 'targetSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
+          grep -Eq 'minSdkVersion[[:space:]]*=[[:space:]]*24' android/variables.gradle
 
       - name: Build unsigned release AAB
         run: |
