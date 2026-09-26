@@ -5,9 +5,24 @@ import fs from 'node:fs';
 const read = path => fs.readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const vercel = JSON.parse(read('vercel.json'));
 const netlify = read('netlify.toml');
+const artifactHeaders = read('_headers');
+const buildScript = read('scripts/build.mjs');
 
 const vercelHeaders = Object.fromEntries(vercel.headers[0].headers.map(({ key, value }) => [key, value]));
 const csp = vercelHeaders['Content-Security-Policy'];
+
+const requiredNetlifyFragments = [
+  'Content-Security-Policy',
+  "default-src 'self'",
+  "object-src 'none'",
+  'https://cdn.jsdelivr.net',
+  'https://zcokxljcsfkrlouzragv.supabase.co',
+  'wss://zcokxljcsfkrlouzragv.supabase.co',
+  'https://www.payfast.co.za',
+  'Cross-Origin-Opener-Policy',
+  'X-Permitted-Cross-Domain-Policies',
+  'Strict-Transport-Security'
+];
 
 test('Vercel ships a restrictive CSP for the static app and Connect', () => {
   assert.ok(csp, 'Content-Security-Policy header is required');
@@ -28,18 +43,25 @@ test('Vercel adds transport and browser-isolation hardening', () => {
   assert.match(vercelHeaders['Strict-Transport-Security'], /^max-age=\d+/);
 });
 
-test('Netlify mirrors the same security policy instead of becoming a weaker deployment path', () => {
-  for (const fragment of [
-    'Content-Security-Policy',
-    "default-src 'self'",
-    "object-src 'none'",
-    'https://cdn.jsdelivr.net',
-    'https://zcokxljcsfkrlouzragv.supabase.co',
-    'wss://zcokxljcsfkrlouzragv.supabase.co',
-    'https://www.payfast.co.za',
-    'Cross-Origin-Opener-Policy = "same-origin"',
-    'X-Permitted-Cross-Domain-Policies = "none"',
-    'Strict-Transport-Security = "max-age=15552000"'
-  ]) assert.ok(netlify.includes(fragment), `Netlify security headers missing: ${fragment}`);
+test('Netlify repository configuration mirrors the same security policy', () => {
+  for (const fragment of requiredNetlifyFragments) {
+    assert.ok(netlify.includes(fragment), `Netlify security headers missing: ${fragment}`);
+  }
+  assert.match(netlify, /Cross-Origin-Opener-Policy\s*=\s*"same-origin"/);
+  assert.match(netlify, /X-Permitted-Cross-Domain-Policies\s*=\s*"none"/);
+  assert.match(netlify, /Strict-Transport-Security\s*=\s*"max-age=15552000"/);
   assert.doesNotMatch(netlify, /unsafe-eval|default-src \*/i);
+});
+
+test('manual Netlify deploy artifact carries the same browser security boundary', () => {
+  assert.match(artifactHeaders, /^\/\*/m);
+  for (const fragment of requiredNetlifyFragments) {
+    assert.ok(artifactHeaders.includes(fragment), `dist _headers policy missing: ${fragment}`);
+  }
+  assert.match(artifactHeaders, /Cross-Origin-Opener-Policy:\s*same-origin/i);
+  assert.match(artifactHeaders, /X-Permitted-Cross-Domain-Policies:\s*none/i);
+  assert.match(artifactHeaders, /Strict-Transport-Security:\s*max-age=15552000/i);
+  assert.doesNotMatch(artifactHeaders, /unsafe-eval|default-src \*/i);
+  assert.match(buildScript, /'sw\.js',\s*'_headers'/, 'build must copy _headers into dist');
+  assert.match(buildScript, /Netlify security headers are missing from production build/);
 });
