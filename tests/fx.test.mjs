@@ -35,12 +35,18 @@ test('FX provider failure falls back only to a bounded stale server cache', asyn
     return new Response(JSON.stringify({ date: '2026-09-25', rate: 18.75 }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
   await fetchReferenceRate('USD', 'ZAR');
-  await new Promise(resolve => setTimeout(resolve, 5));
   fail = true;
-  const fallback = await fetchReferenceRate('USD', 'ZAR');
-  assert.equal(fallback.rate, 18.75);
-  assert.equal(fallback.source, 'frankfurter-v2-stale-cache');
-  assert.ok(fallback.cached_at);
+  const realDateNow = Date.now;
+  const staleNow = realDateNow() + 10;
+  Date.now = () => staleNow;
+  try {
+    const fallback = await fetchReferenceRate('USD', 'ZAR');
+    assert.equal(fallback.rate, 18.75);
+    assert.equal(fallback.source, 'frankfurter-v2-stale-cache');
+    assert.ok(fallback.cached_at);
+  } finally {
+    Date.now = realDateNow;
+  }
 });
 
 test('FX provider failure without cache fails closed', async () => {
