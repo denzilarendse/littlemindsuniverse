@@ -7,10 +7,9 @@ const sql = fs.readFileSync(
   'utf8'
 );
 
-const executableSql = sql
-  .split('\n')
-  .map(line => line.replace(/--.*$/, ''))
-  .join('\n');
+// Assertions below inspect executable SQL only. Strip line comments so words in
+// explanatory comments cannot create false positives in privilege checks.
+const executableSql = sql.replace(/--.*$/gm, '');
 
 const wrappers = [
   'get_message_contacts\\(\\)',
