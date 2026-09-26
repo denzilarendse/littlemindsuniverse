@@ -53,6 +53,14 @@ test('owner-controlled Android signing material is excluded from source control'
   assert.equal(fs.existsSync(path.join(root, 'android/app/google-services.json')), false);
 });
 
+test('release signing is opt-in and reads only owner-local key.properties', () => {
+  assert.match(gradle, /rootProject\.file\('key\.properties'\)/);
+  assert.match(gradle, /hasReleaseSigning\s*=\s*keystorePropertiesFile\.exists\(\)/);
+  assert.match(gradle, /if \(hasReleaseSigning\) \{[\s\S]*signingConfig signingConfigs\.release/);
+  assert.doesNotMatch(gradle, /storePassword\s+["'][^"']+["']/);
+  assert.doesNotMatch(gradle, /keyPassword\s+["'][^"']+["']/);
+});
+
 test('native tests compile under the frozen application identity with no Capacitor template package left behind', () => {
   assert.match(instrumentation, /^package za\.co\.littlemindsuniverse;/m);
   assert.match(instrumentation, /assertEquals\("za\.co\.littlemindsuniverse", appContext\.getPackageName\(\)\)/);
@@ -66,6 +74,13 @@ test('Android adaptive launcher uses LittleMinds brand artwork instead of the Ca
   assert.match(launcherForeground, /#6558E8/i);
   assert.match(launcherForeground, /M32,44 L54,32 L76,44 L54,56 Z/);
   assert.doesNotMatch(launcherForeground, /66\.94,46\.02/);
+});
+
+test('Android declares only the canonical HTTPS domain for verified app links', () => {
+  assert.match(manifest, /<intent-filter android:autoVerify="true">/);
+  assert.match(manifest, /android:name="android\.intent\.action\.VIEW"/);
+  assert.match(manifest, /android:name="android\.intent\.category\.BROWSABLE"/);
+  assert.match(manifest, /android:scheme="https" android:host="www\.littlemindsuniverse\.co\.za"/);
 });
 
 test('Android CI reruns web checks, runtime dependency audit, native lint, unit/instrumentation compilation and AAB build', () => {
