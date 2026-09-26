@@ -9,6 +9,7 @@
     "build": "node scripts/build.mjs",
     "check": "npm run lint && npm test && npm run build",
     "start": "npx serve . -l 5500",
+    "verify:production": "node scripts/verify-production.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:bundle": "npm run android:sync && cd android && ./gradlew bundleRelease",
     "android:assetlinks": "node scripts/generate-assetlinks.mjs"
