@@ -1,4 +1,4 @@
-const CACHE='lmu-production-v6';
+const CACHE='lmu-production-v7';
 
 const CORE=[
   '/',
@@ -11,6 +11,7 @@ const CORE=[
   '/assets/parent-controls.js',
   '/assets/teacher-reports.js',
   '/assets/app.js',
+  '/assets/connect-bridge.js',
   '/assets/connect-app.js',
   '/manifest.json',
   '/assets/icon.svg'
