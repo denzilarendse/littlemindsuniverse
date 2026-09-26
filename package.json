@@ -1,14 +1,25 @@
 {
-  "name":"littlemindsuniverse",
-  "version":"4.0.0",
-  "private":true,
-  "type":"module",
-  "scripts":{
-    "lint":"node scripts/check-js.mjs",
-    "test":"node --test tests/*.test.mjs && node tests/smoke.mjs",
-    "build":"node scripts/build.mjs",
-    "check":"npm run lint && npm test && npm run build",
-    "start":"npx serve . -l 5500"
+  "name": "littlemindsuniverse",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "node scripts/check-js.mjs",
+    "test": "node --test tests/*.test.mjs && node tests/smoke.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "npm run lint && npm test && npm run build",
+    "start": "npx serve . -l 5500",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:bundle": "npm run android:sync && cd android && ./gradlew bundleRelease"
   },
-  "engines":{"node":">=20"}
+  "dependencies": {
+    "@capacitor/core": "8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/cli": "8.5.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }
