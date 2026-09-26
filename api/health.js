@@ -9,9 +9,9 @@ export default function handler(req, res) {
     time: new Date().toISOString(),
     miloConfigured,
     miloProvider: miloConfigured ? 'groq' : null,
-    whatsappConfigured: Boolean(
-      process.env.WHATSAPP_ACCESS_TOKEN &&
-      process.env.WHATSAPP_PHONE_NUMBER_ID
+    connectConfigured: Boolean(
+      process.env.SUPABASE_URL &&
+      (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
     ),
     payfastConfigured: Boolean(
       process.env.PAYFAST_MERCHANT_ID &&

@@ -3,7 +3,6 @@
   "outputDirectory":"dist",
   "functions":{
     "api/milo.js":{"maxDuration":15},
-    "api/whatsapp.js":{"maxDuration":15},
     "api/payfast.js":{"maxDuration":15},
     "api/payfast-itn.js":{"maxDuration":15}
   },

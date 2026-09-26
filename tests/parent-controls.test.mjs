@@ -15,7 +15,7 @@ test('parent controls load before the main app and share the same Supabase clien
   assert.match(controls, /if\(!client\)client=created/);
 });
 
-test('parent controls use only the protected parent and guardian RPCs', () => {
+test('parent controls use only protected parent and guardian RPCs', () => {
   for (const name of [
     'get_guardian_evidence_permissions',
     'get_parent_notification_preferences',
@@ -23,10 +23,10 @@ test('parent controls use only the protected parent and guardian RPCs', () => {
     'set_guardian_child_facing_identity',
     'set_guardian_feature_control',
     'set_guardian_evidence_consent',
-    'set_parent_notification_preferences',
-    'set_parent_whatsapp_contact'
+    'set_parent_notification_preferences'
   ]) assert.match(controls, new RegExp(name));
   assert.match(controls, /profile\.role!=='parent'/);
+  assert.doesNotMatch(controls, /set_parent_whatsapp_contact/);
 });
 
 test('parent consent is distinct from browser or operating-system hardware permission', () => {
@@ -47,9 +47,15 @@ test('evidence consent requires explicit agreement before enabling', () => {
   assert.match(controls, /Revoke permission/);
 });
 
-test('WhatsApp preference is stored separately from provider delivery', () => {
-  assert.match(controls, /Provider delivery remains separate and starts only when the LittleMindsUniverse WhatsApp Business integration is active/);
-  assert.match(controls, /\^\\\+\[1-9\]\[0-9\]\{7,14\}\$/);
+test('parent communication controls use LittleMinds Connect and retire phone-number provider UI', () => {
+  assert.match(controls, /LittleMinds Connect class messages/);
+  assert.match(controls, /Private family-school messaging/);
+  assert.match(controls, /Private phone numbers are not shared/);
+  assert.match(controls, /openConnectMessaging/);
+  assert.match(controls, /p_can_receive_whatsapp:false/);
+  assert.doesNotMatch(controls, /WhatsApp Business/);
+  assert.doesNotMatch(controls, /parentWhatsappPhone/);
+  assert.doesNotMatch(controls, /parentWhatsappOptIn/);
 });
 
 test('parent controls are part of the offline app shell', () => {
