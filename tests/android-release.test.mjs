@@ -15,6 +15,8 @@ const gradle = read('android/app/build.gradle');
 const manifest = read('android/app/src/main/AndroidManifest.xml');
 const gitignore = read('.gitignore');
 const androidWorkflow = read('.github/workflows/android-verification.yml');
+const instrumentation = read('android/app/src/androidTest/java/za/co/littlemindsuniverse/PackageIdentityInstrumentedTest.java');
+const unitTest = read('android/app/src/test/java/za/co/littlemindsuniverse/PackageIdentityUnitTest.java');
 
 test('Android application identity is frozen and consistent', () => {
   assert.equal(capacitor.appId, 'za.co.littlemindsuniverse');
@@ -49,11 +51,19 @@ test('owner-controlled Android signing material is excluded from source control'
   assert.equal(fs.existsSync(path.join(root, 'android/app/google-services.json')), false);
 });
 
-test('Android CI reruns web checks, runtime dependency audit, native lint and AAB build', () => {
+test('native tests compile under the frozen application identity with no Capacitor template package left behind', () => {
+  assert.match(instrumentation, /^package za\.co\.littlemindsuniverse;/m);
+  assert.match(instrumentation, /assertEquals\("za\.co\.littlemindsuniverse", appContext\.getPackageName\(\)\)/);
+  assert.match(unitTest, /^package za\.co\.littlemindsuniverse;/m);
+  assert.equal(fs.existsSync(path.join(root, 'android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java')), false);
+  assert.equal(fs.existsSync(path.join(root, 'android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java')), false);
+});
+
+test('Android CI reruns web checks, runtime dependency audit, native lint, unit/instrumentation compilation and AAB build', () => {
   assert.match(androidWorkflow, /npm audit --omit=dev --audit-level=moderate/);
   assert.match(androidWorkflow, /npm run check/);
   assert.match(androidWorkflow, /npm run android:sync/);
-  assert.match(androidWorkflow, /\.\/gradlew lintRelease testReleaseUnitTest/);
+  assert.match(androidWorkflow, /\.\/gradlew lintRelease testReleaseUnitTest assembleReleaseAndroidTest/);
   assert.match(androidWorkflow, /\.\/gradlew bundleRelease/);
   assert.match(androidWorkflow, /jarsigner -verify/);
 });
