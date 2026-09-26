@@ -1,7 +1,7 @@
 import dns from 'node:dns/promises';
 import tls from 'node:tls';
 
-const SECRET_RE = /(?:SUPABASE_(?:SECRET|SERVICE_ROLE)|SERVICE_ROLE|PAYFAST_(?:MERCHANT_KEY|PASSPHRASE)|GROQ_API_KEY|NINEROUTER_API_KEY|WHATSAPP_ACCESS_TOKEN)\s*[:=]/i;
+const SECRET_RE = /(?:SUPABASE_(?:SECRET_KEY|SERVICE_ROLE(?:_KEY)?)|SERVICE_ROLE(?:_KEY)?|PAYFAST_(?:MERCHANT_KEY|PASSPHRASE)|GROQ_API_KEY|NINEROUTER_API_KEY|WHATSAPP_ACCESS_TOKEN)\s*[:=]/i;
 
 export function validateOrigin(value) {
   let url;
