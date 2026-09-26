@@ -1,6 +1,6 @@
 window.LMU_CONFIG = Object.freeze({
   appName: 'LittleMindsUniverse',
-  environment: 'production-ready',
+  environment: 'release-candidate',
   supabaseUrl: 'https://zcokxljcsfkrlouzragv.supabase.co',
   supabasePublishableKey: 'sb_publishable_WS4f-AHMam0z-wdc8WeRfg_30Uvjkm6',
   apiBase: '',
@@ -9,5 +9,5 @@ window.LMU_CONFIG = Object.freeze({
   defaultCurriculum: 'CAPS',
   weekOneAlwaysFree: true,
   trialDays: 7,
-  pricing: { monthlyZAR: 80, annualZAR: 800, introductoryUSD: 1 }
+  pricing: { monthlyUSD: 3, annualUSD: 30, introductoryUSD: 1 }
 });
