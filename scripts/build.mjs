@@ -22,12 +22,13 @@ const copyDir = relative => {
   }
 };
 
-for (const file of ['index.html', 'manifest.json', 'sw.js']) copyFile(file);
+for (const file of ['index.html', 'connect.html', 'manifest.json', 'sw.js']) copyFile(file);
 for (const dir of ['assets', 'data', '.well-known']) copyDir(dir);
 
 const manifest = JSON.parse(fs.readFileSync(path.join(dist, 'manifest.json'), 'utf8'));
 if (manifest.name !== 'LittleMindsUniverse') throw new Error('Unexpected PWA manifest name');
 if (manifest.display !== 'standalone') throw new Error('PWA manifest must use standalone display');
+if (!fs.existsSync(path.join(dist, 'connect.html'))) throw new Error('LittleMinds Connect shell is missing from production build');
 
 const deployable = [];
 const collect = dir => {

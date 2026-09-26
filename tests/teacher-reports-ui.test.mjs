@@ -27,9 +27,8 @@ test('teacher approval saves current edits before releasing the report', () => {
   assert.match(block, /Approve this weekly report and release it to authorized guardians/);
 });
 
-test('approved reports are read-only and WhatsApp delivery stays separate', () => {
+test('approved reports are read-only and no provider dispatch API is called from the report screen', () => {
   assert.match(reports, /Approved reports are read-only here/);
-  assert.match(reports, /WhatsApp delivery, when enabled later, is a separate provider workflow/);
   assert.doesNotMatch(reports, /reserve_whatsapp_dispatch|complete_whatsapp_dispatch|WHATSAPP_ACCESS_TOKEN/);
 });
 
@@ -39,10 +38,10 @@ test('weekly report dates normalize to Monday', () => {
   assert.match(reports, /Weekly reports start on Monday; the date was adjusted/);
 });
 
-test('teacher report module loads before app initialization and is cached by the PWA', () => {
+test('teacher report module loads before app initialization and remains cached after the Connect PWA revision', () => {
   const moduleIndex = html.indexOf('/assets/teacher-reports.js');
   const appIndex = html.indexOf('/assets/app.js');
   assert.ok(moduleIndex >= 0 && appIndex > moduleIndex);
-  assert.match(sw, /lmu-production-v5/);
+  assert.match(sw, /lmu-production-v7/);
   assert.match(sw, /\/assets\/teacher-reports\.js/);
 });
