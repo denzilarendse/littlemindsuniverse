@@ -1,4 +1,4 @@
-const CACHE='lmu-production-v8';
+const CACHE='lmu-production-v9';
 
 const CORE=[
   '/',
@@ -17,6 +17,7 @@ const CORE=[
   '/manifest.json',
   '/assets/icon.svg'
 ];
+const CACHEABLE_PATHS=new Set(CORE);
 
 self.addEventListener('install',event=>{
   event.waitUntil(
@@ -43,12 +44,15 @@ self.addEventListener('fetch',event=>{
 
   const url=new URL(event.request.url);
 
+  // Never intercept or cache cross-origin data. In particular, authenticated
+  // Supabase REST/Storage/Realtime traffic must remain outside Cache Storage.
+  if(url.origin!==self.location.origin) return;
   if(url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
     fetch(event.request)
       .then(response=>{
-        if(response.ok){
+        if(response.ok&&CACHEABLE_PATHS.has(url.pathname)){
           const copy=response.clone();
           caches.open(CACHE).then(cache=>
             cache.put(event.request,copy)
