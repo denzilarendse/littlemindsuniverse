@@ -58,3 +58,5 @@ jobs:
           done
       - name: Verify production domain, TLS, shells, headers, PWA boundary and server readiness
         run: npm run verify:production -- https://www.littlemindsuniverse.co.za
+
+# probe rerun after Netlify production deploy 6ab84e0bb245cd33886dc51f
