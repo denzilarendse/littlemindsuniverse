@@ -12,3 +12,12 @@ node_modules/
 
 # Generated release output. CI and hosting rebuild this from canonical source.
 dist/
+
+# Android signing and machine-local material must remain owner-controlled.
+*.jks
+*.keystore
+keystore.properties
+key.properties
+android/key.properties
+android/local.properties
+android/app/google-services.json
