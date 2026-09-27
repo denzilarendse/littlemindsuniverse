@@ -14,7 +14,8 @@
     "android:bundle": "npm run android:sync && cd android && ./gradlew :app:bundleRelease",
     "android:assetlinks": "node scripts/generate-assetlinks.mjs",
     "android:connect:sync": "npm run build && node scripts/build-connect-android.mjs",
-    "android:connect:bundle": "npm run android:connect:sync && cd android && ./gradlew :connectapp:bundleRelease"
+    "android:connect:bundle": "npm run android:connect:sync && cd android && ./gradlew :connectapp:bundleRelease",
+    "android:connect:assetlinks": "node scripts/generate-connect-assetlinks.mjs"
   },
   "dependencies": {
     "@capacitor/core": "8.5.2"
