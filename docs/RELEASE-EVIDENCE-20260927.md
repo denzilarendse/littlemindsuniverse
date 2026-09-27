@@ -2,131 +2,174 @@
 
 ## Decision
 
-**RELEASE HOLD — the canonical source, automated regression/build gates, Netlify production deployment, external production-domain probe and unsigned Android API-36 candidate are green. Hosted authenticated role E2E, PayFast provider-backed settlement, backup/restore/rollback, owner signing, physical-device testing and Play Console release gates remain unevidenced.**
+**RELEASE HOLD — production hosting and automated release layers are green, and the live teacher-assignment database defect has been repaired without weakening RLS. The post-repair real-account vertical slice, PayFast provider-backed settlement, recovery/rollback, owner signing, physical-device testing and Play Console gates remain open.**
 
 The release standard remains:
 
 `discover defect -> isolate root cause -> repair -> regression test -> retest -> record evidence`
 
-A successful deployment is not by itself a public-launch or store-release decision.
+A successful deployment, database migration or unsigned Android bundle is not by itself a public-launch or store-release decision.
 
-## Canonical source
+## Canonical state
 
 - Repository: `denzilarendse/littlemindsuniverse`
-- Branch: `main`
-- Exact production source SHA: `274a74629c0fc354d4363dac00c88013bcac1c39`
+- Canonical branch: `main`
+- Current main SHA: `a0bd247b371a90029cceb7d015bc2984dc6b93c1`
+- Current production web deploy source SHA: `274a74629c0fc354d4363dac00c88013bcac1c39`
 - Production host: Netlify project `littlemindsuniverse-app`
-- Netlify project ID: `989d3b15-5ba4-42f7-8ba6-b53dc64fbd27`
 - Production URL: `https://www.littlemindsuniverse.co.za`
-- Netlify deploy ID: `6ab84e0bb245cd33886dc51f`
-- Unique deploy URL: `https://6ab84e0bb245cd33886dc51f--littlemindsuniverse-app.netlify.app`
+- Live Supabase project: `zcokxljcsfkrlouzragv`
 
-## Source and CI verification
+The current main delta after the web deploy is database-only for the teacher-assignment repair. That migration has been applied to the live Supabase project, so no static Netlify redeploy was required for this repair.
 
-The final source SHA was verified before production deployment.
+## Production hosting evidence
 
-- Main release-verification run `36275489198`: PASS.
-- Main Android-verification run `36275489182`: PASS.
-- Vercel commit status for the same source SHA: PASS.
-- Local clean Termux release checkout on the exact source SHA: PASS.
-- Local automated suite: 124 tests passed, 0 failed.
-- Production smoke tests: PASS.
-- Production build: PASS, with 17 static production files built into `dist/`.
-- Required manual-deploy security artifact `dist/_headers`: present.
-- `dist/index.html`, `dist/connect.html`, `dist/manifest.json` and `dist/sw.js`: present.
+The previously stale Netlify production deployment was repaired from a clean Termux-private release checkout and linked to the existing Netlify project rather than creating a replacement site.
 
-The local dependency install reported three moderate npm advisories. The release workflow's explicit shipped-runtime audit and high-severity rejection gate passed. No breaking `npm audit fix --force` was applied merely to obtain a zero-warning count.
+Independent GitHub-hosted production probe `36278055418` passed after that deploy. External evidence included:
 
-## Netlify production deployment
+- HTTPS root: HTTP 200 from Netlify;
+- TLS 1.3 with valid certificate at probe time;
+- CSP, HSTS, X-Content-Type-Options, X-Frame-Options, Referrer Policy, Permissions Policy and COOP present;
+- `/connect.html`: HTTP 200;
+- `/manifest.json`: HTTP 200 with standalone PWA metadata;
+- `/sw.js`: HTTP 200 with explicit static cache allowlist/cross-origin cache boundary;
+- `/assets/runtime-config.js`: HTTP 200 with browser-safe Supabase publishable configuration and no server-secret patterns detected by the probe;
+- `/api/health`: HTTP 200 with `ok=true`, Connect configured and Milo configured;
+- production verifier: PASS.
 
-The production folder was linked to the existing Netlify project rather than creating a replacement site.
+The same health evidence reported `payfastConfigured=false`, so PayFast remains a separate release gate rather than being hidden by the green hosting result.
 
-The first Android-shared-storage deployment attempts exposed environment-specific filesystem restrictions:
+## Production teacher-assignment incident and repair
 
-1. Netlify UI Lighthouse plugin installation failed because Android shared storage rejected npm-created symlinks.
-2. A no-build deployment from shared storage still failed during Netlify Functions bundling because the function entry points could not be resolved correctly from that filesystem boundary.
+Real mobile testing reproduced two connected failures:
 
-The release checkout was then recreated under Termux private Linux storage. There:
+- a teacher could not save a mapped assignment draft;
+- an existing draft could not be published to an active learner, leaving the learner learning view empty.
 
-- `npm ci --ignore-scripts`: PASS;
-- full `npm run check`: PASS;
-- existing Netlify project link: PASS;
-- production no-build deployment of the already-verified `dist/` plus `netlify/functions`: PASS;
-- 17 static files and 5 functions were hashed and uploaded;
-- Netlify reported `Production deploy is live` for `https://www.littlemindsuniverse.co.za`.
+Live Supabase logs isolated backend causes:
 
-This repaired the deployment path without modifying or weakening application security checks.
+1. `create_teacher_draft_with_skill` inserted a `learning_items` row without the required non-null `week_number`;
+2. recipient RLS invoked `learner_in_learning_item_classroom` after direct authenticated EXECUTE had intentionally been revoked from that public internal helper;
+3. learner/guardian recipient and submission RLS similarly invoked `has_commercial_learning_access` after its public direct EXECUTE was revoked;
+4. `weekly_reports` had RLS policies but lacked the authenticated table-level `SELECT` grant needed before those policies could run;
+5. the teacher Connect contact query used `SELECT DISTINCT` while ordering on `gl.primary_guardian`, which was not in the selected row shape.
 
-## Independent external production probe
+PR #39, `Fix: restore production teacher assignment workflow`, repaired the path with migration:
 
-A fresh GitHub-hosted Ubuntu 24.04 probe was triggered after the Netlify production deploy.
+`database/migrations/20260927_repair_teacher_publish_and_role_reads.sql`
 
-- Workflow: `production-domain-probe`
-- Run: `36278055418`
-- Job: `108504498678`
-- Result: PASS
+The repair:
 
-Observed external evidence:
+- derives a bounded classroom curriculum week (1–40), falling back to week 1 for a new classroom;
+- moves RLS-only commercial-access and classroom-membership predicates into a non-exposed `private` schema;
+- keeps the corresponding public internal helpers non-executable by anon/authenticated clients;
+- rewires recipient/submission policies to the private predicates;
+- restores only authenticated `SELECT` on `weekly_reports`, while RLS remains enabled;
+- fixes the Connect teacher contact query without weakening active-classroom or verified-guardian requirements;
+- adds regression coverage for the repaired migration boundary.
 
-- `www.littlemindsuniverse.co.za` resolves through `littlemindsuniverse-app.netlify.app`.
-- HTTPS root response: HTTP 200 from Netlify.
-- TLS: TLS 1.3; certificate valid through 13 December 2026 at probe time.
-- Root security headers: PASS, including CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`, Referrer Policy, Permissions Policy and COOP.
-- `/`: HTTP 200 and current LittleMindsUniverse application shell present.
-- `/connect.html`: HTTP 200 and LittleMinds Connect shell present.
-- `/manifest.json`: HTTP 200; `name=LittleMindsUniverse`, `start_url=/`, `display=standalone`.
-- `/sw.js`: HTTP 200; explicit cache allowlist and cross-origin cache boundary present.
-- `/assets/runtime-config.js`: HTTP 200; browser-safe environment and Supabase publishable configuration present; no server-secret variable patterns surfaced by the probe.
-- `/api/health`: HTTP 200 with `ok=true`, service `littlemindsuniverse`, Connect configured, Milo configured.
-- Production verifier result: `Production probe PASS: https://www.littlemindsuniverse.co.za`.
+The migration was successfully applied to the live Supabase project.
 
-The health endpoint reported `payfastConfigured=false`. The production probe intentionally does not require PayFast to pass the web/Connect/Milo hosting gate, so PayFast remains a separate release gate rather than being hidden by the green production-domain result.
+## Verification after assignment repair
 
-## Production-domain gate transition
+PR #39 passed release verification, Android verification and Vercel preview/status before merge.
 
-The production-domain gate has moved from **UNKNOWN / stale deployment** to **PASS for external DNS, TLS, static shells, security headers, PWA boundary, runtime config, Connect and Milo server readiness** on the deployed candidate.
+On exact current main SHA `a0bd247b371a90029cceb7d015bc2984dc6b93c1`:
 
-This materially closes the previous hosting blocker. It does not prove authenticated multi-role workflows or payment settlement.
+- release-verification run `36285484781`: PASS;
+- Android-verification run `36285484785`: PASS;
+- unsigned API-36 AAB generation: PASS.
+
+The Android result remains intentionally unsigned. It is not evidence of owner signing, physical-device validation, Play upload, pre-launch success or store approval.
+
+Live database post-migration checks confirmed:
+
+- `weekly_reports`: authenticated `SELECT` restored and RLS still enabled;
+- public `has_commercial_learning_access`, `has_premium_access`, and `learner_in_learning_item_classroom`: not directly executable by authenticated/anon roles;
+- private RLS predicates: available to the intended authenticated policy execution path;
+- active workflow test classroom: expected learner and curriculum skill relationship still resolves;
+- rollback-only synthetic verification: no persistent synthetic learning item left behind.
+
+No RLS rule, entitlement rule, teacher ownership rule, active classroom membership rule or verified guardian condition was disabled to obtain a pass.
+
+## Supabase advisor state after repair
+
+Security advisor currently reports hardening/review items rather than a newly introduced release-path critical defect:
+
+- `pg_net` is installed in `public`; prior catalog inspection showed this installed extension is not relocatable, so it has not been blindly moved/dropped/reinstalled merely to silence the warning;
+- leaked-password protection remains disabled and needs supported Auth/project configuration;
+- 55 authenticated SECURITY DEFINER findings remain. These include intended browser RPCs as well as helpers; they require function-by-function classification and must not be bulk-revoked merely to reduce the advisor count.
+
+Performance advisor currently reports:
+
+- 61 unused-index notices;
+- 4 multiple-permissive-policy warnings.
+
+The unused indexes are expected to be noisy before meaningful production traffic and are not being removed from a pre-launch system solely because usage counters are zero. The permissive-policy warnings will only be changed where equivalent authorization semantics can be proven by regression tests.
+
+Supabase remediation references:
+
+- Extension placement: https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public
+- SECURITY DEFINER exposure: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
+- Leaked-password protection: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+- Multiple permissive policies: https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies
+- Unused indexes: https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index
 
 ## Android/API-36 status
 
-The Android application identity remains frozen as:
+The application identity remains frozen as:
 
 `za.co.littlemindsuniverse`
 
-The main Android verification pipeline is green and produces an unsigned API-36 release bundle. Owner signing material remains deliberately outside source control. No claim is made that a signed AAB has been produced, installed on a physical device, uploaded to Play, passed pre-launch testing or received store approval.
+The automated Android pipeline verifies the production web source before packaging, syncs the Capacitor bundle, checks the frozen identity/API/child-safe native defaults, runs Android lint/unit/app instrumentation compilation, and builds an unsigned API-36 release bundle.
 
-## Remaining release gates
+Owner-controlled signing material remains outside source control.
+
+## Current gate status
 
 | Gate | State | Evidence still required |
 | --- | --- | --- |
-| Canonical source / exact production SHA | PASS | Keep release evidence tied to exact SHA |
-| Automated lint/tests/smoke/build | PASS | Repeat if source changes |
-| Netlify production deployment | PASS | Repeat if deploy artifact changes |
-| Production DNS / TLS / security headers | PASS | Repeat if hosting/DNS changes |
-| LMU root shell | PASS | Authenticated behavior still separate |
-| LittleMinds Connect hosted shell | PASS | Real parent/teacher/realtime role E2E |
-| PWA manifest/service-worker privacy boundary | PASS externally | Real install/update/offline exercise on device |
-| Runtime browser configuration | PASS | Keep server secrets absent from public bundle |
-| Milo server health | PASS | Real authenticated role/context E2E still required |
-| Connect server health | PASS | Real authenticated relationship negative/positive E2E |
+| Canonical source / current main SHA | PASS | Keep every release decision tied to exact SHA |
+| Automated lint/tests/build | PASS | Repeat if source changes |
+| Netlify production deployment | PASS | Repeat if web deploy artifact changes |
+| Production DNS/TLS/security headers | PASS | Repeat after hosting/DNS changes |
+| LittleMinds Connect hosted shell | PASS | Real parent/teacher/realtime E2E |
+| PWA manifest/service-worker privacy boundary | PASS externally | Real install/update/offline device exercise |
+| Milo/Connect server health | PASS | Authenticated role/context E2E still required |
+| Teacher draft backend repair | PASS at source/CI/live DB layer | Real teacher Save draft confirmation |
+| Teacher publish backend repair | PASS at source/CI/live DB layer | Real teacher Publish confirmation |
+| Learner assignment visibility | PENDING POST-REPAIR RETEST | Target learner confirms item appears in Learning |
+| Learner submission -> teacher review | OPEN | Real hosted start/save/submit/review evidence |
+| Weekly report read path | REPAIRED DB LAYER | Real teacher/guardian report E2E |
+| Connect teacher contact SQL | REPAIRED DB LAYER | Real teacher Connect contact E2E |
 | Hosted auth lifecycle | OPEN | Learner/parent/teacher/admin login, recovery, logout and role isolation |
-| Hosted browser/mobile E2E | OPEN | Work/submission/review/reporting/Connect flows on production candidate |
-| PayFast automated logic | PASS at automated layer | Provider-backed sandbox/live settlement + entitlement evidence |
-| PayFast production configuration | OPEN | Health currently reports `payfastConfigured=false` |
-| Backup / restore / rollback | OPEN | Successful recovery and rollback drill with recorded result |
-| Supabase Auth leaked-password protection | OPEN HARDENING | Enable through supported project configuration and verify |
-| `pg_net` public-schema advisor | REVIEWED | Managed-extension-safe remediation or documented accepted platform constraint |
-| Android package ID / API-36 unsigned bundle | PASS | Keep final candidate tied to final source |
-| Android owner signing | OPEN OWNER GATE | Owner upload key / Play App Signing evidence |
-| Digital Asset Links | PREPARED | Play app-signing SHA-256, publication and verification |
+| PayFast automated logic | PASS at automated layer | Provider-backed settlement + entitlement evidence |
+| PayFast production configuration | OPEN | Production health previously reported `payfastConfigured=false` |
+| Backup/restore/rollback | OPEN | Successful recovery/rollback drill with recorded result |
+| Supabase leaked-password protection | OPEN HARDENING | Enable through supported project control and verify |
+| `pg_net` public-schema advisor | REVIEWED | Managed-extension-safe remediation or accepted platform constraint |
+| Android package ID/API-36 unsigned bundle | PASS | Final signed candidate must remain tied to final source |
+| Android owner signing | OPEN OWNER GATE | Owner upload key + Play App Signing evidence |
+| Digital Asset Links | PREPARED | Play app-signing SHA-256, production publication and verification |
 | Signed Android AAB | OPEN OWNER GATE | Sign exact final candidate and verify signature |
-| Physical-device release test | OPEN | Install and exercise exact signed artifact |
+| Physical-device release test | OPEN | Install/exercise exact signed artifact |
 | Play internal/closed/pre-launch | OPEN OWNER GATE | Console upload, testers and pre-launch report |
-| Play declarations / production approval | OPEN OWNER GATE | Families, target audience, Data Safety, deletion/privacy and store review evidence |
+| Play declarations/production approval | OPEN OWNER GATE | Families, target audience, Data Safety, deletion/privacy and store review evidence |
+
+## Immediate hosted vertical-slice retest
+
+Using the production website and existing test accounts:
+
+1. teacher opens the existing draft and publishes it to the active learner;
+2. teacher creates a fresh mapped assignment and confirms **Save draft** succeeds;
+3. learner signs in and confirms the published work appears in **Learning**;
+4. learner starts, saves and submits the work;
+5. teacher confirms the submission appears in the review inbox and completes review;
+6. confirm the resulting mastery/report path without exposing another learner's data.
+
+Once this real-account vertical slice is green, record the result and continue to payment, recovery/rollback, signing/device and Play gates.
 
 ## Current conclusion
 
-The stale Netlify deployment blocker is closed. The production domain now serves the current LMU release candidate with the expected security boundary, LittleMinds Connect shell, PWA assets, runtime configuration and Netlify Functions health path.
-
-The next release work should concentrate on hosted authenticated role E2E, PayFast provider configuration/settlement evidence, recovery/rollback proof, and then owner-controlled Android signing/device/Play gates. Until those are observed, the evidence-based overall decision remains **RELEASE HOLD**.
+The stale Netlify deployment blocker is closed, the production teacher-assignment backend defect is repaired live, and current main web/Android automation is green. The next meaningful evidence is the post-repair real-account hosted vertical slice. Until that and the remaining external owner/provider/store gates are observed, the evidence-based overall decision remains **RELEASE HOLD**.
