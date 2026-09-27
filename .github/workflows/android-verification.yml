@@ -105,14 +105,16 @@ jobs:
           ./gradlew :app:lintRelease :app:testReleaseUnitTest :app:assembleDebugAndroidTest \
             :connectapp:lintRelease :connectapp:testReleaseUnitTest :connectapp:assembleDebugAndroidTest
 
-      - name: Build unsigned API 36 release bundles
+      - name: Build unsigned API 36 release bundles and Connect APK
         run: |
           cd android
-          ./gradlew :app:bundleRelease :connectapp:bundleRelease
+          ./gradlew :app:bundleRelease :connectapp:bundleRelease :connectapp:assembleRelease
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/lmu-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/lmu-jarsigner.txt
           jarsigner -verify connectapp/build/outputs/bundle/release/connectapp-release.aab 2>&1 | tee /tmp/connect-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/connect-jarsigner.txt
+          test -s connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
+          sha256sum connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
 
       - name: Upload LMU unsigned release-candidate artifact
         uses: actions/upload-artifact@v7
@@ -127,5 +129,13 @@ jobs:
         with:
           name: littleminds-connect-android-api36-unsigned
           path: android/connectapp/build/outputs/bundle/release/connectapp-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Connect unsigned APK for owner signing
+        uses: actions/upload-artifact@v7
+        with:
+          name: littleminds-connect-android-api36-unsigned-apk
+          path: android/connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
           if-no-files-found: error
           retention-days: 30
