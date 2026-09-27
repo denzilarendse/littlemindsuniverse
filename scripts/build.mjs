@@ -22,13 +22,14 @@ const copyDir = relative => {
   }
 };
 
-for (const file of ['index.html', 'connect.html', 'manifest.json', 'sw.js', '_headers']) copyFile(file);
-for (const dir of ['assets', 'data', '.well-known']) copyDir(dir);
+for (const file of ['index.html', 'connect.html', 'download-connect.html', 'manifest.json', 'sw.js', '_headers']) copyFile(file);
+for (const dir of ['assets', 'data', '.well-known', 'downloads']) copyDir(dir);
 
 const manifest = JSON.parse(fs.readFileSync(path.join(dist, 'manifest.json'), 'utf8'));
 if (manifest.name !== 'LittleMindsUniverse') throw new Error('Unexpected PWA manifest name');
 if (manifest.display !== 'standalone') throw new Error('PWA manifest must use standalone display');
 if (!fs.existsSync(path.join(dist, 'connect.html'))) throw new Error('LittleMinds Connect shell is missing from production build');
+if (!fs.existsSync(path.join(dist, 'download-connect.html'))) throw new Error('LittleMinds Connect download page is missing from production build');
 if (!fs.existsSync(path.join(dist, '_headers'))) throw new Error('Netlify security headers are missing from production build');
 
 const deployable = [];
@@ -40,7 +41,7 @@ const collect = dir => {
 };
 collect(dist);
 const forbidden = /(SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|WHATSAPP_ACCESS_TOKEN|PAYFAST_MERCHANT_KEY|PAYFAST_PASSPHRASE|NINEROUTER_API_KEY|GROQ_API_KEY)\s*[:=]\s*["']?[A-Za-z0-9_-]{12,}/;
-for (const file of deployable.filter(f => /(?:\.(?:html|js|json|css|txt)|_headers)$/i.test(f))) {
+for (const file of deployable.filter(f => /(?:\.(?:html|js|json|css|txt|sha256)|_headers)$/i.test(f))) {
   const text = fs.readFileSync(file, 'utf8');
   if (forbidden.test(text)) throw new Error(`Potential server secret found in deployable static file: ${path.relative(root, file)}`);
 }
