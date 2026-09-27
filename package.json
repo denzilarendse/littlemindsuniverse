@@ -11,8 +11,10 @@
     "start": "npx serve . -l 5500",
     "verify:production": "node scripts/verify-production.mjs",
     "android:sync": "npm run build && npx cap sync android",
-    "android:bundle": "npm run android:sync && cd android && ./gradlew bundleRelease",
-    "android:assetlinks": "node scripts/generate-assetlinks.mjs"
+    "android:bundle": "npm run android:sync && cd android && ./gradlew :app:bundleRelease",
+    "android:assetlinks": "node scripts/generate-assetlinks.mjs",
+    "android:connect:sync": "npm run build && node scripts/build-connect-android.mjs",
+    "android:connect:bundle": "npm run android:connect:sync && cd android && ./gradlew :connectapp:bundleRelease"
   },
   "dependencies": {
     "@capacitor/core": "8.5.2"

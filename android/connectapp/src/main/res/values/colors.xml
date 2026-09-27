@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="connect_background">#15110F</color>
+    <color name="connect_accent">#6F52B5</color>
+    <color name="connect_foreground">#F5DFC8</color>
+</resources>
