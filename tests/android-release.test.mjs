@@ -83,11 +83,12 @@ test('Android declares only the canonical HTTPS domain for verified app links', 
   assert.match(manifest, /android:scheme="https" android:host="www\.littlemindsuniverse\.co\.za"/);
 });
 
-test('Android CI reruns web checks, runtime dependency audit, native lint, unit/instrumentation compilation and AAB build', () => {
+test('Android CI reruns web checks, runtime dependency audit, native lint, unit/instrumentation compilation and AAB builds', () => {
   assert.match(androidWorkflow, /npm audit --omit=dev --audit-level=moderate/);
   assert.match(androidWorkflow, /npm run check/);
   assert.match(androidWorkflow, /npm run android:sync/);
-  assert.match(androidWorkflow, /\.\/gradlew lintRelease testReleaseUnitTest :app:assembleDebugAndroidTest/);
-  assert.match(androidWorkflow, /\.\/gradlew bundleRelease/);
+  assert.match(androidWorkflow, /:app:lintRelease :app:testReleaseUnitTest :app:assembleDebugAndroidTest/);
+  assert.match(androidWorkflow, /:connectapp:lintRelease :connectapp:testReleaseUnitTest :connectapp:assembleDebugAndroidTest/);
+  assert.match(androidWorkflow, /:app:bundleRelease :connectapp:bundleRelease/);
   assert.match(androidWorkflow, /jarsigner -verify/);
 });
