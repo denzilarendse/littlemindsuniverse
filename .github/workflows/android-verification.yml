@@ -13,6 +13,7 @@ on:
       - 'manifest.json'
       - 'sw.js'
       - 'capacitor.config.json'
+      - 'capacitor.connect.config.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/android-verification.yml'
@@ -28,6 +29,7 @@ on:
       - 'manifest.json'
       - 'sw.js'
       - 'capacitor.config.json'
+      - 'capacitor.connect.config.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/android-verification.yml'
@@ -65,39 +67,65 @@ jobs:
       - name: Verify web source before native packaging
         run: npm run check
 
-      - name: Sync production web bundle into Android
+      - name: Sync production web bundle into LMU Android
         run: npm run android:sync
 
-      - name: Verify frozen identity, SDK levels and child-safe native defaults
+      - name: Prepare standalone Connect Android payload
+        run: npm run android:connect:sync
+
+      - name: Verify frozen identities, SDK levels and child-safe native defaults
         run: |
           grep -F '"appId": "za.co.littlemindsuniverse"' capacitor.config.json
           grep -F 'applicationId "za.co.littlemindsuniverse"' android/app/build.gradle
+          grep -F '"appId": "za.co.littlemindsuniverse.connect"' capacitor.connect.config.json
+          grep -F '"appName": "LittleMinds Connect"' capacitor.connect.config.json
+          grep -F 'applicationId "za.co.littlemindsuniverse.connect"' android/connectapp/build.gradle
+          grep -F 'namespace = "za.co.littlemindsuniverse.connect"' android/connectapp/build.gradle
           grep -Eq 'compileSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
           grep -Eq 'targetSdkVersion[[:space:]]*=[[:space:]]*36' android/variables.gradle
           grep -Eq 'minSdkVersion[[:space:]]*=[[:space:]]*24' android/variables.gradle
           grep -F 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
           grep -F 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
+          grep -F 'android:allowBackup="false"' android/connectapp/src/main/AndroidManifest.xml
+          grep -F 'android:usesCleartextTraffic="false"' android/connectapp/src/main/AndroidManifest.xml
           test "$(grep -c '<uses-permission ' android/app/src/main/AndroidManifest.xml)" -eq 1
+          test "$(grep -c '<uses-permission ' android/connectapp/src/main/AndroidManifest.xml)" -eq 1
           grep -F 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml
+          grep -F 'android.permission.INTERNET' android/connectapp/src/main/AndroidManifest.xml
           ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/app/src/main/AndroidManifest.xml
-          ! grep -R 'com\.getcapacitor\.app\|com\.getcapacitor\.myapp' android/app/src/test android/app/src/androidTest
+          ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/connectapp/src/main/AndroidManifest.xml
+          test -f android/connectapp/src/main/assets/public/index.html
+          grep -F 'LittleMinds Connect' android/connectapp/src/main/assets/public/index.html
+          ! grep -F 'id="app"' android/connectapp/src/main/assets/public/index.html
+          ! grep -R 'com\.getcapacitor\.app\|com\.getcapacitor\.myapp' android/app/src/test android/app/src/androidTest android/connectapp/src 2>/dev/null
 
       - name: Android lint, unit and instrumentation compile verification
         run: |
           cd android
-          ./gradlew lintRelease testReleaseUnitTest :app:assembleDebugAndroidTest
+          ./gradlew :app:lintRelease :app:testReleaseUnitTest :app:assembleDebugAndroidTest \
+            :connectapp:lintRelease :connectapp:testReleaseUnitTest :connectapp:assembleDebugAndroidTest
 
-      - name: Build unsigned API 36 release bundle
+      - name: Build unsigned API 36 release bundles
         run: |
           cd android
-          ./gradlew bundleRelease
-          jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/jarsigner.txt
-          grep -F 'jar is unsigned.' /tmp/jarsigner.txt
+          ./gradlew :app:bundleRelease :connectapp:bundleRelease
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/lmu-jarsigner.txt
+          grep -F 'jar is unsigned.' /tmp/lmu-jarsigner.txt
+          jarsigner -verify connectapp/build/outputs/bundle/release/connectapp-release.aab 2>&1 | tee /tmp/connect-jarsigner.txt
+          grep -F 'jar is unsigned.' /tmp/connect-jarsigner.txt
 
-      - name: Upload unsigned release-candidate artifact
+      - name: Upload LMU unsigned release-candidate artifact
         uses: actions/upload-artifact@v7
         with:
           name: littlemindsuniverse-android-api36-unsigned
           path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Connect unsigned release-candidate artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: littleminds-connect-android-api36-unsigned
+          path: android/connectapp/build/outputs/bundle/release/connectapp-release.aab
           if-no-files-found: error
           retention-days: 30
