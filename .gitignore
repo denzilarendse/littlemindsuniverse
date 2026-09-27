@@ -19,5 +19,10 @@ dist/
 keystore.properties
 key.properties
 android/key.properties
+android/connectapp/key.properties
 android/local.properties
 android/app/google-services.json
+android/connectapp/google-services.json
+
+# Standalone Connect native web payload is generated deterministically.
+android/connectapp/src/main/assets/
