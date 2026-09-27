@@ -1,0 +1,17 @@
+// LittleMinds Connect standalone Capacitor module configuration.
+
+android {
+  compileOptions {
+      sourceCompatibility JavaVersion.VERSION_21
+      targetCompatibility JavaVersion.VERSION_21
+  }
+}
+
+apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
+
+dependencies {
+}
+
+if (hasProperty('postBuildExtras')) {
+  postBuildExtras()
+}
