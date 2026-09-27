@@ -24,5 +24,8 @@ android/local.properties
 android/app/google-services.json
 android/connectapp/google-services.json
 
+# Website-distributed signed APKs are release artifacts, not source-control files.
+downloads/*.apk
+
 # Standalone Connect native web payload is generated deterministically.
 android/connectapp/src/main/assets/
