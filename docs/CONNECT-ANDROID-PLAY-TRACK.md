@@ -1,6 +1,6 @@
 # LittleMinds Connect — Android / Google Play Release Track
 
-Status: active release track; standalone package identity is owner-approved and frozen.
+Status: active release track; standalone package identity is owner-approved and frozen; unsigned API-36 release-candidate AAB is now built and independently inspected.
 
 ## Goal
 
@@ -13,8 +13,11 @@ This is a separate release identity from the current LittleMindsUniverse Android
 - LittleMinds Connect web surface is live at `/connect.html` on `https://www.littlemindsuniverse.co.za`.
 - Connect backend health is green on production.
 - Existing LittleMindsUniverse Android package is `za.co.littlemindsuniverse`.
-- Existing LittleMindsUniverse Android CI targets API 36 and produces an unsigned AAB.
 - Standalone Connect package identity has been explicitly approved by the owner.
+- Standalone Connect Android release verification is green on implementation SHA `8753196509334249c9867405f896afed54871e32`.
+- Release-verification run `36309904172`: PASS.
+- Android-verification run `36309904104`: PASS.
+- Vercel status for the same implementation SHA: PASS.
 
 ## Permanent identity — FROZEN
 
@@ -63,7 +66,52 @@ Implemented shell:
 11. owner-local optional signing via `android/connectapp/key.properties`;
 12. CI builds LMU and Connect as separate unsigned AAB artifacts.
 
-The native Connect payload copies only the Connect shell and its required public assets from the verified production build. A secret scan rejects server-secret patterns before packaging.
+The native Connect payload copies only the Connect shell and its required public assets from the verified production build. A secret scan rejects server-secret assignment patterns before packaging.
+
+## First standalone AAB evidence
+
+Android-verification run `36309904104` completed successfully on implementation SHA:
+
+`8753196509334249c9867405f896afed54871e32`
+
+The run passed:
+
+- locked dependency install;
+- shipped-runtime dependency audit;
+- full web regression/build suite;
+- LMU Android sync;
+- standalone Connect payload generation;
+- frozen identity / SDK / child-safe native-default assertions;
+- LMU and Connect Android lint;
+- LMU and Connect release unit-test tasks;
+- LMU and Connect app-scoped instrumentation compilation;
+- both unsigned API-36 release bundle builds;
+- unsigned-state verification;
+- separate artifact uploads.
+
+Standalone Connect artifact:
+
+- artifact name: `littleminds-connect-android-api36-unsigned`
+- artifact id: `10929040991`
+- GitHub artifact ZIP digest: `sha256:00002d339448b8664c05840bc4fd542ec8a38c09a3513b7d214e871dbbd6c4cd`
+- extracted `connectapp-release.aab` SHA-256: `fe3b0b2a29b898232b114188cb1cde2a9af3eaeb811ba1ed96ae5a259b127adc`
+
+Independent inspection of that exact downloaded artifact confirmed:
+
+- the AAB contains package identity text `za.co.littlemindsuniverse.connect` in its packaged Android manifest;
+- packaged Capacitor config is `appId=za.co.littlemindsuniverse.connect`, `appName=LittleMinds Connect`;
+- the packaged native web payload contains the Connect shell and dedicated Connect assets;
+- the main LMU application root is not present in the Connect native entry page;
+- no server-secret assignment patterns were found in the packaged public assets;
+- `jarsigner -verify` reports `jar is unsigned`, as intentionally required before the owner-signing gate.
+
+The API-36/min-SDK-24 configuration and child-safe native defaults were asserted by the same CI run before the exact AAB was built.
+
+## Red -> repair -> green retained
+
+The first dual-app Android run reached the new Connect native module and exposed a real compatibility error: the base theme used `android:windowLightNavigationBar`, an API-27 attribute, while Connect supports Android API 24+.
+
+The repair did **not** raise the minimum SDK or add a lint baseline. The unnecessary API-27-only base-theme attribute was removed while preserving the navigation-bar background, and a regression test now prevents that attribute from returning to the API-24 base theme. Release verification and Android verification then returned green and produced the exact Connect AAB recorded above.
 
 ## Release gates
 
@@ -77,8 +125,8 @@ The native Connect payload copies only the Connect shell and its required public
 - [x] Verify no cleartext traffic and no unnecessary permissions at source/CI gate.
 - [x] Add dedicated launcher/splash mark.
 - [x] Add regression tests preventing LMU/Connect package identity collisions.
-- [ ] Build unsigned Connect AAB in CI and record exact artifact evidence.
-- [ ] Inspect exact AAB identity and packaged web payload.
+- [x] Build unsigned Connect AAB in CI and record exact artifact evidence.
+- [x] Inspect exact AAB identity and packaged web payload.
 
 ### Safety / policy
 
@@ -136,4 +184,4 @@ The existing LittleMindsUniverse upload key, if/when created, must not automatic
 
 ## Immediate next gate
 
-Obtain a green standalone Connect API-36 CI artifact, inspect the exact AAB, then move to owner-controlled Connect upload-key creation and Google Play Console internal-track setup.
+The independent engineering layer has reached a green unsigned Connect API-36 AAB. The next hard gate is owner-controlled Connect upload-key creation, followed by a signed exact candidate and Google Play Console internal-track setup. The Play app-signing certificate SHA-256 obtained after Play App Signing will then be used for Digital Asset Links.
