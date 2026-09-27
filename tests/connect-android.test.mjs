@@ -9,6 +9,7 @@ const lmuConfig = JSON.parse(read('capacitor.config.json'));
 const gradle = read('android/connectapp/build.gradle');
 const manifest = read('android/connectapp/src/main/AndroidManifest.xml');
 const strings = read('android/connectapp/src/main/res/values/strings.xml');
+const styles = read('android/connectapp/src/main/res/values/styles.xml');
 const settings = read('android/settings.gradle');
 const builder = read('scripts/build-connect-android.mjs');
 const workflow = read('.github/workflows/android-verification.yml');
@@ -46,6 +47,11 @@ test('Connect Android inherits API 36 and keeps child-safe native defaults', () 
   }
   assert.match(manifest, /android:host="www\.littlemindsuniverse\.co\.za"/);
   assert.match(manifest, /android:pathPrefix="\/connect"/);
+});
+
+test('Connect base theme stays compatible with the API 24 minimum', () => {
+  assert.doesNotMatch(styles, /android:windowLightNavigationBar/);
+  assert.match(styles, /android:navigationBarColor/);
 });
 
 test('Connect native payload is deterministic and Connect-only', () => {
