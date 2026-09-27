@@ -1,6 +1,6 @@
 # LittleMinds Connect — Android / Google Play Release Track
 
-Status: active release track, package identity not yet frozen.
+Status: active release track; standalone package identity is owner-approved and frozen.
 
 ## Goal
 
@@ -14,19 +14,19 @@ This is a separate release identity from the current LittleMindsUniverse Android
 - Connect backend health is green on production.
 - Existing LittleMindsUniverse Android package is `za.co.littlemindsuniverse`.
 - Existing LittleMindsUniverse Android CI targets API 36 and produces an unsigned AAB.
-- Existing owner-signing guidance is prepared for the LMU package, but no standalone Connect Android package exists yet.
+- Standalone Connect package identity has been explicitly approved by the owner.
 
-## Permanent identity decision
+## Permanent identity — FROZEN
 
-Proposed standalone package:
+Standalone package:
 
 `za.co.littlemindsuniverse.connect`
 
-Proposed Play display name:
+Play display name:
 
 `LittleMinds Connect`
 
-**Do not freeze or publish this package name until the owner explicitly approves it.** Google Play package identity is effectively permanent once published.
+These identities are now frozen for this release track. Do not rename the package before or after Play publication without an explicit new-product migration decision.
 
 ## 2026 Play baseline
 
@@ -42,45 +42,49 @@ Official Families reference:
 
 - https://support.google.com/googleplay/android-developer/answer/9893335
 
-The standalone app must not be merely a thin unaffiliated WebView. It is an LMU-owned authenticated product shell backed by the same controlled Connect service, with native Android packaging, app identity, verified links, release signing and policy declarations.
+The standalone app is an LMU-owned authenticated product shell backed by the same controlled Connect service, with native Android packaging, app identity, verified links, release signing and policy declarations.
 
-## Architecture target
+## Implemented standalone architecture
 
-The standalone Android app should reuse the proven Connect web client and backend rather than fork messaging business logic.
+The standalone Android app reuses the proven Connect web client and backend instead of forking messaging business logic.
 
-Planned shell:
+Implemented shell:
 
-1. dedicated Connect production web bundle entry;
-2. dedicated Capacitor configuration;
-3. dedicated Android application namespace/applicationId;
-4. dedicated app name, icon/splash and store assets;
-5. API 36 target;
-6. no cleartext traffic;
-7. minimum required permissions only;
-8. production HTTPS origin and verified app links;
-9. same Supabase/Auth/Connect authorization model;
-10. same learner safety restrictions and verified relationship graph.
+1. dedicated Connect production web payload builder;
+2. dedicated `capacitor.connect.config.json`;
+3. dedicated Android `connectapp` application module;
+4. frozen `za.co.littlemindsuniverse.connect` applicationId/namespace;
+5. dedicated `LittleMinds Connect` app label;
+6. API 36 target through the shared Android toolchain;
+7. backup disabled and cleartext traffic disabled;
+8. INTERNET is the only requested Android permission;
+9. app links are scoped to `https://www.littlemindsuniverse.co.za/connect...`;
+10. dedicated Connect launcher/splash mark;
+11. owner-local optional signing via `android/connectapp/key.properties`;
+12. CI builds LMU and Connect as separate unsigned AAB artifacts.
+
+The native Connect payload copies only the Connect shell and its required public assets from the verified production build. A secret scan rejects server-secret patterns before packaging.
 
 ## Release gates
 
 ### Engineering
 
-- [ ] Freeze standalone Connect package identity.
-- [ ] Add dedicated Connect build target that packages the Connect shell only.
-- [ ] Add dedicated Capacitor configuration.
-- [ ] Add standalone Android project or deterministic generated Android target.
-- [ ] Set API 36 target and supported minimum SDK.
-- [ ] Verify no cleartext traffic and no unnecessary permissions.
-- [ ] Add branded launcher/adaptive icon and splash assets.
-- [ ] Add regression tests preventing LMU/Connect package identity collisions.
-- [ ] Build unsigned Connect AAB in CI.
+- [x] Freeze standalone Connect package identity.
+- [x] Add dedicated Connect build target that packages the Connect shell only.
+- [x] Add dedicated Capacitor configuration.
+- [x] Add standalone Android application module.
+- [x] Set API 36 target and supported minimum SDK through the shared Android toolchain.
+- [x] Verify no cleartext traffic and no unnecessary permissions at source/CI gate.
+- [x] Add dedicated launcher/splash mark.
+- [x] Add regression tests preventing LMU/Connect package identity collisions.
+- [ ] Build unsigned Connect AAB in CI and record exact artifact evidence.
 - [ ] Inspect exact AAB identity and packaged web payload.
 
 ### Safety / policy
 
 - [ ] Confirm child/family target-audience declaration.
-- [ ] Verify no random/anonymous chat path for child users.
-- [ ] Verify learner messaging restrictions remain enforced server-side.
+- [x] Verify no random/anonymous chat path in current Connect client/backend regression suite.
+- [x] Verify learner messaging restrictions remain enforced server-side in current regression suite.
 - [ ] Complete Data safety inventory from actual runtime behavior.
 - [ ] Confirm privacy-policy URL and account/data deletion path.
 - [ ] Complete IARC content rating questionnaire accurately.
@@ -88,18 +92,18 @@ Planned shell:
 
 ### Signing / links
 
-- [ ] Generate owner-controlled Connect upload key.
+- [ ] Generate owner-controlled **Connect-specific** upload key.
 - [ ] Back up upload key in at least two owner-controlled locations.
 - [ ] Build and verify signed Connect AAB.
 - [ ] Enable Play App Signing.
 - [ ] Record upload certificate SHA-256.
 - [ ] Record Google Play app-signing certificate SHA-256.
 - [ ] Generate Digital Asset Links for the standalone Connect package using the **Play app-signing certificate**.
-- [ ] Publish and externally verify `/.well-known/assetlinks.json`.
+- [ ] Publish and externally verify `/.well-known/assetlinks.json` with both approved package identities where required.
 
 ### Play release
 
-- [ ] Create Play Console app with frozen package identity.
+- [ ] Create Play Console app with package `za.co.littlemindsuniverse.connect`.
 - [ ] Upload signed AAB to internal testing.
 - [ ] Install exact Play-distributed internal-track artifact on physical Android device.
 - [ ] Verify sign-in, session persistence, Connect contacts, send/reply/read flow, role isolation, realtime, offline/reconnect behavior and app links.
@@ -111,11 +115,13 @@ Planned shell:
 
 ## Signing model
 
-Use Google Play App Signing. The owner keeps the upload key; Google Play holds the production app-signing key. Digital Asset Links must use the Play **app-signing** SHA-256 fingerprint for the Play-distributed app, not merely the local upload-key fingerprint.
+Use Google Play App Signing. The owner keeps the Connect upload key; Google Play holds the production app-signing key. Digital Asset Links must use the Play **app-signing** SHA-256 fingerprint for the Play-distributed Connect app, not merely the local upload-key fingerprint.
 
 Official reference:
 
 - https://support.google.com/googleplay/android-developer/answer/9842756
+
+The existing LittleMindsUniverse upload key, if/when created, must not automatically be reused for Connect. Treat the two packages as separate signing assets unless the owner deliberately chooses otherwise before key creation.
 
 ## Non-negotiable safety boundaries
 
@@ -128,6 +134,6 @@ Official reference:
 - No signing keys or passwords in Git/source control.
 - Do not weaken RLS or backend authorization to make mobile tests pass.
 
-## Immediate next engineering step after owner identity approval
+## Immediate next gate
 
-Freeze `LittleMinds Connect` + the standalone package ID, then implement the dedicated Connect Android build target and API-36 CI gate before generating any owner signing material.
+Obtain a green standalone Connect API-36 CI artifact, inspect the exact AAB, then move to owner-controlled Connect upload-key creation and Google Play Console internal-track setup.
