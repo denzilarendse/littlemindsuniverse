@@ -1,0 +1,23 @@
+name: connect-live-production-probe
+
+on:
+  push:
+    branches:
+      - release/verify-connect-download
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify live LittleMindsUniverse production and signed Connect APK
+        run: npm run verify:production -- https://www.littlemindsuniverse.co.za
