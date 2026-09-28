@@ -80,7 +80,7 @@ test('Netlify deploy guard pins branch, production project and post-deploy verif
   assert.match(deploy,/export NETLIFY_SITE_ID=/);
   assert.match(deploy,/git diff --quiet/);
   assert.match(deploy,/npm run prepare:connect-play-release/);
-  assert.match(deploy,/netlify deploy --prod --dir=dist/);
+  assert.match(deploy,/netlify deploy --prod --dir=dist --no-build/);
   assert.match(deploy,/npm run verify:play-production/);
   assert.match(deploy,/CONNECT PLAY WEB RELEASE GATE: GREEN/);
 });
