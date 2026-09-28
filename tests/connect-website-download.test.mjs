@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseConnectChecksum, assertConnectApkHeaders } from '../scripts/verify-production.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -38,4 +39,34 @@ test('Netlify serves APKs as downloadable Android packages', () => {
   assert.match(headers, /\/downloads\/\*\.apk/);
   assert.match(headers, /Content-Type: application\/vnd\.android\.package-archive/);
   assert.match(headers, /Content-Disposition: attachment/);
+});
+
+test('production verifier accepts only the frozen Connect checksum and Android download headers', () => {
+  const expected = '65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb';
+  assert.equal(
+    parseConnectChecksum(`${expected}  LittleMinds-Connect-1.0.0.apk\n`),
+    expected
+  );
+  assert.throws(
+    () => parseConnectChecksum(`${'0'.repeat(64)}  LittleMinds-Connect-1.0.0.apk\n`),
+    /frozen signed APK checksum/i
+  );
+  assert.throws(
+    () => parseConnectChecksum(`${expected}  Wrong.apk\n`),
+    /wrong APK filename/i
+  );
+
+  const validHeaders = new Headers({
+    'content-type': 'application/vnd.android.package-archive',
+    'content-disposition': 'attachment'
+  });
+  assert.doesNotThrow(() => assertConnectApkHeaders(validHeaders));
+  assert.throws(
+    () => assertConnectApkHeaders(new Headers({ 'content-type': 'text/html', 'content-disposition': 'attachment' })),
+    /wrong Content-Type/i
+  );
+  assert.throws(
+    () => assertConnectApkHeaders(new Headers({ 'content-type': 'application/vnd.android.package-archive' })),
+    /not served as an attachment/i
+  );
 });
