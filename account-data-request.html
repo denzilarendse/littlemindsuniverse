@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#182235" />
+  <meta name="description" content="LittleMindsUniverse application account and privacy request resource." />
+  <title>Account & Privacy Requests · LittleMindsUniverse</title>
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/assets/app.css" />
+  <link rel="stylesheet" href="/assets/accessibility.css" />
+</head>
+<body>
+  <main class="content" style="max-width:880px;margin:0 auto;padding:24px 18px 64px">
+    <div class="eyebrow">LittleMindsUniverse · LittleMinds Connect</div>
+    <h1>Application account &amp; privacy requests</h1>
+    <p>This public web resource lets a LittleMindsUniverse account holder ask us to remove their application account and associated data, or submit another privacy inquiry, without installing the Android app.</p>
+
+    <section class="card">
+      <h2>Application account removal</h2>
+      <p>A verified removal request starts a controlled process for the signed-in LittleMindsUniverse application account and associated data. It is not a temporary account freeze. Data that can be removed is deleted or de-identified as part of fulfillment.</p>
+      <p>Limited records may be retained only where necessary for child safeguarding, security or fraud prevention, transaction/accounting requirements, dispute handling, or another legal obligation. Linked learner and classroom records are reviewed so one account cannot erase records another authorized guardian, learner, teacher, or school is entitled or required to retain. See the <a href="/privacy.html">Privacy Policy</a>.</p>
+    </section>
+
+    <section class="card" id="requestAuthCard">
+      <div class="eyebrow">Verify your account</div>
+      <h2 id="authHeading">Sign in</h2>
+      <p id="authStatus">Use the LittleMindsUniverse account for which you want to submit a privacy request.</p>
+      <form id="privacyAuthForm">
+        <div class="field"><label for="privacyEmail">Email</label><input class="input" id="privacyEmail" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="privacyPassword">Password</label><input class="input" id="privacyPassword" type="password" autocomplete="current-password" required></div>
+        <div class="actions"><button type="button" class="ghost" id="privacyResetPassword">Forgot password</button><button class="primary" id="privacySignIn">Sign in</button></div>
+      </form>
+      <div class="actions" id="signedInActions" hidden><button class="ghost" id="privacySignOut">Sign out</button></div>
+    </section>
+
+    <section class="card" id="accountRemovalCard" hidden>
+      <div class="eyebrow">Account removal request</div>
+      <h2>Request removal of this application account and associated data</h2>
+      <p id="removalIdentity"></p>
+      <div class="notice warn">This submits a verified account-removal request for fulfillment. Do not use it merely to sign out or change a password.</div>
+      <label class="task" style="margin-top:14px"><div><b>I understand this request concerns my LittleMindsUniverse application account.</b><p>I want LittleMindsUniverse to begin the account and associated-data removal process, subject to the limited retention described above.</p></div><input id="confirmAccountRemoval" type="checkbox" /></label>
+      <div class="actions"><button class="danger" id="submitAccountRemoval" disabled>Submit account removal request</button></div>
+      <div class="notice" id="accountRemovalResult" hidden></div>
+    </section>
+
+    <section class="card" id="inquiryCard" hidden>
+      <div class="eyebrow">Privacy inquiry</div>
+      <h2>Send a privacy inquiry</h2>
+      <p>Use this for questions about your personal information, access, correction, retention, or account/data removal. Do not include passwords or payment-card information.</p>
+      <div class="field"><label for="privacyInquiryMessage">Your question</label><textarea id="privacyInquiryMessage" class="textarea" minlength="20" maxlength="2000" placeholder="Describe your privacy question or request."></textarea></div>
+      <div class="actions"><button class="primary" id="submitPrivacyInquiry">Submit privacy inquiry</button></div>
+      <div class="notice" id="inquiryResult" hidden></div>
+    </section>
+
+    <section class="card">
+      <h2>What happens next</h2>
+      <p>After a verified request is submitted, LittleMindsUniverse records it for controlled processing. If identity, child-safety, school-relationship, or legal-retention questions must be resolved, the request can be reviewed before final fulfillment. The request remains active while that review occurs.</p>
+      <div class="actions"><a class="ghost" href="/privacy.html">Read Privacy Policy</a><a class="ghost" href="/">Return to LittleMindsUniverse</a><a class="ghost" href="/connect.html">LittleMinds Connect</a></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="/assets/runtime-config.js"></script>
+  <script src="/assets/privacy-request.js"></script>
+</body>
+</html>
