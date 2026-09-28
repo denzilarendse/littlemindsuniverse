@@ -60,8 +60,11 @@ netlify status
 
 echo
 echo '=== PRODUCTION DEPLOY OF PREBUILT DIST ==='
-# Netlify manual deploy uploads the already-built directory; it does not rebuild the source tree.
-netlify deploy --prod --dir=dist
+# This release has already been built and the frozen signed APK injected above.
+# Netlify CLI v27+ builds by default during `deploy`, which can run UI-configured
+# Build Plugins. Use --no-build so the exact verified dist/ directory is uploaded
+# without re-running npm build or Android-incompatible local plugins.
+netlify deploy --prod --dir=dist --no-build
 
 echo
 echo '=== POST-DEPLOY PRODUCTION GATE ==='
