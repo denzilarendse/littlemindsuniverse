@@ -60,7 +60,21 @@ test('verifier requires privacy, deletion, browser-boundary and frozen-APK check
   assert.match(verifier,/65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb/);
 });
 
-test('package scripts expose the dedicated Play production gate',()=>{
+test('guarded release preparation refuses artifact drift and requires Play policy files',()=>{
+  const helper=read('scripts/prepare-connect-play-release.mjs');
+  assert.match(helper,/CONNECT_EXPECTED_SIZE/);
+  assert.match(helper,/CONNECT_EXPECTED_SHA256/);
+  assert.match(helper,/Signed Connect APK size mismatch/);
+  assert.match(helper,/Signed Connect APK SHA-256 mismatch/);
+  assert.match(helper,/privacy\.html/);
+  assert.match(helper,/account-data-request\.html/);
+  assert.match(helper,/privacy-request\.js/);
+  assert.match(helper,/privacy-controls\.js/);
+  assert.match(helper,/fs\.copyFileSync/);
+});
+
+test('package scripts expose the guarded release and dedicated post-deploy gates',()=>{
   const pkg=JSON.parse(read('package.json'));
+  assert.equal(pkg.scripts['prepare:connect-play-release'],'node scripts/prepare-connect-play-release.mjs');
   assert.equal(pkg.scripts['verify:play-production'],'node scripts/verify-connect-play-production.mjs');
 });
