@@ -21,15 +21,24 @@ CURRENT_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
 [ "$CURRENT_BRANCH" = "$EXPECTED_RELEASE_BRANCH" ] || fail "Run this controlled deployment only from $EXPECTED_RELEASE_BRANCH (current: ${CURRENT_BRANCH:-unknown})."
 git diff --quiet && git diff --cached --quiet || fail 'Tracked repository changes are present. Use the clean release clone only.'
 
-[ -f .netlify/state.json ] || fail 'This clone is not linked to a Netlify project (.netlify/state.json is missing).'
-LINKED_SITE_ID="$(node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('.netlify/state.json','utf8'));process.stdout.write(String(s.siteId||''));")"
-[ "$LINKED_SITE_ID" = "$EXPECTED_NETLIFY_SITE_ID" ] || fail "Wrong Netlify project link: expected $EXPECTED_NETLIFY_SITE_ID, got ${LINKED_SITE_ID:-none}."
+if [ -f .netlify/state.json ]; then
+  LINKED_SITE_ID="$(node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('.netlify/state.json','utf8'));process.stdout.write(String(s.siteId||''));")"
+  [ "$LINKED_SITE_ID" = "$EXPECTED_NETLIFY_SITE_ID" ] || fail "Wrong Netlify project link: expected $EXPECTED_NETLIFY_SITE_ID, got ${LINKED_SITE_ID:-none}."
+else
+  LINKED_SITE_ID='not persisted; using NETLIFY_SITE_ID guard'
+fi
+
+# Netlify CLI accepts the UI Project ID as NETLIFY_SITE_ID. Pin every command to
+# the known LittleMindsUniverse production project even when this clean clone has
+# no local .netlify/state.json link.
+export NETLIFY_SITE_ID="$EXPECTED_NETLIFY_SITE_ID"
 
 echo '=== RELEASE IDENTITY ==='
 printf 'repo: %s\n' "$ROOT"
 printf 'branch: %s\n' "$CURRENT_BRANCH"
 printf 'commit: %s\n' "$CURRENT_COMMIT"
-printf 'Netlify site ID: %s\n' "$LINKED_SITE_ID"
+printf 'Netlify production site ID: %s\n' "$NETLIFY_SITE_ID"
+printf 'local Netlify link: %s\n' "$LINKED_SITE_ID"
 printf 'signed APK: %s\n' "$SIGNED_APK"
 printf 'production: %s\n' "$PRODUCTION_ORIGIN"
 
