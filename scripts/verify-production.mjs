@@ -1,7 +1,12 @@
 import dns from 'node:dns/promises';
 import tls from 'node:tls';
+import { createHash } from 'node:crypto';
 
 const SECRET_RE = /(?:SUPABASE_(?:SECRET_KEY|SERVICE_ROLE(?:_KEY)?)|SERVICE_ROLE(?:_KEY)?|PAYFAST_(?:MERCHANT_KEY|PASSPHRASE)|GROQ_API_KEY|NINEROUTER_API_KEY|WHATSAPP_ACCESS_TOKEN)\s*[:=]/i;
+const CONNECT_APK_FILENAME = 'LittleMinds-Connect-1.0.0.apk';
+const CONNECT_APK_PATH = `/downloads/${CONNECT_APK_FILENAME}`;
+const CONNECT_SHA_PATH = '/downloads/LittleMinds-Connect-1.0.0.sha256';
+const CONNECT_EXPECTED_SHA256 = '65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb';
 
 export function validateOrigin(value) {
   let url;
@@ -44,6 +49,31 @@ export function assertRuntimeConfig(text) {
   }
 }
 
+export function parseConnectChecksum(text) {
+  const normalized = String(text || '').trim();
+  const match = normalized.match(/^([a-f0-9]{64})\s+\*?(.+)$/i);
+  if (!match) throw new Error('Published Connect checksum file has an invalid format');
+  const [, hash, filename] = match;
+  if (filename.trim() !== CONNECT_APK_FILENAME) {
+    throw new Error('Published Connect checksum references the wrong APK filename');
+  }
+  if (hash.toLowerCase() !== CONNECT_EXPECTED_SHA256) {
+    throw new Error('Published Connect checksum does not match the frozen signed APK checksum');
+  }
+  return hash.toLowerCase();
+}
+
+export function assertConnectApkHeaders(headers) {
+  const contentType = headers.get('content-type') || '';
+  if (!/^application\/vnd\.android\.package-archive(?:\s*;|$)/i.test(contentType)) {
+    throw new Error('Connect APK has the wrong Content-Type');
+  }
+  const disposition = headers.get('content-disposition') || '';
+  if (!/\battachment\b/i.test(disposition)) {
+    throw new Error('Connect APK is not served as an attachment');
+  }
+}
+
 function tlsProbe(hostname, port = 443, timeoutMs = 10000) {
   return new Promise((resolve, reject) => {
     const socket = tls.connect({ host: hostname, port, servername: hostname, rejectUnauthorized: true });
@@ -64,10 +94,10 @@ function tlsProbe(hostname, port = 443, timeoutMs = 10000) {
   });
 }
 
-async function fetchText(origin, path, { expectedStatus = 200 } = {}) {
+async function fetchResponse(origin, path, { expectedStatus = 200, timeoutMs = 12000 } = {}) {
   const response = await fetch(new URL(path, origin), {
     redirect: 'follow',
-    signal: AbortSignal.timeout(12000),
+    signal: AbortSignal.timeout(timeoutMs),
     headers: { 'User-Agent': 'LittleMindsUniverse-release-probe/1.0' }
   });
   const finalUrl = new URL(response.url);
@@ -75,7 +105,40 @@ async function fetchText(origin, path, { expectedStatus = 200 } = {}) {
     throw new Error(`${path} redirected outside the production HTTPS site`);
   }
   if (response.status !== expectedStatus) throw new Error(`${path} returned HTTP ${response.status}`);
+  return response;
+}
+
+async function fetchText(origin, path, options = {}) {
+  const response = await fetchResponse(origin, path, options);
   return { response, text: await response.text() };
+}
+
+async function verifyConnectWebsiteDownload(origin, results) {
+  const page = await fetchText(origin, '/download-connect.html');
+  if (!page.text.includes(CONNECT_APK_FILENAME) || !page.text.includes(CONNECT_EXPECTED_SHA256)) {
+    throw new Error('Connect download page does not expose the frozen APK metadata');
+  }
+  results.push('Connect website download page: PASS');
+
+  const checksumResponse = await fetchText(origin, CONNECT_SHA_PATH);
+  const publishedChecksum = parseConnectChecksum(checksumResponse.text);
+  results.push('Connect published checksum metadata: PASS');
+
+  const apkResponse = await fetchResponse(origin, CONNECT_APK_PATH, { timeoutMs: 30000 });
+  assertConnectApkHeaders(apkResponse.headers);
+  const apkBytes = Buffer.from(await apkResponse.arrayBuffer());
+  const contentLength = Number(apkResponse.headers.get('content-length'));
+  if (Number.isFinite(contentLength) && contentLength > 0 && contentLength !== apkBytes.byteLength) {
+    throw new Error(`Connect APK Content-Length mismatch: expected ${contentLength}, received ${apkBytes.byteLength}`);
+  }
+  if (apkBytes.byteLength < 1024 * 1024) {
+    throw new Error(`Connect APK payload is unexpectedly small: ${apkBytes.byteLength} bytes`);
+  }
+  const actualChecksum = createHash('sha256').update(apkBytes).digest('hex');
+  if (actualChecksum !== publishedChecksum || actualChecksum !== CONNECT_EXPECTED_SHA256) {
+    throw new Error(`Connect APK SHA-256 mismatch: ${actualChecksum}`);
+  }
+  results.push(`Connect signed APK bytes + headers + SHA-256: PASS (${apkBytes.byteLength} bytes)`);
 }
 
 export async function verifyProduction(rawOrigin, { requirePayfast = false } = {}) {
@@ -101,6 +164,8 @@ export async function verifyProduction(rawOrigin, { requirePayfast = false } = {
     throw new Error('Production Connect shell is missing or stale');
   }
   results.push('LittleMinds Connect shell: PASS');
+
+  await verifyConnectWebsiteDownload(origin, results);
 
   const manifestResponse = await fetchText(origin, '/manifest.json');
   let manifest;
