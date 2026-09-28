@@ -73,6 +73,18 @@ test('guarded release preparation refuses artifact drift and requires Play polic
   assert.match(helper,/fs\.copyFileSync/);
 });
 
+test('Netlify deploy guard pins branch, production project and post-deploy verification',()=>{
+  const deploy=read('scripts/deploy-connect-play-netlify.sh');
+  assert.match(deploy,/release\/connect-play-readiness/);
+  assert.match(deploy,/989d3b15-5ba4-42f7-8ba6-b53dc64fbd27/);
+  assert.match(deploy,/export NETLIFY_SITE_ID=/);
+  assert.match(deploy,/git diff --quiet/);
+  assert.match(deploy,/npm run prepare:connect-play-release/);
+  assert.match(deploy,/netlify deploy --prod --dir=dist/);
+  assert.match(deploy,/npm run verify:play-production/);
+  assert.match(deploy,/CONNECT PLAY WEB RELEASE GATE: GREEN/);
+});
+
 test('package scripts expose the guarded release and dedicated post-deploy gates',()=>{
   const pkg=JSON.parse(read('package.json'));
   assert.equal(pkg.scripts['prepare:connect-play-release'],'node scripts/prepare-connect-play-release.mjs');
