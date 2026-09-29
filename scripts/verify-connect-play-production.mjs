@@ -26,7 +26,7 @@ export function assertAndroidDownloadHeaders(headers) {
 }
 
 export function hasAccountDataRequestLink(html) {
-  return /href\s*=\s*["']\/account-data-request(?:\.html|\/)["']/i.test(String(html || ''));
+  return /href\s*=\s*["']\/account-data-request(?:\.html|\/)?["']/i.test(String(html || ''));
 }
 
 async function fetchSameSite(origin, path, { timeoutMs = 12000 } = {}) {
