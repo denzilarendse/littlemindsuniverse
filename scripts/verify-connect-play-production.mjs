@@ -25,6 +25,10 @@ export function assertAndroidDownloadHeaders(headers) {
   if (!/\battachment\b/i.test(disposition)) throw new Error('Connect APK is not served as an attachment');
 }
 
+export function hasAccountDataRequestLink(html) {
+  return /href\s*=\s*["']\/account-data-request(?:\.html|\/)["']/i.test(String(html || ''));
+}
+
 async function fetchSameSite(origin, path, { timeoutMs = 12000 } = {}) {
   const response = await fetch(new URL(path, origin), {
     redirect: 'follow',
@@ -46,7 +50,7 @@ export async function verifyConnectPlayProduction(rawOrigin) {
 
   const privacyResponse = await fetchSameSite(origin, '/privacy.html');
   const privacy = await privacyResponse.text();
-  if (!/Privacy Policy/i.test(privacy) || !/LittleMindsUniverse/i.test(privacy) || !/account-data-request\.html/.test(privacy)) {
+  if (!/Privacy Policy/i.test(privacy) || !/LittleMindsUniverse/i.test(privacy) || !hasAccountDataRequestLink(privacy)) {
     throw new Error('Public privacy policy is missing required LittleMindsUniverse/account-request markers');
   }
   results.push('Public privacy policy: PASS');
