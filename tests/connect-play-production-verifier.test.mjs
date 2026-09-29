@@ -10,6 +10,7 @@ import {
   CONNECT_EXPECTED_SIZE,
   CONNECT_SHA_PATH,
   assertAndroidDownloadHeaders,
+  hasAccountDataRequestLink,
   parsePublishedChecksum
 } from '../scripts/verify-connect-play-production.mjs';
 
@@ -44,6 +45,13 @@ test('APK response must keep Android package and attachment headers',()=>{
   assert.throws(()=>assertAndroidDownloadHeaders(new Headers({
     'content-type':'application/vnd.android.package-archive'
   })),/not served as an attachment/i);
+});
+
+test('privacy request link accepts source HTML and Netlify Pretty URL output only',()=>{
+  assert.equal(hasAccountDataRequestLink('<a href="/account-data-request.html">Request</a>'),true);
+  assert.equal(hasAccountDataRequestLink('<a href="/account-data-request/">Request</a>'),true);
+  assert.equal(hasAccountDataRequestLink('<a href="/account-data-request-evil/">Request</a>'),false);
+  assert.equal(hasAccountDataRequestLink('<a href="/other/">Request</a>'),false);
 });
 
 test('verifier requires privacy, deletion, browser-boundary and frozen-APK checks',()=>{
