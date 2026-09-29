@@ -47,10 +47,12 @@ test('APK response must keep Android package and attachment headers',()=>{
   })),/not served as an attachment/i);
 });
 
-test('privacy request link accepts source HTML and Netlify Pretty URL output only',()=>{
+test('privacy request link accepts exact source and Netlify Pretty URL forms only',()=>{
   assert.equal(hasAccountDataRequestLink('<a href="/account-data-request.html">Request</a>'),true);
   assert.equal(hasAccountDataRequestLink('<a href="/account-data-request/">Request</a>'),true);
-  assert.equal(hasAccountDataRequestLink('<a href="/account-data-request-evil/">Request</a>'),false);
+  assert.equal(hasAccountDataRequestLink('<a href="/account-data-request">Request</a>'),true);
+  assert.equal(hasAccountDataRequestLink('<a href="/account-data-request-evil">Request</a>'),false);
+  assert.equal(hasAccountDataRequestLink('<a href="/account-data-request.html.evil">Request</a>'),false);
   assert.equal(hasAccountDataRequestLink('<a href="/other/">Request</a>'),false);
 });
 
