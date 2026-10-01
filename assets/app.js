@@ -357,7 +357,7 @@ async function sendMilo(){
     const sessionMode=studio?.engine==='coding_ai'?'project':earlyActivity||studio?.engine==='adaptive_practice'||studio?.engine==='reasoning_missions'||studio?.engine==='voice_language'?'practice':'learn';
     const res=await fetch(cfg.apiBase+'/api/milo',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({
       message:message,age:learnerAge(),helpLevel:state.miloHelpLevel,learningItemId:learningItemId,sessionId:state.miloSessionId,
-      context:{curriculum:state.learner?.curriculum_code||cfg.defaultCurriculum,subject:subject,intent:intent,sessionMode:sessionMode,engine:studio?.engine||null,firstAttemptMade:!!state.miloFirstAttempt,firstAttemptChars:state.miloFirstAttempt.length}
+      context:{curriculum:state.learner?.curriculum_code||cfg.defaultCurriculum,subject:subject,intent:intent,sessionMode:sessionMode,engine:studio?.engine||null,skillId:state.miloTutorSkillId||null,firstAttemptMade:!!state.miloFirstAttempt,firstAttemptChars:state.miloFirstAttempt.length}
     })});
     const body=await res.json();if(!res.ok)throw new Error(body.error||'Milo unavailable');
     state.miloSessionId=body.meta?.sessionId||state.miloSessionId;state.chat.push({who:'milo',text:body.reply});
