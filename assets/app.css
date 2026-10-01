@@ -176,3 +176,192 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @media(max-width:680px){
   button,.pill,.ghost,.primary,.danger,.tiny,.navbtn,.select,.input,.textarea{min-height:44px}
 }
+
+
+/* === LMU ARCHITECTURE 2.0 · EARLY LEARNING WORLD === */
+.early-world{max-width:1100px;margin:0 auto}
+.early-hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  padding:clamp(20px,4vw,36px);
+  border-radius:30px;
+  background:linear-gradient(135deg,#fff8df,#f0f7ff 52%,#efeaff);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow)
+}
+.early-hero h1{margin:.25em 0;font-size:clamp(2rem,6vw,4rem);line-height:1;letter-spacing:-.04em}
+.early-hero p{max-width:720px;font-size:clamp(1rem,2.2vw,1.2rem);line-height:1.55;color:#47546c}
+.early-listen{
+  flex:0 0 auto;
+  min-width:132px;
+  min-height:64px;
+  border:0;
+  border-radius:22px;
+  background:#fff;
+  color:var(--ink);
+  font-weight:900;
+  font-size:1rem;
+  box-shadow:0 8px 24px rgba(40,50,90,.08)
+}
+.early-activity-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  margin:20px 0
+}
+.early-activity{
+  min-height:190px;
+  padding:20px;
+  border:2px solid #e3e7f1;
+  border-radius:26px;
+  background:#fff;
+  color:var(--ink);
+  text-align:left;
+  box-shadow:0 8px 28px rgba(40,50,90,.05);
+  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease
+}
+.early-activity:hover,.early-activity:focus-visible{
+  transform:translateY(-2px);
+  border-color:var(--brand);
+  box-shadow:0 14px 34px rgba(60,55,130,.12)
+}
+.early-activity .early-emoji{display:block;font-size:3rem;line-height:1;margin-bottom:14px}
+.early-activity strong{display:block;font-size:1.25rem;line-height:1.1;margin-bottom:9px}
+.early-activity span:last-child{display:block;color:#5c6880;line-height:1.4}
+.early-teacher-work{margin-top:22px}
+.early-safety{margin-top:16px;font-size:.94rem}
+@media(max-width:900px){
+  .early-activity-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .early-hero{align-items:stretch;flex-direction:column}
+  .early-listen{width:100%}
+  .early-activity-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .early-activity{min-height:170px;padding:15px;border-radius:22px}
+  .early-activity .early-emoji{font-size:2.5rem}
+  .early-activity strong{font-size:1.08rem}
+}
+@media(max-width:360px){
+  .early-activity-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .early-activity{transition:none}
+  .early-activity:hover,.early-activity:focus-visible{transform:none}
+}
+
+
+/* LMU Architecture 2.0 — Milo specialist studios */
+.milo-studio-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin:16px 0;
+}
+.milo-studio{
+  min-height:132px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
+  padding:14px;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  color:var(--ink);
+}
+.milo-studio>span{font-size:1.55rem}
+.milo-studio>strong{font-size:.94rem}
+.milo-studio>small{color:var(--muted);line-height:1.35}
+.milo-studio.selected{outline:3px solid var(--brand);background:#fbfaff}
+.milo-curriculum-browser{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:15px;
+  margin:14px 0;
+  background:#fafbfe;
+}
+.milo-skill-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  max-height:260px;
+  overflow:auto;
+}
+.milo-skill{
+  min-height:58px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:10px 12px;
+  background:#fff;
+  text-align:left;
+  color:var(--ink);
+}
+.milo-skill strong,.milo-skill span{display:block}
+.milo-skill span{margin-top:3px;color:var(--muted);font-size:.78rem}
+.voice-coach-panel{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:12px;
+  margin:10px 0;
+  background:#fafbfe;
+}
+.voice-coach-panel audio{width:100%;margin-top:10px}
+.coding-studio{width:min(920px,94vw)}
+.code-editor{
+  min-height:280px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.92rem;
+  line-height:1.5;
+  tab-size:2;
+}
+.code-output{
+  min-height:110px;
+  max-height:260px;
+  overflow:auto;
+  white-space:pre-wrap;
+  word-break:break-word;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#111827;
+  color:#f3f4f6;
+  padding:13px;
+}
+@media(max-width:820px){
+  .milo-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+  .milo-studio-grid,.milo-skill-list{grid-template-columns:1fr}
+  .milo-studio{min-height:112px}
+}
+
+
+/* Stage 8 governed evidence reviewer */
+.teacher-evidence-card{
+  margin-top:12px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fafbfe;
+}
+.teacher-evidence-image{
+  display:block;
+  width:100%;
+  max-height:520px;
+  object-fit:contain;
+  margin:10px 0;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.teacher-evidence-media{
+  display:block;
+  width:100%;
+  max-height:420px;
+  margin:10px 0;
+}
+.teacher-document-preview{
+  margin:10px 0;
+  max-height:360px;
+}
