@@ -94,4 +94,9 @@ test('Android CI reruns web checks, native verification, AAB builds and publishe
   assert.match(androidWorkflow, /littlemindsuniverse-pilot-debug-apk/);
   assert.equal(pkg.scripts?.['android:apk'], 'npm run android:sync && cd android && ./gradlew :app:assembleDebug');
   assert.match(androidWorkflow, /jarsigner -verify/);
+  assert.match(androidWorkflow, /reactivecircus\/android-emulator-runner@v2/);
+  assert.match(androidWorkflow, /api-level:\s*36/);
+  assert.match(androidWorkflow, /:app:connectedDebugAndroidTest/);
+  assert.match(androidWorkflow, /adb shell am start -W -n za\.co\.littlemindsuniverse\/\.MainActivity/);
+  assert.ok(fs.existsSync(path.join(root, 'android/app/src/androidTest/java/za/co/littlemindsuniverse/AppLaunchInstrumentedTest.java')));
 });
