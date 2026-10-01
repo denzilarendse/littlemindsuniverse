@@ -10,7 +10,7 @@ Status vocabulary: **VERIFIED**, **FAILED**, **NOT CHECKED**, **DEFERRED (pilot 
 |---|---|---|
 | Six learner stages (EE24, F57, DB810, CA1113, PA1415, EDGE1618) represented in runtime and managed learner flow | VERIFIED | Static regression coverage in `tests/stage8-live-test-readiness.test.mjs`; existing Milo/curriculum suites cover stage routing. |
 | LittleMinds Connect is canonical messaging surface | VERIFIED | Connect web/bridge/mobile source exists; runtime phone-provider variables absent; live production DB has no `whatsapp_contacts` or `notification_dispatches` tables. |
-| WhatsApp/external phone-provider runtime removed | VERIFIED | Source and runtime tests reject external phone-provider identifiers; phone-number discovery UI removed. |
+| External phone-provider runtime removed | VERIFIED | Source and runtime tests reject external phone-provider identifiers; phone-number discovery UI removed. |
 | Connect teacher ↔ verified guardian isolation | VERIFIED | Live Supabase transactional probes: teacher/guardian member + visible; learner/unrelated user denied and see zero messages in sampled classroom conversation. |
 | Connect learner unrestricted messaging | VERIFIED DENIED | Live logic returned `connect_can_send=false` for learner; UI keeps learner composer unavailable. |
 | Connect offline retry / duplicate-send protection | VERIFIED | Stage 8 adds session-scoped outbox + `send_connect_message_v2` client UUID idempotency and unique DB index. Transactional duplicate call returned same message ID. |
