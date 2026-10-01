@@ -20,7 +20,7 @@ The pilot covers every learner stage:
 
 ## Pilot operating decisions
 
-1. LittleMinds Connect is the canonical communication system. External phone-number/WhatsApp runtime dependencies remain removed.
+1. LittleMinds Connect is the canonical communication system. External phone-number messaging runtime dependencies remain removed.
 2. PayFast settlement is non-blocking during the controlled pilot. The normal commercial entitlement design is retained for re-gating before paid public launch.
 3. Week 1 remains permanently free. Pilot mode may expose broader testing access, but it does not change authentication, authorization or child-safety rules.
 4. Learner messaging remains restricted. Classroom communication is teacher/verified-guardian relationship based; learner accounts do not receive an unrestricted direct-message composer.
