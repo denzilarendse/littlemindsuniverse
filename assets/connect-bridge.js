@@ -1,27 +1,4 @@
 (function(){
-  const replacements=new Map([
-    ['WhatsApp may mirror permitted updates through the LittleMindsUniverse business identity.','LittleMinds Connect keeps permitted classroom updates inside the verified LittleMindsUniverse relationship.'],
-    ['Private teacher and family numbers are not exposed. WhatsApp mirrors permitted updates through the LittleMindsUniverse business identity.','Private teacher and family phone numbers are not exposed. LittleMinds Connect keeps permitted updates inside the verified classroom relationship.'],
-    ['WhatsApp mirror','LittleMinds Connect'],
-    ['Demo mode never sends WhatsApp or production messages.','Demo mode never sends production Connect messages.'],
-    ['Private teacher and guardian phone numbers are never exposed. WhatsApp, when enabled, is a separate privacy-minimised mirror through the LittleMindsUniverse business identity.','Private teacher and guardian phone numbers are never exposed. LittleMinds Connect is the relationship-authorized communication channel.'],
-    ['Approval is the release point. WhatsApp delivery, when enabled later, is a separate provider workflow and is not triggered by this screen.','Approval releases the report to authorized guardian views. Messaging remains inside LittleMinds Connect and is not triggered automatically by this screen.']
-  ]);
-
-  function patchText(root=document.body){
-    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-    const changes=[];
-    while(walker.nextNode()){
-      const node=walker.currentNode;
-      let value=node.nodeValue;
-      for(const [from,to] of replacements){
-        if(value?.includes(from))value=value.split(from).join(to);
-      }
-      if(value!==node.nodeValue)changes.push([node,value]);
-    }
-    for(const [node,value] of changes)node.nodeValue=value;
-  }
-
   function ensureConnectLauncher(){
     const actions=document.querySelector('.top-actions');
     if(!actions||actions.querySelector('[data-lmu-connect-launcher]'))return;
@@ -49,7 +26,6 @@
   }
 
   function apply(){
-    patchText();
     ensureConnectLauncher();
     enhanceMessagingView();
   }
@@ -64,6 +40,6 @@
     });
   });
 
-  observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+  observer.observe(document.body,{subtree:true,childList:true});
   apply();
 })();
