@@ -197,6 +197,19 @@ async function resolveOrCreateSession({
   return String(sessionId);
 }
 
+async function assertSessionTurnBudget(sessionId, stageCode) {
+  if (!sessionId) return;
+  const limit = stageCode === 'EE24' ? 6 : stageCode === 'F57' ? 8 : 20;
+  const rows = await adminGet(
+    'milo_learning_events?select=id&session_id=eq.'
+      + encodeURIComponent(sessionId)
+      + '&activity_type=eq.tutor_turn&limit=' + limit
+  );
+  if (Array.isArray(rows) && rows.length >= limit) {
+    throw new HttpError(409, 'This Milo learning activity is complete. Start a new activity when you are ready.');
+  }
+}
+
 async function recordLearningEvent(accessToken, sessionId, {
   activityType = 'tutor_turn',
   assistanceLevel = 0,
@@ -307,6 +320,8 @@ export async function createMiloReply(req) {
         intent: context.intent
       })
     : null;
+
+  await assertSessionTurnBudget(activeSessionId, stage.code);
 
   const stageGuidance =
     stage.code === 'EE24'
