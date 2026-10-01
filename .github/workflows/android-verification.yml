@@ -109,7 +109,7 @@ jobs:
       - name: Build unsigned API 36 release bundles and Connect APK
         run: |
           cd android
-          ./gradlew :app:bundleRelease :connectapp:bundleRelease :connectapp:assembleRelease
+          ./gradlew :app:bundleRelease :app:assembleDebug :connectapp:bundleRelease :connectapp:assembleRelease
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/lmu-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/lmu-jarsigner.txt
           jarsigner -verify connectapp/build/outputs/bundle/release/connectapp-release.aab 2>&1 | tee /tmp/connect-jarsigner.txt
