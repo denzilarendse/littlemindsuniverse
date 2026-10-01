@@ -636,84 +636,110 @@ async function loadTeacherSubmissionEvidence(x,d){
 
   const host=d?.querySelector?.('#teacherEvidenceViewer');
   if(!host)return;
+  host.innerHTML='<div class="notice">Loading approved private learner evidence…</div>';
 
-  host.innerHTML='<div class="notice">Loading private learner evidence…</div>';
+  const objectUrls=[];
+  let loadFailed=false;
 
-  let objectUrl=null;
+  const cleanup=()=>{
+    while(objectUrls.length){
+      const url=objectUrls.pop();
+      try{URL.revokeObjectURL(url)}catch(error){console.warn('Private evidence URL cleanup failed',error)}
+    }
+  };
+  d.addEventListener('close',cleanup,{once:true});
 
   try{
     const {data,error}=await state.supabase
       .from('learner_evidence_items')
-      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,captured_at')
+      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,duration_seconds,transcript_text,captured_at')
       .eq('submission_id',x.submission_id)
       .in('status',['parent_approved','processing','milo_analyzed','teacher_reviewed'])
       .order('captured_at',{ascending:false});
 
     if(error)throw error;
-
     const evidence=data||[];
 
     if(!evidence.length){
-      host.innerHTML='<div class="notice">No approved private media evidence is attached to this submission.</div>';
+      host.innerHTML='<div class="notice">No guardian-approved private media evidence is available yet. Written evidence, if present, remains reviewable.</div>';
       return;
     }
 
-    const whiteboard=evidence.find(e=>
-      e.evidence_type==='whiteboard' &&
-      e.storage_path
-    );
+    const rendered=[];
+    for(const item of evidence){
+      const label={
+        whiteboard:'Whiteboard',
+        photo:'Photo',
+        video:'Video',
+        audio:'Audio',
+        transcript:'Transcript',
+        document:'Attachment'
+      }[item.evidence_type]||'Evidence';
 
-    if(!whiteboard){
-      host.innerHTML=`<div class="notice"><b>Approved evidence attached</b><br>${evidence.length} approved evidence item${evidence.length===1?'':'s'} available. Whiteboard preview is not present for this submission.</div>`;
-      return;
-    }
-
-    const {data:blob,error:downloadError}=await state.supabase.storage
-      .from('learner-evidence-private')
-      .download(whiteboard.storage_path);
-
-    if(downloadError)throw downloadError;
-    if(!blob)throw new Error('Private whiteboard download returned no data');
-
-    const mime=String(blob.type||whiteboard.mime_type||'');
-    if(mime && mime!=='image/png' && !mime.startsWith('image/'))
-      throw new Error('Whiteboard evidence is not a supported image');
-
-    objectUrl=URL.createObjectURL(blob);
-
-    host.innerHTML=`
-      <div class="notice">
-        <b>Private whiteboard evidence</b><br>
-        This evidence is visible through the teacher's authorised learner access.
-      </div>
-      <div style="margin-top:10px">
-        <img
-          id="teacherWhiteboardEvidenceImage"
-          src="${esc(objectUrl)}"
-          alt="Learner whiteboard evidence"
-          style="display:block;width:100%;max-height:520px;object-fit:contain;background:#fff;border:1px solid rgba(127,127,127,.25);border-radius:12px"
-        >
-      </div>
-      <p class="muted">
-        ${esc(whiteboard.mime_type||blob.type||'image/png')}
-        · ${Number(whiteboard.file_size_bytes||blob.size||0).toLocaleString()} bytes
-      </p>`;
-
-    const cleanup=()=>{
-      if(objectUrl){
-        URL.revokeObjectURL(objectUrl);
-        objectUrl=null;
+      if(item.transcript_text&&!item.storage_path){
+        rendered.push(`<article class="card teacher-evidence-item"><span class="tag ok">Approved</span><h3>${esc(label)}</h3><p>${esc(item.transcript_text)}</p></article>`);
+        continue;
       }
-    };
 
-    d.addEventListener('close',cleanup,{once:true});
+      if(!item.storage_path){
+        rendered.push(`<article class="card teacher-evidence-item"><span class="tag ok">Approved</span><h3>${esc(label)}</h3><p class="muted">Evidence metadata is available but there is no private file to preview.</p></article>`);
+        continue;
+      }
 
-  }catch(e){
-    if(objectUrl)URL.revokeObjectURL(objectUrl);
-    console.error('Teacher private evidence load failed',e);
+      try{
+        const {data:blob,error:downloadError}=await state.supabase.storage
+          .from('learner-evidence-private')
+          .download(item.storage_path);
+        if(downloadError)throw downloadError;
+        if(!blob)throw new Error('Private evidence download returned no data');
 
+        const mime=String(blob.type||item.mime_type||'');
+        const url=URL.createObjectURL(blob);
+        objectUrls.push(url);
+        let preview='';
+
+        if(mime.startsWith('image/')){
+          preview=`<img src="${esc(url)}" alt="${esc(label)} learner evidence" style="display:block;width:100%;max-height:520px;object-fit:contain;background:#fff;border:1px solid rgba(127,127,127,.25);border-radius:12px">`;
+        }else if(mime.startsWith('video/')){
+          preview=`<video controls playsinline src="${esc(url)}" style="display:block;width:100%;max-height:520px;border-radius:12px"></video>`;
+        }else if(mime.startsWith('audio/')){
+          preview=`<audio controls src="${esc(url)}" style="width:100%"></audio>`;
+        }else{
+          preview=`<a class="ghost" href="${esc(url)}" download="lmu-private-evidence">Open private attachment</a>`;
+        }
+
+        rendered.push(`<article class="card teacher-evidence-item">
+          <span class="tag ok">Guardian approved</span>
+          <h3>${esc(label)}</h3>
+          ${preview}
+          <p class="muted">${esc(mime||item.mime_type||'private file')} · ${Number(item.file_size_bytes||blob.size||0).toLocaleString()} bytes${item.duration_seconds?` · ${esc(item.duration_seconds)}s`:''}</p>
+        </article>`);
+      }catch(error){
+        loadFailed=true;
+        console.error('Teacher private evidence item load failed',error);
+        rendered.push(`<article class="card teacher-evidence-item"><span class="tag warn">Preview unavailable</span><h3>${esc(label)}</h3><p class="muted">This approved private evidence could not be loaded. Do not approve the academic review until it can be inspected.</p></article>`);
+      }
+    }
+
+    host.innerHTML=`<div class="notice"><b>Approved private evidence</b><br>Only evidence that has passed the applicable guardian-approval boundary is shown here.</div><div class="teacher-evidence-grid">${rendered.join('')}</div>`;
+
+    if(loadFailed){
+      const approve=d.querySelector('#saveSubmissionReview');
+      if(approve){
+        approve.disabled=true;
+        approve.title='Private evidence must load before this review can be approved.';
+      }
+    }
+  }catch(error){
+    cleanup();
+    console.error('Teacher private evidence load failed',error);
     if(host?.isConnected){
-      host.innerHTML='<div class="notice">Private evidence could not be loaded. The review remains available, but do not approve it until the required evidence can be inspected.</div>';
+      host.innerHTML='<div class="notice">Private evidence could not be loaded. The review remains on hold until the required evidence can be inspected.</div>';
+      const approve=d.querySelector('#saveSubmissionReview');
+      if(approve){
+        approve.disabled=true;
+        approve.title='Private evidence must load before this review can be approved.';
+      }
     }
   }
 }
