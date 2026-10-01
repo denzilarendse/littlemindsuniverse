@@ -53,8 +53,17 @@ function textBlob(...values){
   return values.filter(Boolean).join(' ').toLowerCase().slice(0,1200);
 }
 
-function selectMiloEngine({stageCode,age,subject,message,intent,assessment=false}={}){
+function engineAllowedForStage(engine,stageCode){
+  const stage=String(stageCode||'').toUpperCase();
+  if(stage==='EE24')return ['early_learning','play_story','voice_language'].includes(engine);
+  if(stage==='F57')return ['early_learning','play_story','voice_language','reasoning_missions','adaptive_practice','ai_literacy'].includes(engine);
+  return ['voice_language','reasoning_missions','adaptive_practice','ai_literacy','coding_ai','brilliant_tutor'].includes(engine);
+}
+
+function selectMiloEngine({stageCode,age,subject,message,intent,assessment=false,preferredEngine=null}={}){
   const stage=normalizeStage(stageCode,age);
+  const requested=ENGINE_IDS.includes(preferredEngine)&&engineAllowedForStage(preferredEngine,stage.code)?preferredEngine:null;
+  if(requested)return requested;
   const text=textBlob(subject,message,intent);
 
   if(stage.code==='EE24'){
@@ -103,5 +112,5 @@ function engineGuidance(engine){
 
 export {
   ENGINE_IDS, STAGES, clampHelp, normalizeStage, normalizeSessionMode,
-  selectMiloEngine, buildTutorPolicy, engineGuidance
+  engineAllowedForStage, selectMiloEngine, buildTutorPolicy, engineGuidance
 };
