@@ -38,12 +38,12 @@ test('Capacitor 8 Android release targets API 36 with the supported minimum', ()
   assert.match(variables, /targetSdkVersion\s*=\s*36/);
 });
 
-test('native shell disables backup and cleartext traffic and requests only internet', () => {
+test('native shell disables backup and cleartext traffic and requests only required network/audio permissions', () => {
   assert.match(manifest, /android:allowBackup="false"/);
   assert.match(manifest, /android:fullBackupContent="false"/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
   const permissions = [...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"/g)].map(([, name]) => name);
-  assert.deepEqual(permissions, ['android.permission.INTERNET']);
+  assert.deepEqual(permissions, ['android.permission.INTERNET', 'android.permission.RECORD_AUDIO']);
 });
 
 test('owner-controlled Android signing material is excluded from source control', () => {
