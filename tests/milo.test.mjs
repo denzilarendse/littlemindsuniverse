@@ -46,7 +46,7 @@ function handleSessionRpc(u, options, {
   onEvent = null
 } = {}) {
   if (u.includes('/rest/v1/milo_learning_events?')) return jsonResponse([]);
-  if (u.endsWith('/rest/v1/rpc/start_milo_learning_session')) {
+  if (u.endsWith('/rest/v1/rpc/start_milo_learning_session_v2')) {
     const body = JSON.parse(options.body);
     onStart?.(body);
     return jsonResponse(sessionId);
