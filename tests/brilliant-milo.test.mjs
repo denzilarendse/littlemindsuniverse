@@ -28,7 +28,25 @@ test('Stage-aware engine guard is enforced in database as defense in depth',()=>
 test('Milo engines do not directly write teacher-approved mastery',()=>{
   const app=read('assets/app.js');
   const api=read('api/milo.js');
-  assert.doesNotMatch(api,/learner_skill_mastery/);
+  assert.doesNotMatch(api,/learner_skill_mastery[^\n]*(?:insert|update|upsert|delete)/i);
   assert.doesNotMatch(api,/mastery_evidence/);
   assert.doesNotMatch(app,/from\('learner_skill_mastery'\)\.insert/);
+});
+
+
+test('adaptive and Brilliant Milo consume reviewed mastery context without writing mastery',()=>{
+  const api=read('api/milo.js');
+  assert.match(api,/loadMasterySnapshot/);
+  assert.match(api,/learner_skill_mastery\?select=current_judgement/);
+  assert.match(api,/Reviewed mastery snapshot \(categorical only; do not treat as a new grade\)/);
+  assert.match(api,/\['adaptive_practice','brilliant_tutor'\]\.includes\(engine\)/);
+  assert.doesNotMatch(api,/from\('learner_skill_mastery'\)\.(?:insert|update|upsert)/);
+});
+
+test('selected Brilliant Milo topic is reloaded from trusted curriculum and stage',()=>{
+  const api=read('api/milo.js');
+  assert.match(api,/loadTrustedTutorSkill/);
+  assert.match(api,/curriculum_code=eq/);
+  assert.match(api,/stage_code=eq/);
+  assert.match(api,/Trusted curriculum topic/);
 });
