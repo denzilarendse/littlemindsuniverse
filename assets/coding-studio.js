@@ -27,6 +27,8 @@ function runJavaScript(source,{timeoutMs=1200,onResult}={}){
     self.WebSocket=undefined;
     self.EventSource=undefined;
     self.importScripts=undefined;
+    self.caches=undefined;
+    self.indexedDB=undefined;
     const format=value=>{
       try{
         if(typeof value==='string')return value;
