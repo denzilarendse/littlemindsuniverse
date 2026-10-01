@@ -14,7 +14,12 @@
     replyTo:null,
     channel:null,
     loading:false,
-    sending:false
+    sending:false,
+    flushing:false,
+    online:navigator.onLine,
+    realtimeStatus:'idle',
+    outbox:[],
+    pushBusy:false
   };
 
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({
@@ -25,6 +30,150 @@
     const text=String(value||'').trim();
     return text.length>72?text.slice(0,69)+'…':text;
   };
+
+
+  function connectUuid(){
+    if(globalThis.crypto?.randomUUID)return globalThis.crypto.randomUUID();
+    const bytes=new Uint8Array(16);
+    globalThis.crypto?.getRandomValues?.(bytes);
+    bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+    return Array.from(bytes,(b,i)=>[4,6,8,10].includes(i)?'-'+b.toString(16).padStart(2,'0'):b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function outboxKey(){
+    const uid=state.session?.user?.id;
+    return uid?'lmu-connect-outbox-'+uid:null;
+  }
+
+  function loadOutbox(){
+    state.outbox=[];
+    const key=outboxKey();
+    if(!key)return;
+    try{
+      const parsed=JSON.parse(sessionStorage.getItem(key)||'[]');
+      if(Array.isArray(parsed)){
+        state.outbox=parsed.filter(item=>
+          item&&typeof item.clientMessageId==='string'&&typeof item.conversationId==='string'&&
+          typeof item.body==='string'&&item.body.length>0&&item.body.length<=4000
+        ).slice(-50);
+      }
+    }catch(error){console.warn('Connect outbox restore failed',error)}
+  }
+
+  function persistOutbox(){
+    const key=outboxKey();
+    if(!key)return;
+    try{
+      if(state.outbox.length)sessionStorage.setItem(key,JSON.stringify(state.outbox.slice(-50)));
+      else sessionStorage.removeItem(key);
+    }catch(error){console.warn('Connect outbox save failed',error)}
+  }
+
+  function clearOutbox(){
+    const key=outboxKey();
+    if(key)try{sessionStorage.removeItem(key)}catch{}
+    state.outbox=[];
+  }
+
+  function queuedForActive(){
+    return state.outbox.filter(item=>String(item.conversationId)===String(state.activeConversationId));
+  }
+
+  function queueOutbound(entry){
+    const existing=state.outbox.find(item=>item.clientMessageId===entry.clientMessageId);
+    if(!existing)state.outbox.push({...entry,status:'queued'});
+    persistOutbox();
+  }
+
+  function discardConnectQueued(id){
+    state.outbox=state.outbox.filter(item=>item.clientMessageId!==id);
+    persistOutbox();
+    render();
+  }
+
+  function transientNetworkError(error){
+    const text=String(error?.message||error||'').toLowerCase();
+    return !navigator.onLine||/failed to fetch|network|load failed|connection|timeout/.test(text);
+  }
+
+  async function sendQueuedEntry(entry){
+    const {error}=await state.client.rpc('send_connect_message_v2',{
+      p_conversation_id:entry.conversationId,
+      p_body:entry.body,
+      p_reply_to_message_id:entry.replyToMessageId||null,
+      p_client_message_id:entry.clientMessageId
+    });
+    if(error)throw error;
+  }
+
+  async function flushOutbox({quiet=false}={}){
+    if(state.flushing||!state.online||!authorizedMessagingRole()||!state.client||!state.outbox.length)return;
+    state.flushing=true;
+    let sent=0;
+    for(const entry of [...state.outbox]){
+      if(entry.status==='failed')continue;
+      try{
+        await sendQueuedEntry(entry);
+        state.outbox=state.outbox.filter(item=>item.clientMessageId!==entry.clientMessageId);
+        sent++;
+      }catch(error){
+        if(transientNetworkError(error)){state.online=navigator.onLine;break}
+        const queued=state.outbox.find(item=>item.clientMessageId===entry.clientMessageId);
+        if(queued){queued.status='failed';queued.error='Access changed or the message was rejected.'}
+        console.warn('Queued Connect message rejected',error);
+      }
+      persistOutbox();
+    }
+    state.flushing=false;
+    persistOutbox();
+    if(sent&&state.activeConversationId){
+      try{await loadActiveMessages({markRead:false});await refreshConnect()}catch(error){console.warn('Connect post-flush refresh failed',error)}
+    }
+    render();
+    if(sent&&!quiet)toast(sent===1?'Queued message sent.':sent+' queued messages sent.');
+  }
+
+  function urlBase64ToUint8Array(value){
+    const padding='='.repeat((4-value.length%4)%4);
+    const base64=(value+padding).replace(/-/g,'+').replace(/_/g,'/');
+    const raw=atob(base64);
+    return Uint8Array.from([...raw].map(char=>char.charCodeAt(0)));
+  }
+
+  async function enableConnectPush(button){
+    if(state.pushBusy)return;
+    if(!cfg?.connectPushPublicKey)return toast('Push notifications are not enabled for this pilot yet.');
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return toast('This browser does not support Connect push notifications.');
+    state.pushBusy=true;
+    if(button){button.disabled=true;button.textContent='Enabling…'}
+    try{
+      const permission=await Notification.requestPermission();
+      if(permission!=='granted')throw new Error('Notification permission was not granted.');
+      const registration=await navigator.serviceWorker.ready;
+      let subscription=await registration.pushManager.getSubscription();
+      if(!subscription){
+        subscription=await registration.pushManager.subscribe({
+          userVisibleOnly:true,
+          applicationServerKey:urlBase64ToUint8Array(cfg.connectPushPublicKey)
+        });
+      }
+      const json=subscription.toJSON();
+      const {error}=await state.client.rpc('register_connect_push_subscription',{
+        p_endpoint:subscription.endpoint,
+        p_p256dh:json.keys?.p256dh||'',
+        p_auth_secret:json.keys?.auth||'',
+        p_platform:'web'
+      });
+      if(error)throw error;
+      toast('Connect notifications enabled for this device.');
+    }catch(error){
+      console.error('Connect push registration failed',error);
+      toast(error?.message||'Connect notifications could not be enabled.');
+    }finally{
+      state.pushBusy=false;
+      if(button?.isConnected){button.disabled=false;button.textContent='Enable notifications'}
+    }
+  }
 
   function toast(message){
     if(!toastNode)return;
@@ -83,7 +232,11 @@
     if(error)throw error;
     state.profile=data||null;
     resetMessaging();
-    if(authorizedMessagingRole())await refreshConnect();
+    loadOutbox();
+    if(authorizedMessagingRole()){
+      await refreshConnect();
+      if(state.online)await flushOutbox({quiet:true});
+    }
   }
 
   async function refreshConnect(){
@@ -111,6 +264,8 @@
     if(error)throw error;
     if(String(state.activeConversationId)!==String(id))return;
     state.messages=data||[];
+    const {error:deliveredError}=await state.client.rpc('mark_connect_thread_delivered',{p_conversation_id:id});
+    if(deliveredError)throw deliveredError;
     if(markRead){
       const {error:readError}=await state.client.rpc('mark_connect_thread_read',{p_conversation_id:id});
       if(readError)throw readError;
@@ -145,6 +300,7 @@
   function subscribeRealtime(conversationId){
     unsubscribeRealtime();
     if(!conversationId||!state.client)return;
+    state.realtimeStatus='connecting';
     state.channel=state.client
       .channel(`connect:${conversationId}:${Date.now()}`)
       .on('postgres_changes',{
@@ -164,7 +320,10 @@
         }
       })
       .subscribe(status=>{
+        state.realtimeStatus=status;
         if(status==='CHANNEL_ERROR')console.warn('Connect realtime channel unavailable; manual refresh remains available.');
+        const node=document.querySelector('[data-connect-network-status]');
+        if(node)node.textContent=!state.online?'Offline · messages queue':status==='SUBSCRIBED'?'Live':'Online';
       });
   }
 
@@ -195,15 +354,43 @@
     const body=input?.value.trim()||'';
     if(!body)return toast('Write a message first.');
     if(body.length>4000)return toast('Messages may contain at most 4000 characters.');
+
+    const entry={
+      clientMessageId:connectUuid(),
+      conversationId:String(state.activeConversationId),
+      body,
+      replyToMessageId:state.replyTo?.message_id||null,
+      createdAt:new Date().toISOString(),
+      status:'queued'
+    };
+
     state.sending=true;
-    if(button){button.disabled=true;button.textContent='Sending…'}
+    if(button){button.disabled=true;button.textContent=state.online?'Sending…':'Queueing…'}
     try{
-      const {error}=await state.client.rpc('send_connect_message',{
-        p_conversation_id:state.activeConversationId,
-        p_body:body,
-        p_reply_to_message_id:state.replyTo?.message_id||null
-      });
-      if(error)throw error;
+      if(!state.online){
+        queueOutbound(entry);
+        state.replyTo=null;
+        if(input)input.value='';
+        render();
+        toast('Queued offline. Connect will retry when this device is online.');
+        return;
+      }
+
+      try{
+        await sendQueuedEntry(entry);
+      }catch(error){
+        if(transientNetworkError(error)){
+          state.online=navigator.onLine;
+          queueOutbound(entry);
+          state.replyTo=null;
+          if(input)input.value='';
+          render();
+          toast('Connection interrupted. Message queued for retry.');
+          return;
+        }
+        throw error;
+      }
+
       state.replyTo=null;
       if(input)input.value='';
       await loadActiveMessages({markRead:false});
@@ -255,22 +442,38 @@
   async function signOut(button){
     if(button?.disabled)return;
     if(button){button.disabled=true;button.textContent='Signing out…'}
-    try{await state.client.auth.signOut()}catch(error){
+    try{
+      clearOutbox();
+      await state.client.auth.signOut();
+    }catch(error){
       console.error('Connect sign out failed',error);
       toast('Sign out failed. Please try again.');
     }
   }
 
+  async function maybeOpenDeepLink(){
+    if(!authorizedMessagingRole())return;
+    const id=new URLSearchParams(location.search).get('conversation');
+    if(!id||!threadById(id))return;
+    history.replaceState(null,'','/connect.html');
+    await openConversation(id);
+  }
+
   function topbar(){
     const signed=!!state.session;
     const role=state.profile?.role||'';
+    const networkLabel=!state.online?'Offline · messages queue':state.realtimeStatus==='SUBSCRIBED'?'Live':'Online';
+    const pushButton=signed&&authorizedMessagingRole()&&cfg?.connectPushPublicKey
+      ? '<button class="ghost" id="connectEnablePush">Enable notifications</button>'
+      : '';
     return `<header class="connect-topbar">
       <a class="connect-brand" href="/connect.html" aria-label="LittleMinds Connect home">
         <span class="connect-brand-mark">LC</span>
         <span class="connect-brand-copy"><strong>LittleMinds Connect</strong><small>Private family & school messaging</small></span>
       </a>
       <div class="connect-actions">
-        ${signed?`<span class="connect-status"><i class="live"></i>${esc(state.profile?.display_name||'Signed in')}${role?` · ${esc(role)}`:''}</span>`:''}
+        ${signed?`<span class="connect-status"><i class="${state.online?'live':''}"></i>${esc(state.profile?.display_name||'Signed in')}${role?` · ${esc(role)}`:''} · <span data-connect-network-status>${esc(networkLabel)}</span></span>`:''}
+        ${pushButton}
         <a class="pill" href="/">Learning app</a>
         ${signed?'<button class="ghost" id="connectSignOut">Sign out</button>':''}
       </div>
@@ -327,8 +530,7 @@
 
   function messagesHtml(){
     if(state.loading)return '<div class="connect-loading">Loading secure conversation…</div>';
-    if(!state.messages.length)return '<div class="connect-empty"><div class="connect-empty-inner"><h2>Start the conversation</h2><p>Messages are visible only to currently authorized participants for this classroom relationship.</p></div></div>';
-    return state.messages.map(message=>{
+    const delivered=state.messages.map(message=>{
       const mine=!!message.sent_by_me;
       const reply=message.reply_to_message_id?messageById(message.reply_to_message_id):null;
       const readLabel=mine&&message.read_at?' · Read':'';
@@ -339,6 +541,18 @@
         <small>${message.created_at?esc(new Date(message.created_at).toLocaleString()):''}${readLabel}</small>
       </article></div>`;
     }).join('');
+
+    const queued=queuedForActive().map(item=>{
+      const failed=item.status==='failed';
+      return `<div class="connect-message mine queued"><article class="connect-message-card">
+        <div class="connect-message-meta"><b>You</b><button class="connect-reply-button" data-discard-connect-queued="${esc(item.clientMessageId)}">Discard</button></div>
+        <p>${esc(item.body)}</p>
+        <small>${failed?'Not sent · '+esc(item.error||'Access changed or message rejected.'):'Queued offline · will retry when online'}</small>
+      </article></div>`;
+    }).join('');
+
+    if(!delivered&&!queued)return '<div class="connect-empty"><div class="connect-empty-inner"><h2>Start the conversation</h2><p>Messages are visible only to currently authorized participants for this classroom relationship.</p></div></div>';
+    return delivered+queued;
   }
 
   function conversationPane(){
@@ -375,6 +589,7 @@
       signIn(event.currentTarget,document.querySelector('#connectSignIn'));
     });
     document.querySelector('#connectSignOut')?.addEventListener('click',event=>signOut(event.currentTarget));
+    document.querySelector('#connectEnablePush')?.addEventListener('click',event=>enableConnectPush(event.currentTarget));
     document.querySelector('#connectRefresh')?.addEventListener('click',event=>manualRefresh(event.currentTarget));
     document.querySelector('#connectSend')?.addEventListener('click',event=>sendMessage(event.currentTarget));
     document.querySelector('#connectComposer')?.addEventListener('keydown',event=>{
@@ -392,6 +607,7 @@
     document.querySelectorAll('[data-reply-to]').forEach(button=>button.addEventListener('click',()=>{
       state.replyTo=messageById(button.dataset.replyTo);render();document.querySelector('#connectComposer')?.focus();
     }));
+    document.querySelectorAll('[data-discard-connect-queued]').forEach(button=>button.addEventListener('click',()=>discardConnectQueued(button.dataset.discardConnectQueued)));
   }
 
   function scrollMessages(){
@@ -418,6 +634,9 @@
       toast('Connect could not initialize. Please try again.');
     }
     render();
+    if(session&&authorizedMessagingRole())await maybeOpenDeepLink();
+    window.addEventListener('online',async()=>{state.online=true;render();await flushOutbox();});
+    window.addEventListener('offline',()=>{state.online=false;state.realtimeStatus='offline';render();});
     state.client.auth.onAuthStateChange(async(_event,session)=>{
       state.session=session;
       state.profile=null;

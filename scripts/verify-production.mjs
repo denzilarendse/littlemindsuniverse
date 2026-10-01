@@ -44,6 +44,15 @@ export function assertRuntimeConfig(text) {
   }
 }
 
+export function assertPilotRuntimeConfig(text) {
+  if (!/pilotMode\s*:\s*true/i.test(text)) {
+    throw new Error('Runtime config is not marked for controlled school pilot testing');
+  }
+  if (!/pilotPaymentsRequired\s*:\s*false/i.test(text)) {
+    throw new Error('Pilot runtime must explicitly mark payment settlement as non-blocking');
+  }
+}
+
 function tlsProbe(hostname, port = 443, timeoutMs = 10000) {
   return new Promise((resolve, reject) => {
     const socket = tls.connect({ host: hostname, port, servername: hostname, rejectUnauthorized: true });
@@ -78,7 +87,7 @@ async function fetchText(origin, path, { expectedStatus = 200 } = {}) {
   return { response, text: await response.text() };
 }
 
-export async function verifyProduction(rawOrigin, { requirePayfast = false } = {}) {
+export async function verifyProduction(rawOrigin, { requirePayfast = false, pilot = false } = {}) {
   const origin = validateOrigin(rawOrigin);
   const results = [];
 
@@ -119,7 +128,8 @@ export async function verifyProduction(rawOrigin, { requirePayfast = false } = {
 
   const runtime = await fetchText(origin, '/assets/runtime-config.js');
   assertRuntimeConfig(runtime.text);
-  results.push('Browser-safe runtime config: PASS');
+  if (pilot) assertPilotRuntimeConfig(runtime.text);
+  results.push(`Browser-safe runtime config: PASS${pilot ? '; controlled pilot mode PASS' : ''}`);
 
   const healthResponse = await fetchText(origin, '/api/health');
   let health;
@@ -129,7 +139,7 @@ export async function verifyProduction(rawOrigin, { requirePayfast = false } = {
   if (health.connectConfigured !== true) throw new Error('Production Connect server configuration is incomplete');
   if (health.miloConfigured !== true) throw new Error('Production Milo server configuration is incomplete');
   if (requirePayfast && health.payfastConfigured !== true) throw new Error('Production PayFast server configuration is incomplete');
-  results.push(`Server health: Connect PASS; Milo PASS; PayFast ${health.payfastConfigured ? 'configured' : 'not required by this probe'}`);
+  results.push(`Server health: Connect PASS; Milo PASS; PayFast ${health.payfastConfigured ? 'configured' : (pilot ? 'non-blocking for pilot' : 'not required by this probe')}`);
 
   return { origin: origin.origin, results, health };
 }
@@ -137,14 +147,20 @@ export async function verifyProduction(rawOrigin, { requirePayfast = false } = {
 async function main() {
   const args = process.argv.slice(2);
   const requirePayfast = args.includes('--require-payfast');
+  const pilot = args.includes('--pilot');
+  if (pilot && requirePayfast) {
+    console.error('Use either --pilot or --require-payfast, not both.');
+    process.exitCode = 2;
+    return;
+  }
   const target = args.find(arg => !arg.startsWith('--')) || process.env.LMU_PRODUCTION_URL;
   if (!target) {
-    console.error('Usage: npm run verify:production -- https://www.littlemindsuniverse.co.za [--require-payfast]');
+    console.error('Usage: npm run verify:production -- https://www.littlemindsuniverse.co.za [--require-payfast|--pilot]');
     process.exitCode = 2;
     return;
   }
   try {
-    const report = await verifyProduction(target, { requirePayfast });
+    const report = await verifyProduction(target, { requirePayfast, pilot });
     console.log(`Production probe PASS: ${report.origin}`);
     for (const line of report.results) console.log(`- ${line}`);
   } catch (error) {

@@ -145,12 +145,7 @@ $function$;
 revoke all on function public.set_parent_notification_preferences(uuid,boolean,boolean,boolean) from public, anon;
 grant execute on function public.set_parent_notification_preferences(uuid,boolean,boolean,boolean) to authenticated;
 
-drop function if exists public.set_parent_whatsapp_contact(text,boolean);
-drop function if exists public.reserve_whatsapp_dispatch(text,uuid,uuid,uuid,text,uuid);
-drop function if exists public.complete_whatsapp_dispatch(uuid,text);
-drop function if exists public.fail_whatsapp_dispatch(uuid,text);
-drop table if exists public.whatsapp_contacts;
-drop table if exists public.notification_dispatches;
-alter table public.guardian_learner_links drop column if exists can_receive_whatsapp;
+-- Legacy external phone-provider artifacts are absent from the canonical schema.
+-- They were removed before this migration was sanitized for the Connect-only source tree.
 
 commit;

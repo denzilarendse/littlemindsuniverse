@@ -28,7 +28,26 @@ Milo requires its configured provider key. PayFast requires its merchant/provide
 ## 5. Netlify
 `netlify.toml` runs the same production build and serves `dist`. Netlify function adapters reuse the tested API handlers. Security headers are kept in parity with Vercel. Do not assume the production Netlify site is GitHub-connected unless that connection is explicitly configured and verified.
 
-## 6. Release gate
+## 6. Controlled school pilot mode
+
+The Stage 8 live-test candidate uses explicit pilot flags in `assets/runtime-config.js`:
+
+- `pilotMode: true`
+- `pilotPaymentsRequired: false`
+
+This removes PayFast settlement as a blocker for controlled school testing only. It does **not** bypass authentication, Connect relationship authorization, RLS/RPC rules, teacher approval, guardian consent, assessment-help limits or Milo safety controls.
+
+Validate a hosted pilot with:
+
+```bash
+npm run verify:pilot -- https://www.littlemindsuniverse.co.za
+```
+
+Do not use `--pilot` as evidence for a commercial production launch. Before paid public launch, rerun the production probe with `--require-payfast` and complete provider settlement/ITN evidence.
+
+Pilot feedback is submitted through the authenticated `submit_pilot_feedback` RPC. Testers are told not to include passwords, phone numbers, private learner conversations or unnecessary personal information.
+
+## 7. Release gate
 Before public release, evidence must cover all of the following:
 
 - exact source SHA and green clean CI;

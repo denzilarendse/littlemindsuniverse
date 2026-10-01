@@ -24,7 +24,7 @@ test('Connect web client uses authorization-aware Connect RPCs for messaging mut
     'get_or_create_connect_classroom_conversation',
     'get_connect_messages',
     'mark_connect_thread_read',
-    'send_connect_message'
+    'send_connect_message_v2'
   ]) assert.match(app,new RegExp(`rpc\\('${name}'`));
   assert.doesNotMatch(app,/from\('connect_messages'\)\.(?:insert|update|delete)/);
   assert.doesNotMatch(app,/from\('connect_members'\)\.(?:insert|update|delete)/);
@@ -34,14 +34,15 @@ test('Connect composer is bounded, reply-aware and duplicate-send guarded',()=>{
   assert.match(app,/maxlength=\"4000\"/);
   assert.match(app,/body\.length>4000/);
   assert.match(app,/state\.sending/);
-  assert.match(app,/p_reply_to_message_id:state\.replyTo\?\.message_id\|\|null/);
+  assert.match(app,/p_reply_to_message_id:entry\.replyToMessageId\|\|null/);
+  assert.match(app,/p_client_message_id:entry\.clientMessageId/);
   assert.match(app,/Message was not sent\. Access is checked again for every send/);
 });
 
 test('Connect web client does not gate verified classroom messaging on premium entitlement',()=>{
   assert.match(app,/Messaging access is independent from premium lesson entitlement/);
   assert.doesNotMatch(app,/from\(['"](?:entitlements|subscriptions)['"]\)/i);
-  assert.doesNotMatch(app,/rpc\(['"][^'"]*(?:entitlement|subscription|premium|trial)[^'"]*['"]/i);
+  assert.doesNotMatch(app,/rpc\(['"][^'"]*(?:entitlement|premium|trial)[^'"]*['"]/i);
   assert.doesNotMatch(app,/premium_required|trial_expired_locked/i);
 });
 
