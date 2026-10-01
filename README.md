@@ -2,7 +2,7 @@
 
 LittleMindsUniverse is the deployable web/PWA learning platform for ages 2–18 with Learner, Teacher, Parent/Guardian and Admin roles. The current release candidate includes six age stages, authentic learning/evidence, mastery tracking, teacher-governed Milo workflows, classroom/reporting flows, LittleMinds Connect relationship-authorized messaging, Supabase live integration, PayFast server integration, PWA support and an Android Capacitor/API-36 wrapper.
 
-WhatsApp is historical only and is not a runtime or release dependency. LittleMinds Connect is the canonical communication layer.
+LittleMinds Connect is the canonical relationship-authorized communication layer. No external phone-number messaging provider is part of the LMU runtime or release dependency set.
 
 ## Local Android-first development
 
