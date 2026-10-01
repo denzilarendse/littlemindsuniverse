@@ -47,6 +47,14 @@ test('engine guard keeps specialist capabilities inside stage boundaries',()=>{
   }
 });
 
+test('default Milo route is allowed for every supported age',()=>{
+  for(let age=2;age<=18;age++){
+    const stage=normalizeStage('',age).code;
+    const engine=selectMiloEngine({age,message:'help me learn this topic'});
+    assert.equal(engineAllowedForStage(engine,stage),true,'age '+age+' routed to '+engine);
+  }
+});
+
 test('all-age intent routing stays age safe',()=>{
   assert.equal(selectMiloEngine({age:3,message:'count three shells'}),'early_learning');
   assert.equal(selectMiloEngine({age:4,message:'tell a story and draw it'}),'play_story');
