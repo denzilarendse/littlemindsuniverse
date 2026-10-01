@@ -176,3 +176,36 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @media(max-width:680px){
   button,.pill,.ghost,.primary,.danger,.tiny,.navbtn,.select,.input,.textarea{min-height:44px}
 }
+
+
+/* === LMU PRIVATE EVIDENCE CAPTURE === */
+.lmu-evidence-capture{
+  margin-top:16px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fbfcff;
+}
+.lmu-evidence-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:12px 0;
+}
+.lmu-evidence-actions button[disabled]{
+  cursor:not-allowed;
+  opacity:.55;
+}
+.lmu-evidence-list .task{
+  margin-top:8px;
+}
+@media(max-width:680px){
+  .lmu-evidence-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .lmu-evidence-actions button{
+    width:100%;
+    min-height:44px;
+  }
+}
