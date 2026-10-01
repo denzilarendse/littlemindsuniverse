@@ -52,7 +52,7 @@ test('parent communication controls use LittleMinds Connect and retire phone-num
   assert.match(controls, /Private family-school messaging/);
   assert.match(controls, /Private phone numbers are not shared/);
   assert.match(controls, /openConnectMessaging/);
-  assert.match(controls, /p_can_receive_whatsapp:false/);
+  assert.doesNotMatch(controls, /can_receive_whatsapp|whatsapp_contacts|notification_dispatches/i);
   assert.doesNotMatch(controls, /WhatsApp Business/);
   assert.doesNotMatch(controls, /parentWhatsappPhone/);
   assert.doesNotMatch(controls, /parentWhatsappOptIn/);
