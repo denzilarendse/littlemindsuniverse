@@ -41,9 +41,18 @@ test('video duration is read before registration and checked against the server 
   assert.match(app,/p_duration_seconds:duration/);
 });
 
-test('final learner submission accepts already-registered private media evidence',()=>{
-  assert.match(app,/const hasMedia=!!media\?\.items\?\.length/);
-  assert.match(app,/Learner submitted private evidence/);
-  assert.match(app,/Guardian-approved media will become available for teacher review/);
+test('learner submission waits for guardian decision and accepts only approved media',()=>{
+  assert.match(app,/hasPending:\(\)=>model\.items\.some\(item=>item\.status==='pending_parent_approval'\)/);
+  assert.match(app,/hasApproved:\(\)=>model\.items\.some/);
+  assert.match(app,/Private media is waiting for guardian approval\. Submit after the guardian decision/);
+  assert.match(app,/Learner submitted guardian-approved private evidence/);
+  assert.match(app,/Guardian-approved evidence submitted privately for teacher review/);
   assert.match(app,/rpc\('save_learner_work'/);
+});
+
+test('existing private evidence state is restored when the learner reopens the task',()=>{
+  assert.match(app,/from\('learner_submissions'\)/);
+  assert.match(app,/from\('learner_evidence_items'\)/);
+  assert.match(app,/loadExistingEvidence/);
+  assert.match(app,/parent_approved/);
 });
