@@ -1,4 +1,4 @@
-const CACHE='lmu-production-v9';
+const CACHE='lmu-production-v10';
 
 const CORE=[
   '/',
@@ -9,6 +9,7 @@ const CORE=[
   '/assets/accessibility.css',
   '/assets/runtime-config.js',
   '/assets/data.js',
+  '/assets/early-learning.js',
   '/assets/parent-controls.js',
   '/assets/teacher-reports.js',
   '/assets/app.js',
