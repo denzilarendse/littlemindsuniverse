@@ -335,3 +335,33 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   .milo-studio-grid,.milo-skill-list{grid-template-columns:1fr}
   .milo-studio{min-height:112px}
 }
+
+
+/* Stage 8 governed evidence reviewer */
+.teacher-evidence-card{
+  margin-top:12px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fafbfe;
+}
+.teacher-evidence-image{
+  display:block;
+  width:100%;
+  max-height:520px;
+  object-fit:contain;
+  margin:10px 0;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.teacher-evidence-media{
+  display:block;
+  width:100%;
+  max-height:420px;
+  margin:10px 0;
+}
+.teacher-document-preview{
+  margin:10px 0;
+  max-height:360px;
+}
