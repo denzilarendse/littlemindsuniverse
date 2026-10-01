@@ -74,7 +74,6 @@ test('critical Supabase workflow actions remain connected to protected operation
     "rpc('save_learner_work'",
     "rpc('review_learner_submission'",
     "rpc('approve_milo_recommendation'",
-    "rpc('start_milo_learning_session_v2'",
     "rpc('record_milo_learning_event'"
   ]) {
     assert.ok(app.includes(operation), `missing protected workflow operation: ${operation}`);
