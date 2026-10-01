@@ -275,7 +275,6 @@
       const {error}=await client.rpc('set_parent_notification_preferences',{
         p_learner_id:pc.selectedLearnerId,
         p_can_receive_reports:!!document.querySelector('#prefReports')?.checked,
-        p_can_receive_whatsapp:false,
         p_can_receive_evidence_requests:!!document.querySelector('#prefEvidence')?.checked,
         p_can_receive_class_messages:!!document.querySelector('#prefClassMessages')?.checked
       });
