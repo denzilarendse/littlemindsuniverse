@@ -209,3 +209,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
     min-height:44px;
   }
 }
+
+.teacher-evidence-grid{
+  display:grid;
+  gap:12px;
+  margin-top:12px;
+}
+.teacher-evidence-item{
+  box-shadow:none;
+}
+.teacher-evidence-item h3{
+  margin:8px 0 10px;
+}
