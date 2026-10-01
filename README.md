@@ -53,3 +53,8 @@ Use `.env.example` as the server-side deployment-variable template. Browser/mobi
 - `docs/RELEASE-EVIDENCE-20260926.md` — current evidence-based release state
 
 A successful source build is not by itself a public-launch or store-approval decision. Hosted authenticated E2E, recovery/rollback, signing, physical-device and store gates remain evidence-driven.
+
+
+## Controlled school pilot
+
+Stage 8 uses LittleMinds Connect only and makes PayFast non-blocking for controlled school testing. See `docs/STAGE8-CONTROLLED-PILOT-PLAN.md`.
