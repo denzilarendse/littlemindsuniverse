@@ -125,6 +125,14 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Upload LMU debug APK for physical-device pilot testing
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-android-api36-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload Connect unsigned release-candidate artifact
         uses: actions/upload-artifact@v7
         with:
