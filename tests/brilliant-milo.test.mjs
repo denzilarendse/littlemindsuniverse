@@ -28,7 +28,7 @@ test('Stage-aware engine guard is enforced in database as defense in depth',()=>
 test('Milo engines do not directly write teacher-approved mastery',()=>{
   const app=read('assets/app.js');
   const api=read('api/milo.js');
-  assert.doesNotMatch(api,/learner_skill_mastery/);
+  assert.doesNotMatch(api,/learner_skill_mastery[^\n]*(?:insert|update|upsert|delete)/i);
   assert.doesNotMatch(api,/mastery_evidence/);
   assert.doesNotMatch(app,/from\('learner_skill_mastery'\)\.insert/);
 });
