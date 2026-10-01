@@ -3,7 +3,7 @@
 Status: implementation foundation, 26 September 2026.
 
 ## Decision
-LittleMindsUniverse communication is owned by LittleMinds Connect. WhatsApp is removed as a launch dependency. Existing historical WhatsApp migrations remain immutable history, but no new product flow, secret, endpoint or release gate may depend on WhatsApp.
+LittleMindsUniverse communication is owned by LittleMinds Connect. External phone-number messaging providers are outside the canonical architecture. No product flow, secret, endpoint or release gate may depend on such a provider.
 
 LittleMinds Connect has two surfaces over one authorization model:
 
@@ -46,7 +46,7 @@ Direct client writes to the conversation/member graph are not granted. Membershi
 
 1. Establish schema/RLS/RPC foundation.
 2. Migrate current LMU message UI from legacy RPC names to Connect RPCs through a compatibility layer.
-3. Remove WhatsApp endpoint, Netlify adapter, provider environment variables and WhatsApp-specific tests/UI.
+3. Keep external phone-number messaging endpoints, adapters, provider environment variables and provider-specific UI outside the canonical project.
 4. Add receipts/unread state, realtime subscriptions and offline-safe optimistic UI.
 5. Add private attachments, reporting/moderation and push notification registration.
 6. Add Connect Business organization/inbox primitives.
