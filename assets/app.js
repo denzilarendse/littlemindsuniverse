@@ -81,7 +81,7 @@ function messages(){
   const active=state.messageThreads.find(t=>String(t.thread_id)===String(state.activeThreadId));
   const conversation=active?state.threadMessages.map(m=>`<div class="bubble ${m.sent_by_me?'user':'milo'}"><b>${esc(m.sent_by_me?'You':m.sender_name||'Participant')}</b><br>${esc(m.body)}<br><small class="muted">${new Date(m.created_at).toLocaleString()}</small></div>`).join(''):'';
   const activePane=active?`<div class="split"><div><div class="eyebrow">Secure class conversation</div><h2>${esc(state.role==='teacher'?active.guardian_name:active.teacher_name)}</h2><p class="muted">${esc(active.learner_name)} · ${esc(active.classroom_name)}</p></div></div><div class="chat" id="messageThread" aria-live="polite">${conversation||'<div class="empty">No messages yet.</div>'}</div><div class="field"><label for="messageInput">Message</label><textarea id="messageInput" class="textarea" maxlength="4000" placeholder="Write a class message..."></textarea><small class="muted">Visible only to the verified teacher and guardian participants for this learner.</small></div><div class="actions"><button class="primary" data-action="send-message">Send message</button></div>`:'<div class="empty">Choose a conversation or open an eligible classroom contact.</div>';
-  return `<div class="grid two"><div><div class="card"><div class="eyebrow">Existing conversations</div><h2>Messages</h2>${threadRows}</div><div class="card" style="margin-top:14px"><div class="eyebrow">Eligible classroom contacts</div><h2>Start or reopen</h2>${contactRows}</div></div><div class="card">${activePane}<div class="notice" style="margin-top:14px">Private teacher and guardian phone numbers are never exposed. WhatsApp, when enabled, is a separate privacy-minimised mirror through the LittleMindsUniverse business identity.</div></div></div>`;
+  return `<div class="grid two"><div><div class="card"><div class="eyebrow">Existing conversations</div><h2>Messages</h2>${threadRows}</div><div class="card" style="margin-top:14px"><div class="eyebrow">Eligible classroom contacts</div><h2>Start or reopen</h2>${contactRows}</div></div><div class="card">${activePane}<div class="notice" style="margin-top:14px">Private teacher and guardian phone numbers are never exposed. Authorized communication stays inside LittleMindsUniverse Connect.</div></div></div>`;
 }
 function settings(){return `<div class="grid two"><div class="card"><h2>Language & accessibility</h2><div class="field"><label for="languagePicker">Interface language</label><select id="languagePicker" class="select"><option value="en">English</option><option value="af">Afrikaans</option><option value="zu">isiZulu</option><option value="xh">isiXhosa</option><option value="st">Sesotho</option><option value="nso">Sepedi</option><option value="tn">Setswana</option><option value="ss">siSwati</option><option value="ve">Tshivenda</option><option value="ts">Xitsonga</option><option value="nr">isiNdebele</option><option value="sasL">South African Sign Language pack</option></select></div><p class="muted">Content packs can add text, audio, captions and sign-language media without changing mastery logic.</p></div><div class="card"><h2>Access model</h2><p><b>Week 1 remains free.</b> Premium weeks can use a no-card trial, paid family/school entitlement or scholarship/sponsored access.</p><p>Payments are delegated to payment providers; LMU does not store card details.</p><div class="notice">Pricing is centralised and configurable rather than hard-coded into lesson logic.</div></div></div>`}
 function main(){const map={home,learning,milo,mastery,classroom,reports,messages,settings};return map[state.view]?.()||home()}
@@ -149,8 +149,35 @@ async function sendMilo(){
   }
 }
 function stageAge(){return {early:3,foundation:6,discovery:9,creator:12,pathfinder:15,edge:17}[state.stage]}
-async function publishLearningItem(item,learners,dialog){if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!state.profile?.id)return toast('A live teacher account is required');if(!item?.id||!item?.classroom_id)return toast('Learning item is incomplete');const selected=[...document.querySelectorAll('[data-publish-learner]:checked')].map(el=>el.dataset.publishLearner).filter(Boolean);if(!selected.length)return toast('Select at least one learner');const allowed=new Set((learners||[]).map(l=>String(l.id)));if(selected.some(id=>!allowed.has(String(id))))return toast('Learner selection is no longer valid');const button=$('#publishSelectedLearners');if(button){button.disabled=true;button.textContent='Publishing…'}try{const recipients=selected.map(learner_id=>({learning_item_id:item.id,learner_id,status:'assigned'}));const {error:rErr}=await state.supabase.from('learning_item_recipients').upsert(recipients,{onConflict:'learning_item_id,learner_id'});if(rErr)throw rErr;const now=new Date().toISOString();const {data:published,error:pErr}=await state.supabase.from('learning_items').update({status:'published',approved_by:state.profile.id,approved_at:now,published_at:now}).eq('id',item.id).eq('teacher_profile_id',state.profile.id).select('*').single();if(pErr)throw pErr;const index=state.tasks.findIndex(x=>String(x.id)===String(item.id));if(index>=0)state.tasks[index]=published;toast(`Published to ${selected.length} learner${selected.length===1?'':'s'}`);if(dialog?.open)dialog.close();render()}catch(e){console.error('Publish learning item failed',e);toast('Work could not be published. It remains available for teacher review.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Publish to selected learners'}}}
-
+async function publishLearningItem(item,learners,dialog){
+  if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!state.profile?.id)return toast('A live teacher account is required');
+  if(!item?.id||!item?.classroom_id)return toast('Learning item is incomplete');
+  const selected=[...document.querySelectorAll('[data-publish-learner]:checked')].map(el=>el.dataset.publishLearner).filter(Boolean);
+  if(!selected.length)return toast('Select at least one learner');
+  const allowed=new Set((learners||[]).map(l=>String(l.id)));
+  if(selected.some(id=>!allowed.has(String(id))))return toast('Learner selection is no longer valid');
+  const button=$('#publishSelectedLearners');
+  if(button){button.disabled=true;button.textContent='Publishing…'}
+  try{
+    const {data,error}=await state.supabase.rpc('publish_teacher_learning_item',{
+      p_learning_item_id:item.id,
+      p_learner_ids:selected
+    });
+    if(error)throw error;
+    const published=Array.isArray(data)?data[0]:data;
+    if(!published?.id)throw new Error('Publish RPC returned no learning item');
+    const index=state.tasks.findIndex(x=>String(x.id)===String(item.id));
+    if(index>=0)state.tasks[index]=published;
+    toast(`Published to ${selected.length} learner${selected.length===1?'':'s'}`);
+    if(dialog?.open)dialog.close();
+    render();
+  }catch(e){
+    console.error('Publish learning item failed',e);
+    toast('Work could not be published. It remains available for teacher review.');
+  }finally{
+    if(button?.isConnected){button.disabled=false;button.textContent='Publish to selected learners'}
+  }
+}
 
 async function loadTeacherSubmissionEvidence(x,d){
   if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!x?.submission_id)return;
