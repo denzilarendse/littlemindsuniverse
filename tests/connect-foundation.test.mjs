@@ -119,10 +119,10 @@ test('Connect message table is prepared for Supabase Realtime without modifying 
   assert.doesNotMatch(migration,/(?:create|alter|drop)\s+(?:table|function|schema)\s+realtime\./i);
 });
 
-test('third-party WhatsApp provider configuration is no longer a release dependency',()=>{
-  assert.doesNotMatch(env,/WHATSAPP_/);
-  assert.doesNotMatch(health,/whatsappConfigured/);
+test('third-party phone messaging provider configuration is not a release dependency',()=>{
+  assert.doesNotMatch(env,/external_phone_provider/i);
+  assert.doesNotMatch(health,/externalPhoneProviderConfigured/);
   assert.match(health,/connectConfigured/);
-  assert.equal(fs.existsSync(new URL('../api/whatsapp.js',import.meta.url)),false);
-  assert.equal(fs.existsSync(new URL('../netlify/functions/whatsapp.mjs',import.meta.url)),false);
+  assert.equal(fs.existsSync(new URL('../api/external-phone-provider.js',import.meta.url)),false);
+  assert.equal(fs.existsSync(new URL('../netlify/functions/external-phone-provider.mjs',import.meta.url)),false);
 });

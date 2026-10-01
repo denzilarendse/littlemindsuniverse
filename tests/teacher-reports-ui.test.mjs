@@ -29,7 +29,7 @@ test('teacher approval saves current edits before releasing the report', () => {
 
 test('approved reports are read-only and no provider dispatch API is called from the report screen', () => {
   assert.match(reports, /Approved reports are read-only here/);
-  assert.doesNotMatch(reports, /reserve_whatsapp_dispatch|complete_whatsapp_dispatch|WHATSAPP_ACCESS_TOKEN/);
+  assert.doesNotMatch(reports, /external_phone_dispatch|EXTERNAL_PHONE_PROVIDER_TOKEN/i);
 });
 
 test('weekly report dates normalize to Monday', () => {

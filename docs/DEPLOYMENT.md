@@ -16,7 +16,7 @@ Database changes are forward migrations. Do not rewrite historical applied migra
 ## 3. LittleMinds Connect
 - `/connect.html` is the standalone Connect web surface.
 - The main LMU shell links to the same relationship-authorized messaging backend.
-- WhatsApp provider secrets/endpoints are retired and are not a deployment requirement.
+- External phone-number messaging provider secrets/endpoints are outside the deployment architecture.
 - Realtime uses the existing Supabase HTTPS/WSS origins.
 - Messaging must remain available to legitimate users independently of premium lesson entitlement.
 

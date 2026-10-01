@@ -10,7 +10,7 @@
 - Temporary intervention/enrichment groups.
 - Coding/robotics/AI progression and Finance & Enterprise progression.
 - Parent/guardian progress, controls, consent and home support.
-- LittleMinds Connect is the canonical relationship-authorized communication layer; WhatsApp is historical only and is not a launch dependency.
+- LittleMinds Connect is the canonical relationship-authorized communication layer; external phone-number messaging providers are outside the LMU product architecture.
 - Connect classroom messaging is available according to verified role/relationship authorization rather than premium lesson entitlement or phone-number discovery.
 - Learner messaging remains safety-restricted; unrestricted learner-to-user messaging is not enabled by the current release candidate.
 - Week 1 free forever, no-card trial capability, paid/sponsored entitlements.

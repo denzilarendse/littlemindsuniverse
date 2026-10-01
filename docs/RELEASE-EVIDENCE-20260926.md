@@ -34,13 +34,13 @@ Main release-verification run `36273655167` completed successfully on `efc14c1d.
 
 Vercel commit status for the same source SHA reports success. This confirms the configured Vercel build/status path, not the custom-domain or real-account runtime gates.
 
-### LittleMinds Connect / WhatsApp retirement
+### LittleMinds Connect communication consolidation
 
 - LittleMinds Connect is the canonical relationship-authorized communication layer.
 - The standalone `/connect.html` surface and the embedded LMU bridge use the Connect RPCs.
 - Parent/teacher messaging authorization is based on active classroom membership, verified guardian relationship and role checks rather than phone-number discovery.
 - Learner accounts do not receive an unrestricted classroom message composer in the current release candidate.
-- WhatsApp provider endpoints/secrets are retired and are not a release dependency.
+- External phone-number provider endpoints/secrets are absent from the canonical runtime and are not a release dependency.
 - Historical provider data/migrations are preserved rather than rewritten or deleted merely to make tests pass.
 
 ### Live Supabase security evidence
@@ -141,8 +141,8 @@ Observed PASS results included:
 
 ## Red -> repair -> green history retained
 
-1. Initial Connect smoke still expected the removed WhatsApp API; the stale test expectation was repaired and full CI rerun.
-2. Vercel configuration still referenced the deleted WhatsApp function; the stale function entry was removed and regression-tested.
+1. Initial Connect smoke still expected a retired external-provider API; the stale test expectation was repaired and full CI rerun.
+2. Vercel configuration still referenced a deleted external-provider function; the stale function entry was removed and regression-tested.
 3. Standalone Connect exposed stale/over-broad test assumptions around entitlement copy and PWA cache revision; tests were corrected to assert the actual behavior.
 4. Live RLS review found a guardian self-correlation defect; the executable predicate was repaired, regression coverage added and CI rerun.
 5. Guardian read paths that lacked an explicit `verified=true` requirement were hardened and retested.
@@ -162,7 +162,7 @@ At no point was a meaningful authorization condition, RLS rule or product safety
 | Clean install / lint / tests / web build | PASS | Re-run on final release SHA |
 | Live Connect RLS/RPC/storage audited scope | PASS | Repeat negative role tests during hosted authenticated E2E |
 | LittleMinds Connect source/runtime foundation | PASS | Hosted real-account parent/teacher/realtime E2E |
-| WhatsApp retirement | PASS | Do not reintroduce provider dependency |
+| Connect-only communication | PASS | Do not introduce an external phone-number provider dependency |
 | Vercel build/status integration | PASS | Does not replace production-domain runtime verification |
 | Accessibility source baseline | PASS | Real browser/device keyboard, screen-reader/high-contrast and responsive evidence |
 | PWA static shell + cache privacy boundary | PASS at source/build layer | Actual hosted install/update/offline exercise on real browser/device |

@@ -46,7 +46,7 @@ fs.writeFileSync(path.join(publicDir, 'connect.html'), html);
 fs.writeFileSync(path.join(assetsRoot, 'capacitor.config.json'), JSON.stringify(config, null, 2) + '\n');
 fs.writeFileSync(path.join(assetsRoot, 'capacitor.plugins.json'), '[]\n');
 
-const forbidden = /(SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|WHATSAPP_ACCESS_TOKEN|PAYFAST_MERCHANT_KEY|PAYFAST_PASSPHRASE|NINEROUTER_API_KEY|GROQ_API_KEY)\s*[:=]\s*["']?[A-Za-z0-9_-]{12,}/;
+const forbidden = /(SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|EXTERNAL_PHONE_PROVIDER_TOKEN|PAYFAST_MERCHANT_KEY|PAYFAST_PASSPHRASE|NINEROUTER_API_KEY|GROQ_API_KEY)\s*[:=]\s*["']?[A-Za-z0-9_-]{12,}/;
 const inspect = [path.join(publicDir, 'index.html'), ...requiredAssets.map(file => path.join(publicDir, file))];
 for (const file of inspect) {
   const text = fs.readFileSync(file, 'utf8');

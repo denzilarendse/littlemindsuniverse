@@ -3,7 +3,7 @@ LITTLEMINDSUNIVERSE RELEASE-CANDIDATE CHECKLIST
 1) Use the canonical GitHub main branch or an explicitly verified release artifact; do not substitute an unknown local tree.
 2) In Termux run: npm ci --ignore-scripts && npm run check
 3) Local browser preview: npx serve . -l 5500, then open http://localhost:5500
-4) LittleMinds Connect is the canonical communication system. WhatsApp provider configuration is retired and is not required.
+4) LittleMinds Connect is the canonical communication system. No external phone-number messaging provider is required.
 5) For real Milo and PayFast deployment, set server-side secrets from .env.example in the deployment provider; never place them in frontend/mobile files.
 6) Supabase browser/mobile connectivity uses the LMU browser-safe publishable key. Authorization remains RLS/RPC controlled.
 7) Android package ID is frozen as za.co.littlemindsuniverse and CI builds an unsigned API-36 release-candidate AAB.

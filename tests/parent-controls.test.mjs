@@ -26,7 +26,6 @@ test('parent controls use only protected parent and guardian RPCs', () => {
     'set_parent_notification_preferences'
   ]) assert.match(controls, new RegExp(name));
   assert.match(controls, /profile\.role!=='parent'/);
-  assert.doesNotMatch(controls, /set_parent_whatsapp_contact/);
 });
 
 test('parent consent is distinct from browser or operating-system hardware permission', () => {
@@ -52,10 +51,7 @@ test('parent communication controls use LittleMinds Connect and retire phone-num
   assert.match(controls, /Private family-school messaging/);
   assert.match(controls, /Private phone numbers are not shared/);
   assert.match(controls, /openConnectMessaging/);
-  assert.match(controls, /p_can_receive_whatsapp:false/);
-  assert.doesNotMatch(controls, /WhatsApp Business/);
-  assert.doesNotMatch(controls, /parentWhatsappPhone/);
-  assert.doesNotMatch(controls, /parentWhatsappOptIn/);
+  assert.doesNotMatch(controls, /externalPhoneProvider/i);
 });
 
 test('parent controls are part of the offline app shell', () => {

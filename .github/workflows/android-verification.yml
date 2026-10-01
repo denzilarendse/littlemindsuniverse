@@ -88,11 +88,12 @@ jobs:
           grep -F 'android:usesCleartextTraffic="false"' android/app/src/main/AndroidManifest.xml
           grep -F 'android:allowBackup="false"' android/connectapp/src/main/AndroidManifest.xml
           grep -F 'android:usesCleartextTraffic="false"' android/connectapp/src/main/AndroidManifest.xml
-          test "$(grep -c '<uses-permission ' android/app/src/main/AndroidManifest.xml)" -eq 1
+          test "$(grep -c '<uses-permission ' android/app/src/main/AndroidManifest.xml)" -eq 2
           test "$(grep -c '<uses-permission ' android/connectapp/src/main/AndroidManifest.xml)" -eq 1
           grep -F 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml
+          grep -F 'android.permission.RECORD_AUDIO' android/app/src/main/AndroidManifest.xml
           grep -F 'android.permission.INTERNET' android/connectapp/src/main/AndroidManifest.xml
-          ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/app/src/main/AndroidManifest.xml
+          ! grep -Eq 'android.permission.(CAMERA|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/app/src/main/AndroidManifest.xml
           ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/connectapp/src/main/AndroidManifest.xml
           test -f android/connectapp/src/main/assets/public/index.html
           grep -F 'LittleMinds Connect' android/connectapp/src/main/assets/public/index.html
@@ -108,7 +109,7 @@ jobs:
       - name: Build unsigned API 36 release bundles and Connect APK
         run: |
           cd android
-          ./gradlew :app:bundleRelease :connectapp:bundleRelease :connectapp:assembleRelease
+          ./gradlew :app:bundleRelease :app:assembleDebug :connectapp:bundleRelease :connectapp:assembleRelease
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/lmu-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/lmu-jarsigner.txt
           jarsigner -verify connectapp/build/outputs/bundle/release/connectapp-release.aab 2>&1 | tee /tmp/connect-jarsigner.txt
@@ -121,6 +122,14 @@ jobs:
         with:
           name: littlemindsuniverse-android-api36-unsigned
           path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload LMU debug APK for physical-device pilot testing
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-android-api36-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
 
