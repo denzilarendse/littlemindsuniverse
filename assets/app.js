@@ -363,7 +363,14 @@ function evidenceMediaDuration(file,kind){
 }
 
 function initLearnerEvidenceTools(t,d){
-  const model={items:[],status:null,busy:false};
+  const approvedStatuses=new Set(['parent_approved','processing','milo_analyzed','teacher_reviewed']);
+  const model={
+    items:[],
+    status:null,
+    busy:true,
+    hasPending:()=>model.items.some(item=>item.status==='pending_parent_approval'),
+    hasApproved:()=>model.items.some(item=>approvedStatuses.has(item.status))
+  };
   const camera=$('#captureCamera'),video=$('#captureVideo'),audio=$('#captureAudio'),attach=$('#captureAttach');
   const note=$('#capturePermissionNote'),statusNode=$('#captureStatus'),list=$('#capturedEvidenceList');
   const inputs={
@@ -372,17 +379,38 @@ function initLearnerEvidenceTools(t,d){
     audio:$('#captureAudioInput'),
     document:$('#captureAttachInput')
   };
+
   const setBusy=busy=>{
     model.busy=busy;
-    for(const button of [camera,video,audio,attach])if(button)button.disabled=busy||button.dataset.allowed!=='true';
-    if(statusNode)statusNode.textContent=busy?'Saving privately…':'Ready';
+    for(const button of [camera,video,audio,attach]){
+      if(button)button.disabled=busy||button.dataset.allowed!=='true';
+    }
+    if(statusNode)statusNode.textContent=busy?'Checking / saving…':'Ready';
   };
+
+  const stateLabel=status=>({
+    pending_parent_approval:['warn','Guardian approval pending'],
+    parent_approved:['ok','Guardian approved'],
+    processing:['ok','Approved · processing'],
+    milo_analyzed:['ok','Approved'],
+    teacher_reviewed:['ok','Teacher reviewed'],
+    parent_rejected:['warn','Guardian rejected'],
+    expired:['warn','Expired'],
+    deleted:['warn','Deleted']
+  })[status]||['','Private evidence'];
+
   const renderItems=()=>{
     if(!list)return;
-    list.innerHTML=model.items.length
-      ?model.items.map(item=>`<div class="task"><div><span class="tag warn">Guardian approval pending</span><b>${esc(item.label)}</b><p>${Number(item.size||0).toLocaleString()} bytes · private evidence</p></div></div>`).join('')
+    const visible=model.items.filter(item=>!['deleted','expired'].includes(item.status));
+    list.innerHTML=visible.length
+      ?visible.map(item=>{
+        const [tagClass,label]=stateLabel(item.status);
+        const kindLabel=item.label||({photo:'Photo',video:'Video',audio:'Audio',document:'Attachment',transcript:'Transcript'}[item.kind]||'Evidence');
+        return `<div class="task"><div><span class="tag ${tagClass}">${esc(label)}</span><b>${esc(kindLabel)}</b><p>${Number(item.size||0).toLocaleString()} bytes · private evidence</p></div></div>`;
+      }).join('')
       :'<div class="empty">No additional private evidence added yet.</div>';
   };
+
   const allow=(button,allowed,title)=>{
     if(!button)return;
     button.dataset.allowed=allowed?'true':'false';
@@ -390,9 +418,40 @@ function initLearnerEvidenceTools(t,d){
     button.title=title||'';
   };
 
+  const loadExistingEvidence=async()=>{
+    const {data:submission,error:submissionError}=await state.supabase
+      .from('learner_submissions')
+      .select('id,status')
+      .eq('learning_item_id',t.id)
+      .eq('learner_id',state.learner.id)
+      .maybeSingle();
+    if(submissionError)throw submissionError;
+    if(!submission?.id){model.items=[];renderItems();return}
+
+    const {data,error}=await state.supabase
+      .from('learner_evidence_items')
+      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,duration_seconds,captured_at')
+      .eq('submission_id',submission.id)
+      .order('captured_at',{ascending:false});
+    if(error)throw error;
+    model.items=(data||[])
+      .filter(item=>item.evidence_type!=='whiteboard')
+      .map(item=>({
+        id:item.id,
+        kind:item.evidence_type,
+        label:{photo:'Photo',video:'Video',audio:'Audio',document:'Attachment',transcript:'Transcript'}[item.evidence_type]||'Evidence',
+        size:item.file_size_bytes||0,
+        path:item.storage_path,
+        mime:item.mime_type,
+        duration:item.duration_seconds,
+        status:item.status
+      }));
+    renderItems();
+  };
+
   const upload=async(kind,file)=>{
     if(!file||state.mode!=='live'||!state.learner?.id||!state.supabase)return;
-    if(model.busy)return toast('Wait for the current evidence upload to finish.');
+    if(model.busy)return toast('Wait for the current evidence check or upload to finish.');
     if(!file.size||file.size>26214400)return toast('Evidence files must be between 1 byte and 25 MB.');
 
     const mime=String(file.type||'').toLowerCase();
@@ -435,10 +494,13 @@ function initLearnerEvidenceTools(t,d){
       if(!data)throw new Error('Evidence registration returned no evidence ID');
 
       const label={photo:'Photo',video:'Video',audio:'Audio',document:'Attachment'}[kind]||'Evidence';
-      model.items.push({id:data,kind,label,size:file.size,path:storagePath,mime,duration});
+      model.items.unshift({
+        id:data,kind,label,size:file.size,path:storagePath,mime,duration,
+        status:'pending_parent_approval'
+      });
       renderItems();
       const guardian=model.status?.evidence_approver_label||'Guardian';
-      toast(`${label} saved privately. Waiting for ${guardian} approval.`);
+      toast(`${label} saved privately. Waiting for ${guardian} approval before final submission.`);
       storagePath=null;
     }catch(error){
       console.error('Private evidence capture failed',error);
@@ -456,6 +518,7 @@ function initLearnerEvidenceTools(t,d){
   };
 
   if(state.mode!=='live'||!state.learner?.id||!state.supabase){
+    model.busy=false;
     if(statusNode)statusNode.textContent='Live account required';
     if(note)note.textContent='Sign in with the learner account to add private camera, video, microphone or attachment evidence.';
     return model;
@@ -472,18 +535,24 @@ function initLearnerEvidenceTools(t,d){
 
   (async()=>{
     try{
-      const {data,error}=await state.supabase.rpc('get_learner_evidence_capture_status',{p_learner_id:state.learner.id});
+      const [{data,error},existingResult]=await Promise.all([
+        state.supabase.rpc('get_learner_evidence_capture_status',{p_learner_id:state.learner.id}),
+        loadExistingEvidence().then(()=>({ok:true})).catch(existingError=>({ok:false,error:existingError}))
+      ]);
       if(error)throw error;
+      if(!existingResult.ok)console.warn('Existing private evidence status could not be loaded',existingResult.error);
+
       model.status=Array.isArray(data)?data[0]||{}:data||{};
       const guardian=model.status.evidence_approver_label||'Guardian';
       allow(camera,!!model.status.camera_enabled,model.status.camera_enabled?'Camera evidence is enabled':`Ask ${guardian} to enable camera evidence`);
       allow(video,!!model.status.video_enabled,model.status.video_enabled?'Video evidence is enabled':`Ask ${guardian} to enable video evidence`);
       allow(audio,!!model.status.audio_evidence_enabled,model.status.audio_evidence_enabled?'Audio evidence is enabled':`Ask ${guardian} to enable audio evidence`);
       allow(attach,true,'Attachments are stored privately and require guardian approval before teacher review');
-      if(statusNode)statusNode.textContent='Ready';
+      setBusy(false);
       if(note){
         const max=Number(model.status.video_max_capture_seconds||0);
-        note.textContent=`Guardian consent: Camera ${model.status.camera_enabled?'on':'off'} · Video ${model.status.video_enabled?'on':'off'} · Mic ${model.status.audio_evidence_enabled?'on':'off'}.${max?` Video limit: ${max}s.`:''} Device permission is still requested separately by your phone or browser.`;
+        const pending=model.hasPending()?' Private evidence is still waiting for guardian approval.':'';
+        note.textContent=`Guardian consent: Camera ${model.status.camera_enabled?'on':'off'} · Video ${model.status.video_enabled?'on':'off'} · Mic ${model.status.audio_evidence_enabled?'on':'off'}.${max?` Video limit: ${max}s.`:''}${pending} Device permission is still requested separately by your phone or browser.`;
       }
     }catch(error){
       console.error('Learner evidence permission status failed',error);
@@ -491,6 +560,7 @@ function initLearnerEvidenceTools(t,d){
       allow(video,false,'Evidence permission status unavailable');
       allow(audio,false,'Evidence permission status unavailable');
       allow(attach,true,'Attachments are stored privately and require guardian approval before teacher review');
+      setBusy(false);
       if(statusNode)statusNode.textContent='Permission check unavailable';
       if(note)note.textContent='Camera, video and microphone stay locked until LMU can verify guardian consent. Attachments remain private and require guardian approval.';
     }
@@ -538,9 +608,12 @@ async function persistWhiteboardEvidence(t,board){
 async function submitEvidence(t,text,d,board=null,media=null){
   const clean=text.trim();
   const hasBoard=!!board?.hasDrawing?.();
-  const hasMedia=!!media?.items?.length;
-  if(media?.busy)return toast('Wait for the private evidence upload to finish.');
-  if(!clean&&!hasBoard&&!hasMedia)return toast('Add your own written attempt, whiteboard work, or private evidence first');
+  const hasApprovedMedia=!!media?.hasApproved?.();
+  const hasPendingMedia=!!media?.hasPending?.();
+
+  if(media?.busy)return toast('Wait for the private evidence check or upload to finish.');
+  if(hasPendingMedia)return toast('Private media is waiting for guardian approval. Submit after the guardian decision.');
+  if(!clean&&!hasBoard&&!hasApprovedMedia)return toast('Add your own written attempt, whiteboard work, or approved private evidence first');
 
   const btn=$('#taskSubmit');
   if(btn?.disabled)return;
@@ -550,7 +623,7 @@ async function submitEvidence(t,text,d,board=null,media=null){
   try{
     const responseText=clean||(hasBoard
       ?'Learner submitted whiteboard working.'
-      :(hasMedia?'Learner submitted private evidence.':''));
+      :(hasApprovedMedia?'Learner submitted guardian-approved private evidence.':''));
 
     if(state.mode==='live'&&state.learner){
       if(hasBoard){
@@ -566,7 +639,7 @@ async function submitEvidence(t,text,d,board=null,media=null){
       });
       if(error){
         console.error('Atomic learner submission failed after evidence persistence',error);
-        toast((durableBoard||hasMedia)
+        toast((durableBoard||hasApprovedMedia)
           ?'Your private evidence was saved safely, but final submission is not complete yet. Please try again.'
           :'Your work could not be submitted just now. Please try again.');
         return;
@@ -587,13 +660,13 @@ async function submitEvidence(t,text,d,board=null,media=null){
       try{board.save()}catch(error){console.warn('Final whiteboard local save failed',error)}
     }
     d.close();
-    toast(hasMedia
-      ?'Evidence submitted. Guardian-approved media will become available for teacher review.'
+    toast(hasApprovedMedia
+      ?'Guardian-approved evidence submitted privately for teacher review.'
       :(hasBoard?'Whiteboard evidence submitted privately for teacher review':'Learning evidence submitted for teacher review'));
     render();
   }catch(error){
     console.error('Evidence submission failed',error);
-    toast((hasBoard||hasMedia)
+    toast((hasBoard||hasApprovedMedia)
       ?'Your local/private evidence is preserved. Upload or submission failed; please try again.'
       :'Your work could not be submitted just now. Please try again.');
   }finally{
