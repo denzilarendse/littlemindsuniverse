@@ -4,7 +4,9 @@ Date: 2026-10-01
 Candidate branch: `release/stage8-live-test-readiness-20261001`  
 PR: #47 — Stage 8: controlled school live-test readiness
 
-Status vocabulary: **VERIFIED**, **FAILED**, **NOT CHECKED**, **DEFERRED (pilot non-blocker)**.
+Status vocabulary: **VERIFIED**, **VERIFIED WITH WARNINGS**, **FAILED**, **NOT CHECKED**, **DEFERRED (pilot non-blocker)**.
+
+Engineering control SHA evaluated before this documentation-only update: `173f0766b74fe6ede35e81a625964f8cbae4d400`. Android runtime candidate SHA: `6cceed400aaba01fc21c67e557bf60429bf5c094`.
 
 | Gate | Status | Evidence / note |
 |---|---|---|
@@ -21,27 +23,27 @@ Status vocabulary: **VERIFIED**, **FAILED**, **NOT CHECKED**, **DEFERRED (pilot 
 | Pilot feedback | VERIFIED | Authenticated bounded feedback RPC/table, direct table deny, minimal-data guidance in UI. |
 | PayFast settlement | DEFERRED (pilot non-blocker) | `pilotMode=true`, `pilotPaymentsRequired=false`, pilot verifier added. Commercial release must rerun with `--require-payfast`. |
 | Week 1 permanently free / pricing design retained | VERIFIED | Runtime keeps `weekOneAlwaysFree=true` and configured USD pricing while pilot settlement is bypassed. |
-| Milo role/stage/assessment authority | VERIFIED by source tests, CI pending final run | Server-derived role/stage; assigned-item assessment state; assistance cap; client spoof ignored. |
-| Milo prompt-injection / assessment integrity | VERIFIED by existing regression design, CI pending final run | System prompts and regression tests protect role/stage/assessment rules; no MCQ-first policy remains. |
-| Accessibility baseline | VERIFIED by source tests, CI pending final run | lang metadata, live status, semantic main/nav, focus-visible, 44px targets, reduced motion, forced colors. |
-| PWA cache privacy | VERIFIED by source tests, CI pending final run | Only explicit static shell paths cache; cross-origin and `/api/*` responses are not cached. |
+| Milo role/stage/assessment authority | VERIFIED | Server-derived role/stage; assigned-item assessment state; assistance cap; client spoof ignored. Exact-head release verification passed. |
+| Milo prompt-injection / assessment integrity | VERIFIED | Regression tests protect role/stage/assessment rules, first-attempt enforcement and bounded assistance; no multiple-choice-first policy remains. |
+| Accessibility baseline | VERIFIED | CI covers lang metadata, live status, semantic main/nav, focus-visible, 44px targets, reduced motion and forced colors. |
+| PWA cache privacy | VERIFIED | CI confirms only explicit static shell paths cache; cross-origin and `/api/*` responses are not cached. |
 | Android target API | VERIFIED | Root `android/variables.gradle`: compileSdk 36, targetSdk 36, minSdk 24. |
 | Connect Android privacy permissions | VERIFIED | Connect manifest requests INTERNET only; no location, contacts, camera, microphone, AD_ID or notification permission. |
-| Owner-controlled Android signing | NOT CHECKED | Build scripts support owner `key.properties`, but signing key and signed candidate must remain owner-controlled and require device evidence. |
-| Physical Android device smoke test for this Stage 8 SHA | NOT CHECKED | Must be run on the final candidate before expanding school cohort. |
+| Owner-controlled Android signing | NOT CHECKED | Build scripts support owner `key.properties`; signing remains an owner-controlled release step and is not needed for the CI-generated debug APK pilot smoke. |
+| Physical Android device smoke test for this Stage 8 SHA | NOT CHECKED | CI now produces an installable LMU debug APK. Install/touch/microphone/session smoke is the first real-device pilot activity before cohort expansion. |
 | Google Play target audience / Data Safety / IARC / review | DEFERRED (pilot non-blocker) | Required for Play/public distribution, not for supervised controlled-school distribution outside Play. |
 | Supabase Stage 8 schema migrations | VERIFIED | Idempotency/delivery/push foundation, explicit deny, and pilot feedback migrations applied successfully to production project. |
-| Supabase Security Advisor | VERIFIED WITH WARNINGS | Push table no-policy finding resolved. Remaining warnings: pre-existing `pg_net` in public schema, intentional authenticated SECURITY DEFINER app RPCs requiring ongoing contract review, leaked-password protection disabled. |
-| Dependency audit | VERIFIED for runtime / high severity in CI history | Runtime dependency audit previously 0 vulnerabilities; full tree currently includes moderate dev-tool transitive findings only. |
-| GitHub lint/test/build exact Stage 8 head | PENDING | Must be green before merge. |
-| Vercel preview | DEFERRED (pilot non-blocker) | PR preview status can fail from team build-rate limit; LMU canonical production hosting is Netlify. |
-| Netlify deployment of exact Stage 8 SHA | NOT CHECKED | Requires deployment of merged release candidate and hosted pilot probe. |
+| Supabase Security Advisor | VERIFIED WITH WARNINGS | Current warnings: `pg_net` in public schema, 71 authenticated SECURITY DEFINER RPC findings requiring contract review, and leaked-password protection disabled. No missing-RLS warning is present for the new Stage 8 tables. |
+| Dependency audit | VERIFIED WITH WARNINGS | Shipped runtime dependency audit is 0 vulnerabilities. Full dependency tree reports 3 moderate development-tool transitive findings; CI high-severity gate remains green. |
+| GitHub lint/test/build exact Stage 8 head | VERIFIED | Release verification passed on control SHA `173f0766...`; the preceding runtime SHA executed 188 tests with 188 pass / 0 fail and completed build. |
+| Vercel preview | DEFERRED (pilot non-blocker) | Connected Vercel integration currently exposes no teams/projects, and no deployment was attempted. The supervised Android debug-APK pilot does not require a Vercel preview. |
+| Hosted deployment of exact Stage 8 SHA | NOT CHECKED | Deliberately not performed in this Stage 8 autonomous run. Production/hosted deployment remains a separate owner-controlled gate. |
 | Backup / rollback source anchor | VERIFIED (source) | Stage 8 isolated in PR #47 against release branch; rollback is PR/base SHA based. Hosted database restore drill remains NOT CHECKED. |
 
 ## Current release decision
 
-**HOLD pending exact-head CI and hosted/device smoke evidence.**
+**READY WITH KNOWN NON-BLOCKERS for controlled real-life testing.**
 
-Once GitHub lint/test/build is green and the exact candidate is deployed and smoke-tested on HTTPS plus at least one physical Android device, this matrix can move to **READY WITH KNOWN NON-BLOCKERS** for supervised school pilot testing.
+The engineering candidate is ready to enter supervised browser and physical-device testing across all six learner stages. The first physical Android install, microphone-consent check, authenticated browser journeys and school/guardian observation are part of the testing stage and remain honestly marked NOT CHECKED until executed.
 
-This matrix does **not** declare public commercial or Google Play release readiness.
+Public commercial release, hosted production promotion, Play submission/signing, leaked-password protection, CAPTCHA/bot-abuse configuration, legal/store declarations and backup-restore drill remain separate release gates. This matrix does **not** declare public commercial or Google Play release readiness.
