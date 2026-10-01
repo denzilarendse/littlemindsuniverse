@@ -158,7 +158,8 @@ async function resolveOrCreateSession({
   engine,
   sessionMode,
   requestedSessionId,
-  intent
+  intent,
+  skillId
 }) {
   if (!trusted.learnerId) return null;
 
@@ -167,7 +168,7 @@ async function resolveOrCreateSession({
       throw new HttpError(400, 'Milo session is invalid');
     }
     const rows = await adminGet(
-      'milo_learning_sessions?select=id,profile_id,learner_id,learning_item_id,engine,session_mode,status&id=eq.'
+      'milo_learning_sessions?select=id,profile_id,learner_id,learning_item_id,primary_skill_id,engine,session_mode,status&id=eq.'
       + encodeURIComponent(requestedSessionId)
       + '&profile_id=eq.' + encodeURIComponent(user.id)
       + '&learner_id=eq.' + encodeURIComponent(trusted.learnerId)
@@ -175,14 +176,18 @@ async function resolveOrCreateSession({
     );
     const session = Array.isArray(rows) ? rows[0] : null;
     const sameItem = String(session?.learning_item_id || '') === String(trusted.learningItemId || '');
-    if (session?.id && sameItem && session.engine === engine && session.session_mode === sessionMode) {
+    const sameSkill = trusted.learningItemId || String(session?.primary_skill_id || '') === String(skillId || '');
+    if (session?.id && sameItem && sameSkill && session.engine === engine && session.session_mode === sessionMode) {
       return session.id;
     }
   }
 
-  const started = await userRpc(accessToken, 'start_milo_learning_session', {
+  const requestedSkillId = skillId == null || skillId === '' ? null : String(skillId);
+  if (requestedSkillId && !UUID_RE.test(requestedSkillId)) throw new HttpError(400, 'Curriculum skill is invalid');
+  const started = await userRpc(accessToken, 'start_milo_learning_session_v2', {
     p_learner_id: trusted.learnerId,
     p_learning_item_id: trusted.learningItemId,
+    p_skill_id: requestedSkillId,
     p_engine: engine,
     p_session_mode: sessionMode,
     p_assistance_level: trusted.level,
@@ -318,7 +323,8 @@ export async function createMiloReply(req) {
         engine,
         sessionMode,
         requestedSessionId: sessionId,
-        intent: context.intent
+        intent: context.intent,
+        skillId: context.skillId
       })
     : null;
 
