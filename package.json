@@ -12,6 +12,7 @@
     "verify:production": "node scripts/verify-production.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:bundle": "npm run android:sync && cd android && ./gradlew :app:bundleRelease",
+    "android:apk": "npm run android:sync && cd android && ./gradlew :app:assembleDebug",
     "android:assetlinks": "node scripts/generate-assetlinks.mjs",
     "android:connect:sync": "npm run build && node scripts/build-connect-android.mjs",
     "android:connect:bundle": "npm run android:connect:sync && cd android && ./gradlew :connectapp:bundleRelease",
