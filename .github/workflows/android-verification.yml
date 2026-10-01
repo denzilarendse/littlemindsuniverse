@@ -105,16 +105,26 @@ jobs:
           ./gradlew :app:lintRelease :app:testReleaseUnitTest :app:assembleDebugAndroidTest \
             :connectapp:lintRelease :connectapp:testReleaseUnitTest :connectapp:assembleDebugAndroidTest
 
-      - name: Build unsigned API 36 release bundles and Connect APK
+      - name: Build API 36 release bundles, LMU pilot APK and Connect APK
         run: |
           cd android
-          ./gradlew :app:bundleRelease :connectapp:bundleRelease :connectapp:assembleRelease
+          ./gradlew :app:bundleRelease :app:assembleDebug :connectapp:bundleRelease :connectapp:assembleRelease
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/lmu-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/lmu-jarsigner.txt
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          sha256sum app/build/outputs/apk/debug/app-debug.apk
           jarsigner -verify connectapp/build/outputs/bundle/release/connectapp-release.aab 2>&1 | tee /tmp/connect-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/connect-jarsigner.txt
           test -s connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
           sha256sum connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
+
+      - name: Upload LMU installable pilot debug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-pilot-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload LMU unsigned release-candidate artifact
         uses: actions/upload-artifact@v7
