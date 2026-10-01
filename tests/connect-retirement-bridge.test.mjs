@@ -26,11 +26,16 @@ test('embedded LMU loads the Connect retirement bridge after the legacy applicat
   assert.match(sw, /\/assets\/connect-bridge\.js/);
 });
 
-test('every known user-facing WhatsApp-era phrase still emitted by compatibility code has an explicit Connect replacement', () => {
-  const compatibilitySource = app + '\n' + reports;
+test('canonical runtime no longer emits known user-facing WhatsApp-era copy', () => {
+  const canonicalRuntime = app + '\n' + reports;
   for (const phrase of retiredCopy) {
-    assert.ok(compatibilitySource.includes(phrase), `expected compatibility source phrase missing: ${phrase}`);
-    assert.ok(bridge.includes(phrase), `Connect bridge does not retire user-facing copy: ${phrase}`);
+    assert.equal(canonicalRuntime.includes(phrase), false, `canonical runtime still emits retired copy: ${phrase}`);
+  }
+});
+
+test('compatibility bridge still recognizes historical cached WhatsApp-era copy', () => {
+  for (const phrase of retiredCopy) {
+    assert.ok(bridge.includes(phrase), `Connect bridge no longer recognizes historical phrase: ${phrase}`);
   }
 });
 
