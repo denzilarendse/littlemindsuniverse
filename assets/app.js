@@ -366,7 +366,7 @@ async function generateClassroomCode(classroomId){if(state.mode!=='live'||state.
 async function revokeClassroomCode(classroomId,codeId){if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!state.profile?.id)return toast('A live teacher account is required');if(!confirm('Revoke this join code? Existing learners will remain in the classroom, but this code can no longer be used.'))return;const button=$('#classRevokeCode');if(button){button.disabled=true;button.textContent='Revoking…'}try{const {error}=await state.supabase.from('classroom_codes').update({active:false}).eq('id',codeId).eq('classroom_id',classroomId);if(error){console.error('Revoke classroom code failed',error);return toast('Join code could not be revoked. Please try again.')}toast('Join code revoked');return manageClassroom(classroomId)}catch(e){console.error('Revoke classroom code failed',e);toast('Join code could not be revoked. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Revoke code'}}}
 async function removeClassroomLearner(classroomId,learnerId,learnerName){if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!state.profile?.id)return toast('A live teacher account is required');if(!confirm(`Remove ${learnerName||'this learner'} from this classroom? Their previous classroom membership record will be preserved.`))return;const button=document.querySelector(`[data-remove-learner="${learnerId}"]`);if(button){button.disabled=true;button.textContent='Removing…'}try{const {error}=await state.supabase.from('classroom_members').update({status:'removed'}).eq('classroom_id',classroomId).eq('learner_id',learnerId).eq('status','active');if(error){console.error('Remove classroom learner failed',error);return toast('Learner could not be removed. Please try again.')}toast('Learner removed from classroom');return manageClassroom(classroomId)}catch(e){console.error('Remove classroom learner failed',e);toast('Learner could not be removed. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Remove'}}}
 async function manageClassroom(id){const c=state.classrooms.find(x=>String(x.id)===String(id));if(!c)return toast('Classroom could not be found');const d=$('#authDialog');d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><p>${esc(c.curriculum_code||'CAPS')} · ${esc(c.age_band||'mixed ages')}</p><div class="notice">Loading classroom members and join code…</div></div>`;d.showModal();if(state.mode!=='live'||!state.supabase){d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><p>Classroom management uses the live teacher account.</p><div class="actions"><button class="ghost" id="classClose">Close</button></div></div>`;$('#classClose').onclick=()=>d.close();return}try{const [{data:members,error:mErr},{data:codes,error:cErr}]=await Promise.all([state.supabase.from('classroom_members').select('learner_id,status,joined_at').eq('classroom_id',c.id).eq('status','active').order('joined_at',{ascending:true}),state.supabase.from('classroom_codes').select('id,code,active,maximum_uses,current_uses,expires_at,created_at').eq('classroom_id',c.id).eq('active',true).order('created_at',{ascending:false}).limit(1)]);if(mErr||cErr){console.error('Classroom management load failed',mErr||cErr);throw new Error('classroom-load-failed')}const learnerIds=(members||[]).map(m=>m.learner_id).filter(Boolean);let learnerMap=new Map();if(learnerIds.length){const {data:learnerRows,error:lErr}=await state.supabase.from('learners').select('id,display_name,stage_code').in('id',learnerIds);if(lErr){console.error('Classroom learner details failed',lErr);throw new Error('classroom-learners-failed')}learnerMap=new Map((learnerRows||[]).map(l=>[l.id,l]))}const code=codes?.[0];const memberHtml=members?.length?members.map(m=>{const l=learnerMap.get(m.learner_id);return `<div class="task"><div><b>${esc(l?.display_name||'Learner')}</b><p>${esc(l?.stage_code||'Stage not set')}</p><span class="tag">Active</span></div><button class="ghost" data-remove-learner="${esc(m.learner_id)}" data-remove-name="${esc(l?.display_name||'Learner')}">Remove</button></div>`}).join(''):'<div class="empty">No active learners in this classroom yet.</div>';const codeHtml=code?`<div class="notice ok"><b>Join code: ${esc(code.code)}</b><br><span>${code.maximum_uses==null?'No use limit':`${Number(code.current_uses||0)} of ${Number(code.maximum_uses)} uses`} · ${code.expires_at?`expires ${esc(new Date(code.expires_at).toLocaleDateString())}`:'no expiry set'}</span></div><div class="actions"><button class="ghost" id="classRevokeCode">Revoke code</button></div>`:`<div class="notice">No active join code for this classroom.</div><div class="actions"><button class="primary" id="classGenerateCode">Generate join code</button></div>`;d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><p>${esc(c.curriculum_code||'CAPS')} · ${esc(c.age_band||'mixed ages')} · ${members?.length||0} active learner${members?.length===1?'':'s'}</p><h3>Join / invite code</h3>${codeHtml}<h3>Learners</h3>${memberHtml}<div class="actions"><button class="ghost" id="classClose">Close</button></div></div>`;$('#classClose').onclick=()=>d.close();const generateButton=$('#classGenerateCode');if(generateButton)generateButton.onclick=()=>generateClassroomCode(c.id);const revokeButton=$('#classRevokeCode');if(revokeButton&&code)revokeButton.onclick=()=>revokeClassroomCode(c.id,code.id);document.querySelectorAll('[data-remove-learner]').forEach(b=>b.onclick=()=>removeClassroomLearner(c.id,b.dataset.removeLearner,b.dataset.removeName))}catch(e){console.error('Classroom management failed',e);d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><div class="notice">Classroom details could not be loaded just now. Please try again.</div><div class="actions"><button class="ghost" id="classClose">Close</button></div></div>`;$('#classClose').onclick=()=>d.close()}}
-async function openTask(id){const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;if(['submitted','reviewed'].includes(t.recipient_status))return toast(t.recipient_status==='reviewed'?'This work has been reviewed by your teacher.':'This evidence is already submitted for review.');if(state.mode==='live'&&state.learner?.id&&state.supabase){const {error:startError}=await state.supabase.from('learning_item_recipients').update({status:'started'}).eq('learning_item_id',t.id).eq('learner_id',state.learner.id).eq('status','assigned');if(startError)console.warn('Recipient start status update failed',startError);else if(t.recipient_status==='assigned'||!t.recipient_status)t.recipient_status='started'}const d=$('#authDialog');d.innerHTML=`<div class="modal-inner lmu-workspace"><span class="tag">${esc(t.subject||'Learning')}</span><h2>${esc(t.title)}</h2><p>${esc(t.instructions)}</p><div class="field"><label for="evidenceText">Your written attempt / explanation</label><textarea id="evidenceText" class="textarea" placeholder="Show your thinking, explanation, code, reflection, or describe what you drew."></textarea></div><div class="lmu-whiteboard-shell"><div class="split"><div><div class="eyebrow">Learner whiteboard</div><h3>Show your working</h3></div><span class="tag" id="wbStatus">Ready</span></div><div class="lmu-whiteboard-tools" role="toolbar" aria-label="Whiteboard tools"><button type="button" class="ghost wb-tool active" id="wbPen">Pen</button><button type="button" class="ghost wb-tool" id="wbEraser">Eraser</button><label class="wb-control">Colour <input id="wbColour" type="color" value="#172033" aria-label="Pen colour"></label><label class="wb-control">Size <input id="wbSize" type="range" min="2" max="18" value="4" aria-label="Pen thickness"></label><button type="button" class="ghost" id="wbUndo">Undo</button><button type="button" class="ghost" id="wbClear">Clear</button></div><div class="lmu-canvas-wrap"><canvas id="learnerWhiteboard" class="lmu-whiteboard" aria-label="Learner drawing whiteboard"></canvas></div><div class="split wb-meta"><small class="muted">Finger, stylus or mouse · automatically saved on this device</small><small class="muted" id="wbActivityCount">0 actions</small></div><details class="wb-history"><summary>Activity history</summary><div id="wbActivityLog" class="wb-log"><div class="empty">No whiteboard actions yet.</div></div></details></div><div class="actions"><button class="ghost" id="taskHint">Ask Milo for a hint</button><button class="primary" id="taskSubmit">Submit evidence</button></div></div>`;d.showModal();const board=initLearnerWhiteboard(t,d);$('#taskHint').onclick=()=>{const attempt=$('#evidenceText')?.value||'';d.close();state.miloLearningItemId=t.id;state.miloStudioId='brilliant-milo';state.miloSessionId=null;state.miloFirstAttempt=attempt.trim().slice(0,6000);state.view='milo';state.chat.push({who:'user',text:`I am working on ${t.title}. My first attempt is: ${attempt||'(not written yet)'}`});render()};$('#taskSubmit').onclick=()=>submitEvidence(t,$('#evidenceText').value,d,board)}
+async function openTask(id){const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;if(['submitted','reviewed'].includes(t.recipient_status))return toast(t.recipient_status==='reviewed'?'This work has been reviewed by your teacher.':'This evidence is already submitted for review.');if(state.mode==='live'&&state.learner?.id&&state.supabase){const {error:startError}=await state.supabase.from('learning_item_recipients').update({status:'started'}).eq('learning_item_id',t.id).eq('learner_id',state.learner.id).eq('status','assigned');if(startError)console.warn('Recipient start status update failed',startError);else if(t.recipient_status==='assigned'||!t.recipient_status)t.recipient_status='started'}const d=$('#authDialog');d.innerHTML=`<div class="modal-inner lmu-workspace"><span class="tag">${esc(t.subject||'Learning')}</span><h2>${esc(t.title)}</h2><p>${esc(t.instructions)}</p><div class="field"><label for="evidenceText">Your written attempt / explanation</label><textarea id="evidenceText" class="textarea" placeholder="Show your thinking, explanation, code, reflection, or describe what you drew."></textarea></div><div class="lmu-whiteboard-shell"><div class="split"><div><div class="eyebrow">Learner whiteboard</div><h3>Show your working</h3></div><span class="tag" id="wbStatus">Ready</span></div><div class="lmu-whiteboard-tools" role="toolbar" aria-label="Whiteboard tools"><button type="button" class="ghost wb-tool active" id="wbPen">Pen</button><button type="button" class="ghost wb-tool" id="wbEraser">Eraser</button><label class="wb-control">Colour <input id="wbColour" type="color" value="#172033" aria-label="Pen colour"></label><label class="wb-control">Size <input id="wbSize" type="range" min="2" max="18" value="4" aria-label="Pen thickness"></label><button type="button" class="ghost" id="wbUndo">Undo</button><button type="button" class="ghost" id="wbClear">Clear</button></div><div class="lmu-canvas-wrap"><canvas id="learnerWhiteboard" class="lmu-whiteboard" aria-label="Learner drawing whiteboard"></canvas></div><div class="split wb-meta"><small class="muted">Finger, stylus or mouse · automatically saved on this device</small><small class="muted" id="wbActivityCount">0 actions</small></div><details class="wb-history"><summary>Activity history</summary><div id="wbActivityLog" class="wb-log"><div class="empty">No whiteboard actions yet.</div></div></details></div><div class="actions"><button class="ghost" id="taskHint">Ask Milo for a hint</button><button class="ghost" id="taskVoice">Voice coach</button><button class="ghost" id="taskCode">Coding Studio</button><button class="primary" id="taskSubmit">Submit evidence</button></div></div>`;d.showModal();const board=initLearnerWhiteboard(t,d);$('#taskHint').onclick=()=>{const attempt=$('#evidenceText')?.value||'';d.close();state.miloLearningItemId=t.id;state.miloStudioId='brilliant-milo';state.miloSessionId=null;state.miloFirstAttempt=attempt.trim().slice(0,6000);state.view='milo';state.chat.push({who:'user',text:`I am working on ${t.title}. My first attempt is: ${attempt||'(not written yet)'}`});render()};$('#taskVoice').onclick=()=>{const attempt=$('#evidenceText')?.value||'';d.close();state.miloLearningItemId=t.id;state.miloStudioId='voice-language';state.miloSessionId=null;state.miloFirstAttempt=attempt.trim().slice(0,6000);state.chat=[];state.view='milo';render();const input=$('#miloInput');if(input)input.value='Help me explain this learning task aloud in my own words. Listen for clarity and vocabulary, but do not give me the answer.'};$('#taskCode').onclick=()=>{state.miloLearningItemId=t.id;state.miloStudioId='coding-ai';d.close();openCodingStudio()};$('#taskSubmit').onclick=()=>submitEvidence(t,$('#evidenceText').value,d,board)}
 
 
 function whiteboardStorageKey(t){return `lmu-whiteboard-v1:${state.learner?.id||state.session?.user?.id||'local'}:${t.id}`}
@@ -436,91 +436,63 @@ async function publishLearningItem(item,learners,dialog){
 
 async function loadTeacherSubmissionEvidence(x,d){
   if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!x?.submission_id)return;
-
-  const host=d?.querySelector?.('#teacherEvidenceViewer');
-  if(!host)return;
-
+  const host=d?.querySelector?.('#teacherEvidenceViewer');if(!host)return;
   host.innerHTML='<div class="notice">Loading private learner evidence…</div>';
-
-  let objectUrl=null;
+  const objectUrls=[];
+  const cleanup=()=>{for(const url of objectUrls)try{URL.revokeObjectURL(url)}catch(error){};objectUrls.length=0};
+  d.addEventListener('close',cleanup,{once:true});
 
   try{
-    const {data,error}=await state.supabase
-      .from('learner_evidence_items')
-      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,captured_at')
+    const {data,error}=await state.supabase.from('learner_evidence_items')
+      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,duration_seconds,transcript_text,captured_at')
       .eq('submission_id',x.submission_id)
       .in('status',['parent_approved','processing','milo_analyzed','teacher_reviewed'])
-      .order('captured_at',{ascending:false});
-
+      .order('captured_at',{ascending:true});
     if(error)throw error;
-
     const evidence=data||[];
-
     if(!evidence.length){
-      host.innerHTML='<div class="notice">No approved private media evidence is attached to this submission.</div>';
+      host.innerHTML='<div class="notice">No guardian-approved private media or document evidence is available yet. Do not approve evidence you have not inspected.</div>';
       return;
     }
 
-    const whiteboard=evidence.find(e=>
-      e.evidence_type==='whiteboard' &&
-      e.storage_path
-    );
+    const cards=[];
+    for(const item of evidence){
+      const type=String(item.evidence_type||'evidence');
+      const mime=String(item.mime_type||'');
+      let preview='';
+      if(item.storage_path){
+        const {data:blob,error:downloadError}=await state.supabase.storage.from('learner-evidence-private').download(item.storage_path);
+        if(downloadError)throw downloadError;
+        if(!blob)throw new Error('Private evidence download returned no data');
 
-    if(!whiteboard){
-      host.innerHTML=`<div class="notice"><b>Approved evidence attached</b><br>${evidence.length} approved evidence item${evidence.length===1?'':'s'} available. Whiteboard preview is not present for this submission.</div>`;
-      return;
-    }
-
-    const {data:blob,error:downloadError}=await state.supabase.storage
-      .from('learner-evidence-private')
-      .download(whiteboard.storage_path);
-
-    if(downloadError)throw downloadError;
-    if(!blob)throw new Error('Private whiteboard download returned no data');
-
-    const mime=String(blob.type||whiteboard.mime_type||'');
-    if(mime && mime!=='image/png' && !mime.startsWith('image/'))
-      throw new Error('Whiteboard evidence is not a supported image');
-
-    objectUrl=URL.createObjectURL(blob);
-
-    host.innerHTML=`
-      <div class="notice">
-        <b>Private whiteboard evidence</b><br>
-        This evidence is visible through the teacher's authorised learner access.
-      </div>
-      <div style="margin-top:10px">
-        <img
-          id="teacherWhiteboardEvidenceImage"
-          src="${esc(objectUrl)}"
-          alt="Learner whiteboard evidence"
-          style="display:block;width:100%;max-height:520px;object-fit:contain;background:#fff;border:1px solid rgba(127,127,127,.25);border-radius:12px"
-        >
-      </div>
-      <p class="muted">
-        ${esc(whiteboard.mime_type||blob.type||'image/png')}
-        · ${Number(whiteboard.file_size_bytes||blob.size||0).toLocaleString()} bytes
-      </p>`;
-
-    const cleanup=()=>{
-      if(objectUrl){
-        URL.revokeObjectURL(objectUrl);
-        objectUrl=null;
+        if(type==='whiteboard'||type==='photo'||mime.startsWith('image/')){
+          const url=URL.createObjectURL(blob);objectUrls.push(url);
+          preview='<img src="'+esc(url)+'" alt="Learner '+esc(type)+' evidence" class="teacher-evidence-image">';
+        }else if(type==='audio'||mime.startsWith('audio/')){
+          const url=URL.createObjectURL(blob);objectUrls.push(url);
+          preview='<audio controls preload="metadata" src="'+esc(url)+'" class="teacher-evidence-media"></audio>';
+        }else if(type==='video'||mime.startsWith('video/')){
+          const url=URL.createObjectURL(blob);objectUrls.push(url);
+          preview='<video controls preload="metadata" src="'+esc(url)+'" class="teacher-evidence-media"></video>';
+        }else if(type==='document'&&(mime.startsWith('text/')||mime==='application/javascript'||mime==='application/json')&&Number(blob.size||0)<=524288){
+          const text=await blob.text();
+          preview='<pre class="code-output teacher-document-preview">'+esc(text.slice(0,12000))+'</pre>'+(text.length>12000?'<small class="muted">Preview truncated to 12,000 characters.</small>':'');
+        }else{
+          preview='<div class="notice">Private file attached. This file type is not rendered inline in the current reviewer.</div>';
+        }
+      }else if(item.transcript_text){
+        preview='<div class="notice"><b>Transcript</b><br>'+esc(item.transcript_text)+'</div>';
       }
-    };
-
-    d.addEventListener('close',cleanup,{once:true});
-
-  }catch(e){
-    if(objectUrl)URL.revokeObjectURL(objectUrl);
-    console.error('Teacher private evidence load failed',e);
-
-    if(host?.isConnected){
-      host.innerHTML='<div class="notice">Private evidence could not be loaded. The review remains available, but do not approve it until the required evidence can be inspected.</div>';
+      const meta=[mime||type,Number(item.file_size_bytes||0)>0?Number(item.file_size_bytes).toLocaleString()+' bytes':'',item.duration_seconds?Math.round(Number(item.duration_seconds))+' sec':''].filter(Boolean).join(' · ');
+      cards.push('<section class="teacher-evidence-card"><div class="split"><div><span class="tag ok">'+esc(type)+'</span> <strong>Approved learner evidence</strong></div><small class="muted">'+esc(item.status)+'</small></div>'+preview+'<small class="muted">'+esc(meta)+'</small></section>');
     }
+    host.innerHTML='<div class="notice ok"><b>'+evidence.length+' approved evidence item'+(evidence.length===1?'':'s')+'</b><br>Loaded through the teacher’s authorised private learner-evidence access.</div>'+cards.join('');
+  }catch(error){
+    cleanup();
+    console.error('Teacher private evidence load failed',error);
+    if(host?.isConnected)host.innerHTML='<div class="notice warn">Private evidence could not be loaded. Do not approve this submission until the required evidence can be inspected.</div>';
   }
 }
-
 function openSubmissionReview(submissionId){if(state.mode!=='live'||state.role!=='teacher'||!state.supabase)return toast('A live teacher account is required');const x=(state.teacherSubmissions||[]).find(v=>String(v.submission_id)===String(submissionId));if(!x)return toast('Submission could not be found');const d=$('#authDialog');const mapped=Number(x.mapped_skill_count||0);d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher evidence review</div><h2>${esc(x.title||'Learning evidence')}</h2><p><b>${esc(x.learner_name||'Learner')}</b> · ${esc(x.classroom_name||'Classroom')}</p><div class="notice"><b>Learner evidence</b><br>${esc(x.response_text||'No written response was supplied.')}</div><div id="teacherEvidenceViewer"><div class="notice">Loading approved private evidence…</div></div><p class="muted">Assistance level ${esc(x.assistance_level??0)} · ${mapped} mapped skill${mapped===1?'':'s'}</p>${mapped===0?'<div class="notice">This learning item has no mapped curriculum skill. The review can be recorded, but it must not create artificial mastery evidence.</div>':''}<div class="field"><label>Mastery judgement</label><select id="reviewJudgement" class="select"><option value="not_yet">Not yet</option><option value="developing">Developing</option><option value="secure">Secure</option><option value="strong">Strong</option></select></div><div class="field"><label>Misconception / difficulty noticed</label><textarea id="reviewMisconception" class="textarea" placeholder="Optional specific misconception"></textarea></div><div class="field"><label>Teacher feedback</label><textarea id="reviewFeedback" class="textarea" placeholder="Clear feedback for this learner"></textarea></div><div class="field"><label>Recommended next step</label><textarea id="reviewNextStep" class="textarea" placeholder="Practice, intervention, enrichment or next learning step"></textarea></div><div class="actions"><button class="primary" id="saveSubmissionReview">Approve review</button><button class="ghost" id="reviewClose">Close</button></div></div>`;d.showModal();loadTeacherSubmissionEvidence(x,d);$('#reviewClose').onclick=()=>d.close();$('#saveSubmissionReview').onclick=()=>submitTeacherReview(x,d)}
 
 async function submitTeacherReview(x,d){const judgement=$('#reviewJudgement')?.value||'developing';const misconception=$('#reviewMisconception')?.value.trim()||null;const feedback=$('#reviewFeedback')?.value.trim()||null;const nextStep=$('#reviewNextStep')?.value.trim()||null;const button=$('#saveSubmissionReview');if(button?.disabled)return;if(button){button.disabled=true;button.textContent='Saving review…'}try{const {error}=await state.supabase.rpc('review_learner_submission',{p_submission_id:x.submission_id,p_mastery_judgement:judgement,p_misconception:misconception,p_teacher_feedback:feedback,p_recommended_next_step:nextStep});if(error)throw error;state.teacherSubmissions=state.teacherSubmissions.filter(v=>String(v.submission_id)!==String(x.submission_id));if(d?.open)d.close();toast(Number(x.mapped_skill_count||0)>0?'Review approved and mastery evidence updated':'Review approved. No mastery was changed because no skill is mapped.');render()}catch(e){console.error('Teacher submission review failed',e);toast('The review could not be approved. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Approve review'}}}
