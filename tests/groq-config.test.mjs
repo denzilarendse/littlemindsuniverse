@@ -25,7 +25,7 @@ test('Milo uses GROQ_API_KEY and the Groq OpenAI-compatible endpoint', async () 
   global.fetch = async (url, options = {}) => {
     const u = String(url);
     if (u.endsWith('/auth/v1/user')) return jsonResponse({ id: userId });
-    if (u.includes('/rest/v1/profiles?')) return jsonResponse([{ id: userId, role: 'learner' }]);
+    if (u.includes('/rest/v1/profiles?')) return jsonResponse([{ id: userId, role: 'parent' }]);
     if (u.includes('/rest/v1/milo_assistance_events?')) return jsonResponse([]);
     if (u.endsWith('/rest/v1/rpc/log_milo_assistance_event')) {
       auditBody = JSON.parse(options.body);
