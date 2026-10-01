@@ -29,7 +29,6 @@ test('privacy requests have an explicit direct-client deny policy',()=>{
 });
 
 test('canonical classroom messaging copy is in-app only',()=>{
-  assert.doesNotMatch(app,/WhatsApp mirrors permitted updates/);
-  assert.doesNotMatch(app,/WhatsApp, when enabled/);
+  assert.doesNotMatch(app,/external phone-number messaging provider/i);
   assert.match(app,/LittleMindsUniverse Connect/);
 });
