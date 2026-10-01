@@ -96,7 +96,7 @@ test('pilot feedback is authenticated, bounded and avoids direct table access',(
     'create or replace function public.submit_pilot_feedback',
     'char_length(v_body) < 3 or char_length(v_body) > 2000'
   ]) assert.ok(feedbackMigration.includes(fragment),'missing '+fragment);
-  assert.ok(app.includes("rpc('submit_pilot_feedback'"));
+  assert.match(app,/state\.supabase\.rpc\('submit_pilot_feedback'/);
   assert.ok(app.includes('Do not include passwords, phone numbers, private learner conversations'));
 });
 
