@@ -109,7 +109,7 @@ jobs:
       - name: Build unsigned API 36 release bundles and Connect APK
         run: |
           cd android
-          ./gradlew :app:bundleRelease :connectapp:bundleRelease :connectapp:assembleRelease
+          ./gradlew :app:bundleRelease :app:assembleDebug :connectapp:bundleRelease :connectapp:assembleRelease
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/lmu-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/lmu-jarsigner.txt
           jarsigner -verify connectapp/build/outputs/bundle/release/connectapp-release.aab 2>&1 | tee /tmp/connect-jarsigner.txt
@@ -122,6 +122,14 @@ jobs:
         with:
           name: littlemindsuniverse-android-api36-unsigned
           path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload LMU debug APK for physical-device pilot testing
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-android-api36-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
 
