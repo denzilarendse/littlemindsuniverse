@@ -139,7 +139,124 @@ function teacherSubmissionInbox(){if(state.role!=='teacher')return '';const rows
 
 function teacherSavedWork(){if(state.role!=='teacher')return '';const items=state.tasks||[];return `<div class="card"><div class="eyebrow">Teacher publishing</div><h2>Saved work</h2><p class="muted">Choose a saved draft to assign learners and publish.</p>${items.length?items.map(item=>{const classroom=state.classrooms.find(c=>String(c.id)===String(item.classroom_id));return `<div class="task"><div><span class="tag">${esc(item.status||'draft')}</span><p><b>${esc(item.title||'Untitled work')}</b></p><small class="muted">${esc(item.subject||'General')} · ${esc(classroom?.name||'Classroom')}</small></div><button class="primary" data-publish-item="${esc(item.id)}">${item.status==='published'?'View':'Assign & publish'}</button></div>`}).join(''):'<div class="empty">No saved teacher work yet.</div>'}</div>`}
 
-function milo(){const locked=state.role==='learner'?'Milo asks for your attempt first.':'Milo drafts; human approval remains required.';return `<div class="card"><div class="split"><div><div class="eyebrow">Role-aware AI companion</div><h2>Milo · ${esc(state.role)}</h2></div><span class="tag">${esc(locked)}</span></div><div class="chat" id="chatBox" aria-live="polite" aria-busy="${state.miloPending?'true':'false'}">${state.chat.length?state.chat.map(m=>`<div class="bubble ${m.who}">${esc(m.text)}</div>`).join(''):`<div class="bubble milo">Hi. ${state.role==='learner'?'Show me what you have tried and I will help you understand the next step.':state.role==='teacher'?'Tell me what you want to teach and I will draft something for your review.':'I can explain teacher-approved progress and suggest safe home support.'}</div>`}</div><div class="field"><textarea id="miloInput" class="textarea" aria-label="Message to Milo" placeholder="Write your message..."></textarea></div><div class="actions"><select id="miloHelp" class="select" style="max-width:180px">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${Number(state.miloHelpLevel)===n?'selected':''}>Help ${n}</option>`).join('')}</select><button class="primary" data-action="milo-send" ${state.miloPending?'disabled':''}>${state.miloPending?'Milo is thinking…':'Send to Milo'}</button></div></div>`}
+
+function currentMiloStudio(){return state.miloStudioId?window.LMU_STUDIOS?.byId?.(state.miloStudioId):null}
+function availableMiloStudios(){return window.LMU_STUDIOS?.forAge?.(learnerAge())||[]}
+function voiceEvidenceAllowed(){return !!state.evidenceFeatures?.audio_evidence_enabled}
+function tutorCatalogFiltered(){
+  const q=String(state.tutorSearch||'').trim().toLowerCase();
+  const rows=state.tutorCatalog||[];
+  if(!q)return rows.slice(0,12);
+  return rows.filter(s=>[s.subject,s.skill_name,s.skill_code,s.description].some(v=>String(v||'').toLowerCase().includes(q))).slice(0,20);
+}
+function startMiloStudio(id){
+  const studio=window.LMU_STUDIOS?.byId?.(id);
+  if(!studio||!availableMiloStudios().some(s=>s.id===id))return toast('That Milo learning mode is not available for this learner stage.');
+  if(id==='coding-ai')return openCodingStudio();
+  state.miloStudioId=id;state.miloSessionId=null;state.miloFirstAttempt='';state.miloTutorSkillId=null;state.miloTutorSkillName='';state.miloTutorSubject='';state.chat=[];state.view='milo';render();
+  const input=$('#miloInput');if(input)input.value=studio.starter;
+}
+function continueCurriculumWithMilo(){
+  const task=(state.tasks||[]).find(t=>!['submitted','reviewed'].includes(t.recipient_status||'assigned'));
+  if(!task)return toast('There is no active teacher-assigned item to continue right now.');
+  state.miloStudioId='brilliant-milo';state.miloLearningItemId=task.id;state.miloSessionId=null;state.miloFirstAttempt='';state.miloTutorSkillId=null;state.miloTutorSkillName=task.title||'Current lesson';state.miloTutorSubject=task.subject||'Current curriculum';state.chat=[];state.view='milo';render();
+  const input=$('#miloInput');if(input)input.value='Help me continue "'+String(task.title||'this lesson')+'". Start by checking what I understand, then teach without doing the work for me.';
+}
+function startTutorSkill(skillId){
+  const skill=(state.tutorCatalog||[]).find(s=>String(s.skill_id)===String(skillId));
+  if(!skill)return toast('That curriculum skill is no longer available.');
+  if(Number(learnerAge())<8)return toast('The live curriculum tutor opens from age 8. Younger learners use the age-specific Milo worlds.');
+  state.miloStudioId='brilliant-milo';state.miloLearningItemId=null;state.miloSessionId=null;state.miloFirstAttempt='';state.miloTutorSkillId=skill.skill_id;state.miloTutorSkillName=skill.skill_name;state.miloTutorSubject=skill.subject;state.chat=[];state.view='milo';render();
+  const input=$('#miloInput');if(input)input.value='Teach me '+String(skill.skill_name||'this skill')+' in '+String(skill.subject||'my curriculum')+'. First find out what I already understand, then guide me through a live lesson and a transfer check.';
+}
+function speakMiloReply(){
+  if(!('speechSynthesis' in window))return toast('Read-aloud is not available on this device.');
+  const last=[...state.chat].reverse().find(m=>m.who==='milo');if(!last?.text)return toast('Milo has not replied yet.');
+  try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(last.text).slice(0,1800));u.lang=state.language==='af'?'af-ZA':state.language==='zu'?'zu-ZA':state.language==='xh'?'xh-ZA':'en-ZA';u.rate=.92;window.speechSynthesis.speak(u)}
+  catch(error){console.warn('Milo read-aloud failed',error);toast('Read-aloud could not start.')}
+}
+function stopVoiceTracks(stream){try{stream?.getTracks?.().forEach(track=>track.stop())}catch(error){}}
+async function toggleVoiceCapture(){
+  if(state.role!=='learner'||state.mode!=='live')return toast('Sign in as a learner to record a voice sample.');
+  if(!voiceEvidenceAllowed())return toast('Voice recording is locked until '+String(state.evidenceFeatures?.evidence_approver_label||'your guardian')+' enables audio evidence.');
+  if(state.voiceCapture?.recorder&&state.voiceCapture.recorder.state==='recording'){state.voiceCapture.recorder.stop();return}
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)return toast('Voice recording is not supported on this device/browser.');
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    const preferred=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(type=>MediaRecorder.isTypeSupported?.(type));
+    const recorder=new MediaRecorder(stream,preferred?{mimeType:preferred}:undefined);const chunks=[];const startedAt=Date.now();
+    recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+    recorder.onstop=()=>{stopVoiceTracks(stream);const duration=Math.max(.1,Math.min(20,(Date.now()-startedAt)/1000));const mimeType=recorder.mimeType||chunks[0]?.type||'audio/webm';const blob=new Blob(chunks,{type:mimeType});if(state.voiceCapture?.url)URL.revokeObjectURL(state.voiceCapture.url);state.voiceCapture={blob:blob,url:URL.createObjectURL(blob),duration:duration,mimeType:mimeType,recorder:null};render();toast('Voice sample kept on this device until you choose to attach it.')};
+    state.voiceCapture={recorder:recorder,stream:stream,url:null,blob:null,duration:0,mimeType:preferred||'audio/webm'};recorder.start(250);render();setTimeout(()=>{if(recorder.state==='recording')recorder.stop()},20000);
+  }catch(error){console.error('Voice capture failed',error);toast('Microphone access could not be started.')}
+}
+async function attachVoiceEvidence(){
+  const capture=state.voiceCapture,learningItemId=state.miloLearningItemId;
+  if(!capture?.blob?.size)return toast('Record a voice sample first.');
+  if(!learningItemId)return toast('Open voice coaching from a teacher-assigned learning item before attaching evidence.');
+  if(!state.supabase||!state.learner?.id)return toast('A live learner account is required.');
+  const learnerId=state.learner.id,ext=capture.mimeType.includes('mp4')?'m4a':'webm',path=learnerId+'/audio/'+String(learningItemId).replace(/[^a-zA-Z0-9_-]/g,'')+'/'+Date.now()+'.'+ext,bucket=state.supabase.storage.from('learner-evidence-private');
+  const uploaded=await bucket.upload(path,capture.blob,{contentType:capture.mimeType,cacheControl:'3600',upsert:false});
+  if(uploaded.error){console.error('Voice evidence upload failed',uploaded.error);return toast('Voice evidence could not be uploaded.')}
+  try{
+    const result=await state.supabase.rpc('create_learner_evidence_item',{p_learning_item_id:learningItemId,p_learner_id:learnerId,p_evidence_type:'audio',p_storage_path:path,p_mime_type:capture.mimeType,p_file_size_bytes:capture.blob.size,p_duration_seconds:capture.duration,p_transcript_text:null});
+    if(result.error)throw result.error;if(!result.data)throw new Error('No evidence id returned');toast('Voice evidence saved privately and queued under guardian evidence rules.');
+  }catch(error){console.error('Voice evidence registration failed',error);try{await bucket.remove([path])}catch(cleanupError){console.warn('Voice upload cleanup failed',cleanupError)}toast('Voice evidence was not registered. The uploaded copy was removed.')}
+}
+function openCodingStudio(){
+  if(state.role!=='learner')return toast('Coding Studio is a learner workspace.');
+  if(Number(learnerAge())<8)return toast('Coding & AI Builder opens from the Discovery Builders stage.');
+  state.miloStudioId='coding-ai';state.miloSessionId=null;
+  const d=$('#authDialog'),templates=window.LMU_CODING?.templates||{},initial=state.codingSource||templates.starter?.code||'console.log("Hello, Milo!");';
+  const templateButtons=Object.entries(templates).map(([id,t])=>'<button type="button" class="ghost" data-code-template="'+esc(id)+'">'+esc(t.label)+'</button>').join('');
+  d.innerHTML='<div class="modal-inner coding-studio"><div class="eyebrow">Milo Coding & AI Builder</div><h2>Safe JavaScript Studio</h2><p>Run small beginner programs in an isolated worker. Network calls, host files and unrestricted shell access are not part of this sandbox.</p><div class="actions">'+templateButtons+'</div><div class="field"><label for="codingSource">Your code</label><textarea id="codingSource" class="textarea code-editor" spellcheck="false">'+esc(initial)+'</textarea></div><div class="actions"><button type="button" class="primary" id="runCodeBtn">Run code</button><button type="button" class="ghost" id="askMiloCodeBtn">Ask Milo to debug with me</button>'+(state.miloLearningItemId?'<button type="button" class="ghost" id="attachCodeBtn">Attach to assignment</button>':'')+'<button type="button" class="ghost" id="codingClose">Close</button></div><pre id="codingOutput" class="code-output" aria-live="polite">Ready.</pre><div class="notice">Milo may explain and debug with you, but assessed projects must remain the learner\\'s own work.</div></div>';
+  d.showModal();const source=$('#codingSource');source.addEventListener('input',()=>{state.codingSource=source.value});
+  document.querySelectorAll('[data-code-template]').forEach(b=>b.onclick=()=>{const t=templates[b.dataset.codeTemplate];if(!t)return;source.value=t.code;state.codingSource=t.code;$('#codingOutput').textContent='Template loaded. Run it when ready.'});
+  $('#runCodeBtn').onclick=()=>{state.codingSource=source.value;const out=$('#codingOutput');out.textContent='Running…';window.LMU_CODING?.runJavaScript?.(source.value,{onResult:result=>{if(out?.isConnected)out.textContent=(result.ok?'Output:\\n':'Check this:\\n')+result.output}})};
+  $('#askMiloCodeBtn').onclick=()=>{state.codingSource=source.value;d.close();state.view='milo';state.chat=[];state.miloSessionId=null;state.miloFirstAttempt=source.value.trim().slice(0,6000);render();const input=$('#miloInput');if(input)input.value='I wrote this code and want to debug it myself. Ask what I expected, then guide me without replacing my solution.\\n\\n'+source.value.slice(0,4000)};
+  $('#attachCodeBtn')?.addEventListener('click',()=>attachCodingEvidence(source.value));$('#codingClose').onclick=()=>d.close();
+}
+async function attachCodingEvidence(source){
+  const learningItemId=state.miloLearningItemId,code=String(source||'').trim();if(!learningItemId)return toast('Open Coding Studio from a teacher-assigned task before attaching code.');if(!code)return toast('Write code before attaching it.');if(!state.supabase||!state.learner?.id)return toast('A live learner account is required.');
+  const learnerId=state.learner.id,blob=new Blob([code],{type:'text/javascript'});if(blob.size>26214400)return toast('This code file is too large.');
+  const path=learnerId+'/document/'+String(learningItemId).replace(/[^a-zA-Z0-9_-]/g,'')+'/'+Date.now()+'.js',bucket=state.supabase.storage.from('learner-evidence-private'),uploaded=await bucket.upload(path,blob,{contentType:'text/javascript',cacheControl:'3600',upsert:false});
+  if(uploaded.error){console.error('Code evidence upload failed',uploaded.error);return toast('Code evidence could not be uploaded.')}
+  try{const result=await state.supabase.rpc('create_learner_evidence_item',{p_learning_item_id:learningItemId,p_learner_id:learnerId,p_evidence_type:'document',p_storage_path:path,p_mime_type:'text/javascript',p_file_size_bytes:blob.size,p_duration_seconds:null,p_transcript_text:null});if(result.error)throw result.error;if(!result.data)throw new Error('No evidence id returned');toast('Code evidence saved privately. Guardian approval may be required before teacher review.')}
+  catch(error){console.error('Code evidence registration failed',error);try{await bucket.remove([path])}catch(cleanupError){console.warn('Code upload cleanup failed',cleanupError)}toast('Code evidence was not registered. The uploaded copy was removed.')}
+}
+async function finishMiloSession(){
+  if(!state.miloSessionId||state.mode!=='live'||!state.supabase){state.miloSessionId=null;return toast('Milo session closed.')}
+  const result=await state.supabase.rpc('record_milo_learning_event',{p_session_id:state.miloSessionId,p_activity_type:'session_completed',p_attempt_number:0,p_assistance_level:state.miloHelpLevel,p_independence:state.miloHelpLevel===0?'independent':'assisted',p_transfer_result:null,p_metadata:{source:'learner_finish'}});
+  if(result.error){console.error('Milo session completion failed',result.error);return toast('Session could not be completed just now.')}state.miloSessionId=null;toast('Milo session completed.');render();
+}
+function miloStudioCards(){
+  if(state.role!=='learner')return '';
+  const studios=availableMiloStudios();
+  return '<div class="milo-studio-grid">'+studios.map(s=>'<button type="button" class="milo-studio '+(state.miloStudioId===s.id?'selected':'')+'" data-milo-studio="'+esc(s.id)+'"><span aria-hidden="true">'+s.emoji+'</span><strong>'+esc(s.title)+'</strong><small>'+esc(s.description)+'</small></button>').join('')+'</div>';
+}
+function miloTutorBrowser(){
+  if(state.role!=='learner'||Number(learnerAge())<8)return '';
+  const rows=tutorCatalogFiltered();
+  return '<div class="milo-curriculum-browser"><div class="split"><div><div class="eyebrow">Brilliant Milo Tutor</div><h3>Learn from your curriculum</h3></div><button type="button" class="ghost" data-action="milo-continue-curriculum">Continue my curriculum</button></div><div class="field"><label for="miloTutorSearch">Find a subject or skill</label><input id="miloTutorSearch" class="input" value="'+esc(state.tutorSearch)+'" placeholder="Search subject or skill"></div><div class="milo-skill-list">'+(rows.length?rows.map(s=>'<button type="button" class="milo-skill" data-tutor-skill="'+esc(s.skill_id)+'"><strong>'+esc(s.skill_name)+'</strong><span>'+esc(s.subject)+' · '+esc(s.curriculum_code)+'</span></button>').join(''):'<div class="empty">No matching curriculum skills are loaded yet. Teacher-assigned learning can still open Brilliant Milo with trusted lesson context.</div>')+'</div></div>';
+}
+function miloExtensionPanel(){
+  if(state.role!=='learner')return '';
+  const studio=currentMiloStudio();let extra=miloStudioCards()+miloTutorBrowser();
+  if(state.miloTutorSkillName)extra+='<div class="notice ok">Current tutor topic: <b>'+esc(state.miloTutorSkillName)+'</b>'+(state.miloTutorSubject?' · '+esc(state.miloTutorSubject):'')+'</div>';
+  if(studio)extra+='<div class="notice"><b>'+esc(studio.title)+'</b> · '+esc(studio.description)+'</div>';
+  if(studio?.engine==='reasoning_missions')extra+='<div class="field"><label for="miloFirstAttempt">Try first</label><textarea id="miloFirstAttempt" class="textarea" placeholder="Write or describe your first attempt before Milo coaches you.">'+esc(state.miloFirstAttempt)+'</textarea><small class="muted">Milo records only attempt metadata in the learning-event audit.</small></div>';
+  if(studio?.engine==='voice_language'){
+    extra+='<div class="voice-coach-panel"><div class="actions"><button type="button" class="ghost" data-action="milo-read-reply">🔊 Read Milo aloud</button><button type="button" class="ghost" data-action="voice-record" '+(voiceEvidenceAllowed()?'':'disabled')+'>'+(state.voiceCapture?.recorder?.state==='recording'?'Stop recording':'Record voice sample')+'</button>'+(state.voiceCapture?.blob&&state.miloLearningItemId?'<button type="button" class="ghost" data-action="voice-attach">Attach voice evidence</button>':'')+'</div>'+(voiceEvidenceAllowed()?'':'<div class="notice">Audio recording is locked until '+esc(state.evidenceFeatures?.evidence_approver_label||'your guardian')+' enables audio evidence.</div>')+(state.voiceCapture?.url?'<audio controls src="'+esc(state.voiceCapture.url)+'"></audio><small class="muted">Local sample · '+Math.round(state.voiceCapture.duration||0)+' seconds</small>':'')+'</div>';
+  }
+  return extra;
+}
+
+function milo(){
+  const locked=state.role==='learner'?'Milo teaches; the learner does the work.':'Milo drafts; human approval remains required.';
+  const chat=state.chat.length?state.chat.map(m=>'<div class="bubble '+m.who+'">'+esc(m.text)+'</div>').join(''):'<div class="bubble milo">Hi. '+(state.role==='learner'?'Choose a learning mode or ask about your current curriculum. Show me your thinking and I will teach the next useful step.':state.role==='teacher'?'Tell me what you want to teach and I will draft something for your review.':'I can explain teacher-approved progress and suggest safe home support.')+'</div>';
+  const help=[0,1,2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(state.miloHelpLevel)===n?'selected':'')+'>Help '+n+'</option>').join('');
+  return '<div class="card"><div class="split"><div><div class="eyebrow">Milo Learning OS</div><h2>Milo · '+esc(state.role)+'</h2></div><span class="tag">'+esc(locked)+'</span></div>'+miloExtensionPanel()+'<div class="chat" id="chatBox" aria-live="polite" aria-busy="'+(state.miloPending?'true':'false')+'">'+chat+'</div><div class="field"><textarea id="miloInput" class="textarea" aria-label="Message to Milo" placeholder="Write your message..."></textarea></div><div class="actions"><select id="miloHelp" class="select" style="max-width:180px">'+help+'</select><button class="primary" data-action="milo-send" '+(state.miloPending?'disabled':'')+'>'+(state.miloPending?'Milo is thinking…':'Send to Milo')+'</button>'+(state.miloSessionId?'<button type="button" class="ghost" data-action="milo-finish">Finish session</button>':'')+'</div></div>';
+}
 function mastery(){return `<div class="grid two"><div class="card"><div class="eyebrow">Skill mastery</div><h2>Evidence over time</h2>${state.mastery.length?state.mastery.map(m=>`<div class="master-row"><div><b>${esc(m.name)}</b><small class="muted">${esc(m.subject)} · ${m.evidence_count||0} evidence items · ${m.independent?'independent':'assisted mix'}</small><div class="bar"><i style="width:${Math.max(0,Math.min(100,m.estimate||0))}%"></i></div></div><div class="master-score">${Math.round(m.estimate||0)}%</div></div>`).join(''):'<div class="empty">Mastery updates appear after reviewed evidence.</div>'}</div><div class="card"><h2>How mastery works</h2><p>LMU keeps an estimate per skill with evidence count, confidence, independent-versus-assisted evidence, misconception tags, teacher notes and intervention history.</p><div class="notice">Scores are not the product. Mastery is built from authentic evidence over time.</div></div></div>`}
 function classroom(){if(state.role==='admin')return `<div class="card"><h2>School administration</h2><p>Organization and school-verification controls are not exposed through learner classroom controls. Admin access will use verified organization membership.</p></div>`;if(state.role==='teacher')return `<div class="grid two"><div class="card"><h2>Classrooms</h2>${state.classrooms.length?state.classrooms.map(c=>`<div class="task"><div><b>${esc(c.name)}</b><p>${esc(c.curriculum_code||'CAPS')} · ${esc(c.age_band||'mixed ages')} · ${esc(c.classroom_type||'normal')}</p></div><button class="ghost" data-manage-class="${esc(c.id)}">Manage</button></div>`).join(''):'<div class="empty">No classroom yet.</div>'}<button class="primary" data-action="create-class">Create classroom</button></div><div class="card"><h2>Temporary groups</h2><p>Intervention and enrichment groups are specific, temporary and teacher-approved. They should dissolve when the target need changes.</p><div class="notice ok">Workflow: evidence → Milo proposal → teacher review → targeted activity → re-estimate mastery → continue, modify or dissolve.</div></div></div>`;if(state.role==='parent')return `<div class="grid two"><div class="card"><div class="eyebrow">Classroom enrolment</div><h2>Join a classroom</h2>${state.learner?`<p>Joining for <b>${esc(state.learner.display_name||'your learner')}</b>.</p><div class="field"><label for="classJoinCode">Teacher join code</label><input id="classJoinCode" class="input" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="LMU-XXXXXX"></div><div class="actions"><button class="primary" data-action="join-classroom">Join classroom</button></div><div class="notice">Only a verified guardian can enrol this learner. The teacher's classroom code must still be active.</div>`:`<div class="empty">No verified learner is linked to this parent account yet.</div>`}</div><div class="card"><h2>Classroom privacy</h2><p>Class membership is managed inside LittleMindsUniverse. Private teacher and family phone numbers are not exposed.</p><div class="notice">Classroom communication stays inside LittleMindsUniverse Connect.</div></div></div>`;return `<div class="card"><h2>My classroom</h2><p>${state.classrooms[0]?esc(state.classrooms[0].name):'Classroom membership and teacher-approved communication will appear here.'}</p><div class="notice">Private teacher and family numbers are not exposed. Classroom communication stays inside LittleMindsUniverse Connect.</div></div>`}
 function reports(){return `<div class="card"><div class="eyebrow">Weekly reports</div><h2>Teacher-approved progress</h2>${state.reports.length?state.reports.map(r=>`<div class="task"><div><span class="tag ok">${esc(r.status)}</span><h3>Week of ${esc(r.week_start)}</h3><p><b>Summary:</b> ${esc(r.summary)}</p><p><b>Strengths:</b> ${esc(r.strengths)}</p><p><b>Next steps:</b> ${esc(r.next_steps)}</p><p><b>Home support:</b> ${esc(r.home_support)}</p></div></div>`).join(''):'<div class="empty">No approved report available.</div>'}</div>`}
