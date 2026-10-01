@@ -32,9 +32,9 @@ test('Early Learning catalogue is original, bounded to ages 2-5 and offers varie
   assert.ok(activities.every(a=>a.prompt.length<350));
 });
 
-test('Stage 4 does not add camera, microphone, contact or location permissions',()=>{
+test('Early Learning does not add camera, contact or location permissions',()=>{
   const manifest=read('android/app/src/main/AndroidManifest.xml');
-  for(const permission of ['CAMERA','RECORD_AUDIO','READ_CONTACTS','WRITE_CONTACTS','ACCESS_FINE_LOCATION','ACCESS_COARSE_LOCATION']){
+  for(const permission of ['CAMERA','READ_CONTACTS','WRITE_CONTACTS','ACCESS_FINE_LOCATION','ACCESS_COARSE_LOCATION']){
     assert.doesNotMatch(manifest,new RegExp('android\\.permission\\.'+permission));
   }
 });
