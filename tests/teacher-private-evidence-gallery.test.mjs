@@ -20,7 +20,7 @@ test('teacher viewer downloads approved files from private storage and supports 
   const start=app.indexOf('async function loadTeacherSubmissionEvidence');
   const end=app.indexOf('\nfunction openSubmissionReview',start);
   const block=app.slice(start,end);
-  assert.match(block,/storage\.from\('learner-evidence-private'\)\.download\(item\.storage_path\)/);
+  assert.match(block,/storage\s*\n?\s*\.from\('learner-evidence-private'\)\s*\n?\s*\.download\(item\.storage_path\)/);
   assert.match(block,/mime\.startsWith\('image\/'\)/);
   assert.match(block,/mime\.startsWith\('video\/'\)/);
   assert.match(block,/mime\.startsWith\('audio\/'\)/);
