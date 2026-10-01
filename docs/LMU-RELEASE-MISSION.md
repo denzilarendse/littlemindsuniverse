@@ -50,7 +50,7 @@ Generated `dist/` output is not canonical source and is rebuilt by CI/hosting fr
 - Classroom/guardian membership tables are authorization boundaries and cannot be freely self-mutated.
 - Guardian reads require a verified, row-correlated relationship plus the relevant permission where one exists.
 - Learner evidence stays in private storage and uses explicit learner/guardian/teacher authorization.
-- LittleMinds Connect owns LMU communication; WhatsApp is historical only and is not a launch dependency.
+- LittleMinds Connect owns LMU communication; external phone-number messaging providers are outside the launch architecture.
 - Connect relationship authorization, not phone-number or username discovery, determines who can communicate.
 - Learner Connect accounts remain notification/read-only unless a separately reviewed age-safe interaction policy enables more.
 - Payment identity, price, FX policy, duration, settlement state and entitlement are server-authoritative.
