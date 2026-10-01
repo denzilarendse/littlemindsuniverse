@@ -6,6 +6,7 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const migration=read('database/migrations/20261001_connect_stage8_realtime_offline_push.sql');
 const denyMigration=read('database/migrations/20261001_connect_push_subscriptions_explicit_deny.sql');
 const app=read('assets/connect-app.js');
+const lmuApp=read('assets/app.js');
 const sw=read('sw.js');
 const runtime=read('assets/runtime-config.js');
 const data=read('assets/data.js');
@@ -96,11 +97,11 @@ test('pilot feedback is authenticated, bounded and avoids direct table access',(
     'create or replace function public.submit_pilot_feedback',
     'char_length(v_body) < 3 or char_length(v_body) > 2000'
   ]) assert.ok(feedbackMigration.includes(fragment),'missing '+fragment);
-  assert.match(app,/\.rpc\(['"]submit_pilot_feedback['"]/);
-  assert.ok(app.includes('Do not include passwords, phone numbers, private learner conversations'));
+  assert.match(lmuApp,/\.rpc\(['"]submit_pilot_feedback['"]/);
+  assert.ok(lmuApp.includes('Do not include passwords, phone numbers, private learner conversations'));
 });
 
 test('runtime configuration has no external phone messaging provider dependency',()=>{
-  const runtimeSurface=[env,health,app,runtime].join('\n');
+  const runtimeSurface=[env,health,app,lmuApp,runtime].join('\n');
   assert.equal(/EXTERNAL_PHONE_PROVIDER_|phone_e164|external_phone_contacts|notification_dispatches/i.test(runtimeSurface),false);
 });
