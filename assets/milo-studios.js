@@ -23,7 +23,7 @@ const studios=[
   },
   {
     id:'ai-literacy',engine:'ai_literacy',emoji:'🤖',title:'AI Literacy Lab',
-    ages:[8,18],subject:'AI literacy',
+    ages:[5,18],subject:'AI literacy',
     intent:'AI literacy machine learning bias safety responsible use creative project',
     description:'Learn what AI can and cannot do, how data and bias matter, and how to use AI responsibly.',
     starter:'Teach me one age-appropriate AI literacy idea and give me a small safe activity to prove I understand it.'
