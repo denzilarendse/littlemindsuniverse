@@ -28,7 +28,7 @@ test('web clients never call internal helper RPCs directly', () => {
     assert.doesNotMatch(client, /rpc\(['"]connect_can_send['"]/);
     assert.doesNotMatch(client, /rpc\(['"]has_premium_access['"]/);
   }
-  assert.match(connectClient, /rpc\(['"]send_connect_message['"]/);
+  assert.match(connectClient, /rpc\(['"]send_connect_message_v2['"]/);
 });
 
 test('hardening does not revoke the supported top-level app RPC surface', () => {
