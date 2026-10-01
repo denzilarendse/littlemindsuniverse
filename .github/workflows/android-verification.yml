@@ -149,3 +149,53 @@ jobs:
           path: android/connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
           if-no-files-found: error
           retention-days: 30
+
+
+  verify-emulator:
+    needs: verify-android
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Sync verified web bundle into Android
+        run: npm run android:sync
+
+      - name: Enable KVM for Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Execute LMU on API 36 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: default
+          arch: x86_64
+          profile: pixel_7
+          working-directory: ./android
+          disable-animations: true
+          script: |
+            ./gradlew :app:connectedDebugAndroidTest :app:assembleDebug
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb shell am force-stop za.co.littlemindsuniverse
+            adb shell am start -W -n za.co.littlemindsuniverse/.MainActivity | tee /tmp/lmu-launch.txt
+            grep -F 'Status: ok' /tmp/lmu-launch.txt
+            adb shell pidof za.co.littlemindsuniverse
