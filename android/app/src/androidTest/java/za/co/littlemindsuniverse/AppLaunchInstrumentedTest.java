@@ -3,7 +3,7 @@ package za.co.littlemindsuniverse;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static org.hamcrest.Matchers.isAssignableFrom;
+import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 
 import android.webkit.WebView;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
