@@ -51,6 +51,5 @@ test('service worker cannot cache authenticated cross-origin or arbitrary same-o
   assert.match(sw,/url\.origin!==self\.location\.origin\) return/);
   assert.match(sw,/const CACHEABLE_PATHS=new Set\(CORE\)/);
   assert.match(sw,/response\.ok&&CACHEABLE_PATHS\.has\(url\.pathname\)/);
-  assert.doesNotMatch(sw,/lmu-production-v9/);
-  assert.match(sw,/lmu-production-v10/);
+  assert.match(sw,/lmu-production-v11/);
 });
