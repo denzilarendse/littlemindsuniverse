@@ -102,5 +102,5 @@ test('pilot feedback is authenticated, bounded and avoids direct table access',(
 
 test('runtime configuration has no external phone messaging provider dependency',()=>{
   const runtimeSurface=[env,health,app,runtime].join('\n');
-  assert.equal(/EXTERNAL_PHONE_PROVIDER_|phone_e164|whatsapp_contacts|notification_dispatches/i.test(runtimeSurface),false);
+  assert.equal(/EXTERNAL_PHONE_PROVIDER_|phone_e164|external_phone_contacts|notification_dispatches/i.test(runtimeSurface),false);
 });
