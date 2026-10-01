@@ -1,5 +1,6 @@
 import { applyCors, HttpError, requireMethod, sendError } from './_lib/http.js';
 import { authenticateRequest, userRpc, adminGet, adminRpc } from './_lib/supabase.js';
+import { buildTutorPolicy, engineGuidance, normalizeSessionMode, normalizeStage, selectMiloEngine } from './_lib/milo-orchestrator.js';
 
 const ROLE_RULES = {
   learner: `You are Learner Milo, a safe educational tutor for ages 2-18. Teach rather than complete work. Ask for the learner's attempt when appropriate, diagnose misconceptions, give age-appropriate hints and explanations, and use a different example before returning to the learner's task. Never claim teacher approval.`,
@@ -33,6 +34,25 @@ function optionalConfiguredHelp(contentJson) {
 
 function normalizeBaseUrl(value) {
   return String(value || 'https://api.groq.com/openai/v1').replace(/\/+$/, '');
+}
+
+function ageFromBirthDate(value) {
+  if (!value) return null;
+  const date = new Date(String(value) + 'T00:00:00Z');
+  if (Number.isNaN(date.getTime())) return null;
+  const now = new Date();
+  let years = now.getUTCFullYear() - date.getUTCFullYear();
+  const monthDelta = now.getUTCMonth() - date.getUTCMonth();
+  if (monthDelta < 0 || (monthDelta === 0 && now.getUTCDate() < date.getUTCDate())) years -= 1;
+  return years >= 2 && years <= 18 ? years : null;
+}
+
+function ageForStage(stageCode) {
+  return { EE24: 3, F57: 6, DB810: 9, CA1113: 12, PA1415: 15, EDGE1618: 17 }[stageCode] ?? null;
+}
+
+function safeIntent(value) {
+  return String(value || '').trim().slice(0, 80);
 }
 
 function rateLimit() {
