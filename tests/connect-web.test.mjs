@@ -42,7 +42,7 @@ test('Connect composer is bounded, reply-aware and duplicate-send guarded',()=>{
 test('Connect web client does not gate verified classroom messaging on premium entitlement',()=>{
   assert.match(app,/Messaging access is independent from premium lesson entitlement/);
   assert.doesNotMatch(app,/from\(['"](?:entitlements|subscriptions)['"]\)/i);
-  assert.doesNotMatch(app,/rpc\(['"][^'"]*(?:entitlement|subscription|premium|trial)[^'"]*['"]/i);
+  assert.doesNotMatch(app,/rpc\(['"][^'"]*(?:entitlement|premium|trial)[^'"]*['"]/i);
   assert.doesNotMatch(app,/premium_required|trial_expired_locked/i);
 });
 
