@@ -30,7 +30,7 @@ test('captured evidence uploads only to private storage and registers through th
   assert.match(block,/storage\.from\('learner-evidence-private'\)/);
   assert.match(block,/rpc\('create_learner_evidence_item'/);
   assert.match(block,/upsert:false/);
-  assert.match(block,/bucket\.remove\(\[storagePath\]\)/);
+  assert.match(block,/storage\.from\('learner-evidence-private'\)\.remove\(\[storagePath\]\)/);
   assert.doesNotMatch(block,/getPublicUrl|createSignedUrl|service_role/i);
 });
 
