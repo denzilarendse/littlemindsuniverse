@@ -87,6 +87,19 @@ function settings(){return `<div class="grid two"><div class="card"><h2>Language
 function main(){const map={home,learning,milo,mastery,classroom,reports,messages,settings};return map[state.view]?.()||home()}
 function render(){document.getElementById('app').innerHTML=`<div class="app">${header()}<div class="layout">${sidebar()}<main class="content">${main()}<div class="footer">LittleMindsUniverse · safe, teacher-led learning · country curriculum first · platform achievements are not accredited qualifications unless explicitly stated.</div></main></div></div>`;wire();const chat=$('#chatBox');if(chat)chat.scrollTop=chat.scrollHeight}
 function wire(){document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{const view=b.dataset.view;if(view==='milo'&&state.view!=='milo')state.miloLearningItemId=null;state.view=view;render();document.querySelector(`[data-view="${view}"]`)?.focus()});document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{const stage=b.dataset.stage;state.stage=stage;if(state.mode==='demo')state.learner.stage_code=stages[state.stage].code;render();document.querySelector(`[data-stage="${stage}"]`)?.focus()});$('#rolePicker')?.addEventListener('change',e=>{state.role=e.target.value;state.chat=[];state.miloLearningItemId=null;demoReset();render();$('#rolePicker')?.focus()});$('#parentLearnerPicker')?.addEventListener('change',e=>selectParentLearner(e.target.value));$('[data-action="add-managed-learner"]')?.addEventListener('click',openManagedLearnerDialog);$('[data-action="auth"]')?.addEventListener('click',openAuth);$('[data-action="milo-send"]')?.addEventListener('click',sendMilo);$('#miloHelp')?.addEventListener('change',e=>{const level=Number(e.target.value);if(Number.isInteger(level)&&level>=0&&level<=5)state.miloHelpLevel=level});$('[data-action="create-lesson"]')?.addEventListener('click',createLesson);if(state.role==='teacher'){const saveTeacherDraft=()=>{state.teacherDraft={classroomId:$('#lessonClassroom')?.value||'',skillId:$('#lessonSkill')?.value||'',title:$('#lessonTitle')?.value||'',subject:$('#lessonSubject')?.value||'',instructions:$('#lessonInstructions')?.value||'',help:Number($('#lessonHelp')?.value??2)};persistTeacherDraft()};['lessonClassroom','lessonSkill','lessonTitle','lessonSubject','lessonInstructions','lessonHelp'].forEach(id=>{const el=$('#'+id);if(el){el.addEventListener('input',saveTeacherDraft);el.addEventListener('change',saveTeacherDraft)}});const classroomPicker=$('#lessonClassroom');if(classroomPicker){classroomPicker.addEventListener('change',async()=>{state.teacherDraft.skillId='';persistTeacherDraft();await loadTeacherSkills(classroomPicker.value);render()})}}$('[data-action="create-class"]')?.addEventListener('click',createClass);$('[data-action="join-classroom"]')?.addEventListener('click',joinClassroom);$('[data-action="send-message"]')?.addEventListener('click',sendMessage);document.querySelectorAll('[data-message-thread]').forEach(b=>b.onclick=()=>openMessageThread(b.dataset.messageThread));document.querySelectorAll('[data-start-message-contact]').forEach(b=>b.onclick=()=>startMessageContact(b.dataset.classroomId,b.dataset.learnerId,b.dataset.guardianId||null,b));document.querySelectorAll('[data-manage-class]').forEach(b=>b.onclick=()=>manageClassroom(b.dataset.manageClass));document.querySelectorAll('[data-start-task]').forEach(b=>b.onclick=()=>openTask(b.dataset.startTask));document.querySelectorAll('[data-approve-rec]').forEach(b=>b.onclick=()=>approveRecommendation(b.dataset.approveRec));document.querySelectorAll('[data-publish-item]').forEach(b=>b.onclick=()=>openPublishItem(b.dataset.publishItem));document.querySelectorAll('[data-review-submission]').forEach(b=>b.onclick=()=>openSubmissionReview(b.dataset.reviewSubmission));const languagePicker=$('#languagePicker');if(languagePicker){languagePicker.value=state.language;languagePicker.addEventListener('change',e=>{state.language=e.target.value;toast(state.mode==='live'?'Language changed for this session':'Demo language changed')})}}
+function wirePasswordVisibility(inputId,buttonId){
+  const input=$('#'+inputId),button=$('#'+buttonId);
+  if(!input||!button)return;
+  button.onclick=()=>{
+    const showing=input.type==='text';
+    input.type=showing?'password':'text';
+    button.textContent=showing?'Show':'Hide';
+    button.setAttribute('aria-pressed',String(!showing));
+    button.setAttribute('aria-label',showing?'Show password':'Hide password');
+    input.focus();
+  };
+}
+
 function openAuth(){
   const d=$('#authDialog');
   if(state.session){
@@ -96,13 +109,132 @@ function openAuth(){
     $('#signOutBtn').onclick=async()=>{const b=$('#signOutBtn');b.disabled=true;b.textContent='Signing out…';await state.supabase.auth.signOut();d.close();toast('Signed out')};
     return;
   }
-  d.innerHTML=`<form class="modal-inner" id="authForm"><div class="eyebrow">Secure account</div><h2>Sign in to LittleMindsUniverse</h2><div class="field"><label for="authEmail">Email</label><input class="input" id="authEmail" type="email" required autocomplete="email"></div><div class="field"><label for="authPassword">Password</label><input class="input" id="authPassword" type="password" required minlength="6" autocomplete="current-password"></div><div class="field"><label for="authDisplayName">Display name (for new parent accounts)</label><input class="input" id="authDisplayName" maxlength="80" autocomplete="name"></div><div class="field"><label for="authAccountType">New account type</label><select id="authAccountType" class="select"><option value="parent">Parent / guardian</option><option value="teacher">Teacher / tutor</option><option value="learner">Learner</option></select></div><div class="actions"><button type="button" class="ghost" id="forgotPasswordBtn">Forgot password</button><button type="button" class="ghost" id="signUpBtn">Create account</button><button class="primary" id="signInBtn">Sign in</button></div><p class="muted">New self-service accounts are parent/guardian accounts. Teacher/tutor roles require trusted verification; learner profiles are created or linked by a parent/guardian.</p></form>`;
+  d.innerHTML=`<form class="modal-inner" id="authForm">
+    <div class="eyebrow">Secure account</div>
+    <h2>Sign in to LittleMindsUniverse</h2>
+    <div class="field"><label for="authRole">Sign in as</label><select id="authRole" class="select" required><option value="parent">Parent / guardian</option><option value="teacher">Teacher / tutor</option><option value="learner">Learner</option><option value="admin">Administrator</option></select></div>
+    <div class="field"><label for="authEmail">Email</label><input class="input" id="authEmail" type="email" required autocomplete="email"></div>
+    <div class="field"><label for="authPassword">Password</label><div class="password-field-row"><input class="input" id="authPassword" type="password" required minlength="6" autocomplete="current-password"><button type="button" class="ghost password-toggle" id="authPasswordToggle" aria-pressed="false" aria-label="Show password">Show</button></div></div>
+    <div class="field"><label for="authDisplayName">Display name (for new parent accounts)</label><input class="input" id="authDisplayName" maxlength="80" autocomplete="name"></div>
+    <div class="field"><label for="authAccountType">New account type</label><select id="authAccountType" class="select"><option value="parent">Parent / guardian</option><option value="teacher">Teacher / tutor</option><option value="learner">Learner</option></select></div>
+    <div class="actions"><button type="button" class="ghost" id="forgotPasswordBtn">Forgot password</button><button type="button" class="ghost" id="signUpBtn">Create account</button><button class="primary" id="signInBtn">Sign in</button></div>
+    <p class="muted">The selected role is checked against the authenticated LMU profile; choosing a role never grants permissions. New self-service accounts are parent/guardian accounts. Teacher/tutor roles require trusted verification; learner profiles are created or linked by a parent/guardian.</p>
+  </form>`;
   d.showModal();
-  $('#authForm').onsubmit=async e=>{e.preventDefault();const button=$('#signInBtn');if(button.disabled)return;button.disabled=true;button.textContent='Signing in…';try{const {error}=await state.supabase.auth.signInWithPassword({email:$('#authEmail').value,password:$('#authPassword').value});if(error)toast(error.message);else d.close()}finally{if(button?.isConnected){button.disabled=false;button.textContent='Sign in'}}};
-  $('#signUpBtn').onclick=async()=>{const type=$('#authAccountType')?.value||'parent';if(type==='teacher')return toast('Teacher or tutor registration requires verification. No account was created.');if(type==='learner')return toast('A parent or guardian creates and manages the learner profile. No account was created.');const email=$('#authEmail').value.trim();const password=$('#authPassword').value;const displayName=$('#authDisplayName').value.trim();if(!email||!password)return toast('Enter an email and password first');if(password.length<8)return toast('Use at least 8 characters for a new password');if(!displayName)return toast('Add your display name for the parent account');const button=$('#signUpBtn');if(button.disabled)return;button.disabled=true;button.textContent='Creating…';try{const {error}=await state.supabase.auth.signUp({email,password,options:{data:{display_name:displayName,preferred_language:state.language}}});toast(error?error.message:'Check your email to complete parent/guardian sign-up')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Create account'}}};
-  $('#forgotPasswordBtn').onclick=async()=>{const email=$('#authEmail').value.trim();if(!email)return toast('Enter your email first');const button=$('#forgotPasswordBtn');if(button.disabled)return;button.disabled=true;button.textContent='Sending…';try{const redirectTo=window.location.origin+'/?recovery=1';const {error}=await state.supabase.auth.resetPasswordForEmail(email,{redirectTo});toast(error?error.message:'If the account exists, check your email for a password-reset link')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Forgot password'}}};
+  wirePasswordVisibility('authPassword','authPasswordToggle');
+
+  $('#authForm').onsubmit=async e=>{
+    e.preventDefault();
+    const button=$('#signInBtn');
+    if(button.disabled)return;
+    button.disabled=true;
+    button.textContent='Signing in…';
+    const selectedRole=$('#authRole')?.value||'parent';
+    try{
+      const {data,error}=await state.supabase.auth.signInWithPassword({
+        email:$('#authEmail').value.trim(),
+        password:$('#authPassword').value
+      });
+      if(error){
+        console.warn('Sign-in rejected',error?.status||error?.code||'auth_error');
+        return toast(error?.status===429?'Too many sign-in attempts. Please wait and try again.':'Sign-in details could not be verified.');
+      }
+      const uid=data?.session?.user?.id;
+      if(!uid){
+        await state.supabase.auth.signOut();
+        return toast('Sign-in could not be completed.');
+      }
+      const {data:profile,error:profileError}=await state.supabase
+        .from('profiles')
+        .select('role')
+        .eq('id',uid)
+        .maybeSingle();
+      if(profileError||!profile?.role){
+        await state.supabase.auth.signOut();
+        return toast('Your LMU account profile is not ready yet.');
+      }
+      if(profile.role!==selectedRole){
+        await state.supabase.auth.signOut();
+        return toast('This account is not registered for the selected role.');
+      }
+      d.close();
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Sign in'}
+    }
+  };
+
+  $('#signUpBtn').onclick=async()=>{
+    const type=$('#authAccountType')?.value||'parent';
+    if(type==='teacher')return toast('Teacher or tutor registration requires verification. No account was created.');
+    if(type==='learner')return toast('A parent or guardian creates and manages the learner profile. No account was created.');
+    const email=$('#authEmail').value.trim();
+    const password=$('#authPassword').value;
+    const displayName=$('#authDisplayName').value.trim();
+    if(!email||!password)return toast('Enter an email and password first');
+    if(password.length<8)return toast('Use at least 8 characters for a new password');
+    if(!displayName)return toast('Add your display name for the parent account');
+    const button=$('#signUpBtn');
+    if(button.disabled)return;
+    button.disabled=true;
+    button.textContent='Creating…';
+    try{
+      const {error}=await state.supabase.auth.signUp({email,password,options:{data:{display_name:displayName,preferred_language:state.language}}});
+      toast(error?'Account creation could not be completed.':'Check your email to complete parent/guardian sign-up');
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Create account'}
+    }
+  };
+
+  $('#forgotPasswordBtn').onclick=async()=>{
+    const email=$('#authEmail').value.trim();
+    if(!email)return toast('Enter your email first');
+    const button=$('#forgotPasswordBtn');
+    if(button.disabled)return;
+    button.disabled=true;
+    button.textContent='Sending…';
+    try{
+      const redirectTo=window.location.origin+'/?recovery=1';
+      const {error}=await state.supabase.auth.resetPasswordForEmail(email,{redirectTo});
+      if(error)console.warn('Password recovery request rejected',error?.status||error?.code||'auth_error');
+      toast('If the account exists, check your email for a password-reset link');
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Forgot password'}
+    }
+  };
 }
-function openPasswordRecovery(){const d=$('#authDialog');d.innerHTML=`<form class="modal-inner" id="recoveryForm"><div class="eyebrow">Password recovery</div><h2>Choose a new password</h2><div class="field"><label for="newPassword">New password</label><input class="input" id="newPassword" type="password" required minlength="8" autocomplete="new-password"></div><div class="field"><label for="confirmPassword">Confirm password</label><input class="input" id="confirmPassword" type="password" required minlength="8" autocomplete="new-password"></div><div class="actions"><button class="primary" id="savePasswordBtn">Save new password</button></div></form>`;if(!d.open)d.showModal();$('#recoveryForm').onsubmit=async e=>{e.preventDefault();const password=$('#newPassword').value;const confirmation=$('#confirmPassword').value;if(password!==confirmation)return toast('Passwords do not match');const button=$('#savePasswordBtn');button.disabled=true;button.textContent='Saving…';try{const {error}=await state.supabase.auth.updateUser({password});if(error)return toast(error.message);history.replaceState({},'',location.pathname);d.close();toast('Password updated')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Save new password'}}}}
+
+function openPasswordRecovery(){
+  const d=$('#authDialog');
+  d.innerHTML=`<form class="modal-inner" id="recoveryForm">
+    <div class="eyebrow">Password recovery</div>
+    <h2>Choose a new password</h2>
+    <div class="field"><label for="newPassword">New password</label><div class="password-field-row"><input class="input" id="newPassword" type="password" required minlength="8" autocomplete="new-password"><button type="button" class="ghost password-toggle" id="newPasswordToggle" aria-pressed="false" aria-label="Show password">Show</button></div></div>
+    <div class="field"><label for="confirmPassword">Confirm password</label><div class="password-field-row"><input class="input" id="confirmPassword" type="password" required minlength="8" autocomplete="new-password"><button type="button" class="ghost password-toggle" id="confirmPasswordToggle" aria-pressed="false" aria-label="Show password">Show</button></div></div>
+    <div class="actions"><button class="primary" id="savePasswordBtn">Save new password</button></div>
+  </form>`;
+  if(!d.open)d.showModal();
+  wirePasswordVisibility('newPassword','newPasswordToggle');
+  wirePasswordVisibility('confirmPassword','confirmPasswordToggle');
+  $('#recoveryForm').onsubmit=async e=>{
+    e.preventDefault();
+    const password=$('#newPassword').value;
+    const confirmation=$('#confirmPassword').value;
+    if(password!==confirmation)return toast('Passwords do not match');
+    const button=$('#savePasswordBtn');
+    button.disabled=true;
+    button.textContent='Saving…';
+    try{
+      const {error}=await state.supabase.auth.updateUser({password});
+      if(error)return toast('Password could not be updated. Request a new recovery link and try again.');
+      history.replaceState({},'',location.pathname);
+      d.close();
+      toast('Password updated');
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Save new password'}
+    }
+  };
+}
+
 async function selectParentLearner(id){if(state.role!=='parent')return;const learner=state.learners.find(l=>String(l.id)===String(id));if(!learner)return toast('That learner is no longer available');state.selectedLearnerId=learner.id;state.learner=learner;state.stage=stageKey(learner.stage_code);state.tasks=[];state.mastery=[];state.reports=[];await loadRoleData();render();$('#parentLearnerPicker')?.focus()}
 function openManagedLearnerDialog(){if(state.mode!=='live'||state.role!=='parent'||!state.supabase)return toast('Sign in with a parent or guardian account first');const d=$('#authDialog');d.innerHTML=`<form class="modal-inner" id="managedLearnerForm"><div class="eyebrow">Family onboarding</div><h2>Add a learner</h2><p class="muted">Store only the information you choose to enter for this learner.</p><div class="field"><label for="managedLearnerName">Learner display name</label><input id="managedLearnerName" class="input" maxlength="80" required autocomplete="off"></div><div class="field"><label for="managedLearnerStage">Learning stage</label><select id="managedLearnerStage" class="select"><option value="EE24">Early Explorers · 2–4</option><option value="F57">Foundation · 5–7</option><option value="DB810">Discovery Builders · 8–10</option><option value="CA1113">Creator Academy · 11–13</option><option value="PA1415">Pathfinder Academy · 14–15</option><option value="EDGE1618">LittleMinds Edge · 16–18</option></select></div><div class="field"><label for="managedLearnerCurriculum">Curriculum</label><select id="managedLearnerCurriculum" class="select"><option value="CAPS">CAPS</option><option value="CAMBRIDGE">Cambridge</option><option value="GLOBAL">Global</option><option value="LITTLEMinds">LittleMinds</option></select></div><div class="field"><label for="managedLearnerCountry">Country code</label><input id="managedLearnerCountry" class="input" maxlength="2" value="${esc(cfg.defaultCountry||'ZA')}" required autocapitalize="characters"></div><div class="actions"><button type="button" class="ghost" id="managedLearnerCancel">Cancel</button><button class="primary" id="managedLearnerSave">Add learner</button></div></form>`;d.showModal();$('#managedLearnerCancel').onclick=()=>d.close();$('#managedLearnerForm').onsubmit=async e=>{e.preventDefault();const button=$('#managedLearnerSave');if(button.disabled)return;const name=$('#managedLearnerName').value.trim();const stage=$('#managedLearnerStage').value;const curriculum=$('#managedLearnerCurriculum').value;const country=$('#managedLearnerCountry').value.trim().toUpperCase();if(!/^[A-Z]{2}$/.test(country))return toast('Use a two-letter country code');button.disabled=true;button.textContent='Adding…';try{const {data,error}=await state.supabase.rpc('create_managed_learner',{p_display_name:name,p_stage_code:stage,p_curriculum_code:curriculum,p_country_code:country});if(error){console.error('Managed learner creation failed',error);return toast('Learner profile could not be created. Please try again.')}state.selectedLearnerId=Array.isArray(data)?data[0]:data;d.close();await loadLive();render();toast('Learner added to your family account')}catch(error){console.error('Managed learner creation failed',error);toast('Learner profile could not be created. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Add learner'}}}}
 async function joinClassroom(){if(state.mode!=='live'||state.role!=='parent'||!state.supabase||!state.learner?.id)return toast('A verified parent and learner account is required');const input=$('#classJoinCode');const button=$('[data-action="join-classroom"]');const code=(input?.value||'').trim().toUpperCase();if(!/^LMU-[A-Z0-9]{6}$/.test(code))return toast('Enter a valid LMU classroom code');if(button){button.disabled=true;button.textContent='Joining…'}try{const {data,error}=await state.supabase.rpc('join_classroom_by_code',{p_code:code,p_learner_id:state.learner.id});if(error){console.error('Join classroom failed',error);return toast('The classroom could not be joined. Check the code and try again.')}const joined=Array.isArray(data)?data[0]:data;if(input)input.value='';toast(joined?.classroom_name?`Joined ${joined.classroom_name}`:'Classroom joined');await loadLive();render()}catch(e){console.error('Join classroom failed',e);toast('The classroom could not be joined. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Join classroom'}}}
