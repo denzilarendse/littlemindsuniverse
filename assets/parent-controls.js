@@ -17,6 +17,7 @@
     selectedLearnerId:null,
     device:null,
     receipts:[],
+    pendingEvidence:[],
     loading:false,
     loadedFor:null,
     rendering:false
@@ -43,6 +44,7 @@
     pc.selectedLearnerId=null;
     pc.device=null;
     pc.receipts=[];
+    pc.pendingEvidence=[];
     pc.loadedFor=null;
     document.querySelector('#parentAuthorizationPanel')?.remove();
   }
@@ -89,14 +91,21 @@
     try{
       const ok=await ensureParent();
       if(!ok)return;
-      const [{data:permissions,error:permissionError},{data:prefs,error:prefsError}]=await Promise.all([
+      const [
+        {data:permissions,error:permissionError},
+        {data:prefs,error:prefsError},
+        {data:pending,error:pendingError}
+      ]=await Promise.all([
         client.rpc('get_guardian_evidence_permissions'),
-        client.rpc('get_parent_notification_preferences')
+        client.rpc('get_parent_notification_preferences'),
+        client.rpc('get_guardian_pending_evidence')
       ]);
       if(permissionError)throw permissionError;
       if(prefsError)throw prefsError;
+      if(pendingError)throw pendingError;
       pc.permissions=permissions||[];
       pc.notificationPreferences=prefs||[];
+      pc.pendingEvidence=pending||[];
       const learners=learnerRows();
       if(!learners.some(row=>String(row.id)===String(pc.selectedLearnerId))){
         pc.selectedLearnerId=learners[0]?.id||null;
@@ -175,6 +184,91 @@
     if(!pc.receipts.length)return '<div class="empty">No consent changes recorded yet.</div>';
     return pc.receipts.map(row=>`<div class="task"><div><span class="tag ${row.action==='granted'?'ok':'warn'}">${esc(row.action)}</span><b>${esc(permissionLabel(row.consent_type))}</b><p>${esc(row.policy_title_snapshot||'Consent policy')} · version ${esc(row.policy_version_snapshot||'—')}</p><small class="muted">${row.occurred_at?esc(new Date(row.occurred_at).toLocaleString()):''}${row.child_facing_label_snapshot?` · caregiver label ${esc(row.child_facing_label_snapshot)}`:''}</small></div></div>`).join('');
   }
+  function selectedPendingEvidence(){
+    return (pc.pendingEvidence||[]).filter(row=>String(row.learner_id)===String(pc.selectedLearnerId));
+  }
+
+  function pendingEvidenceHtml(){
+    const rows=selectedPendingEvidence();
+    if(!rows.length)return '<div class="empty">No evidence is waiting for your approval.</div>';
+    return rows.map(row=>{
+      const captured=row.captured_at?new Date(row.captured_at).toLocaleString():'Recently captured';
+      const expires=row.pending_expires_at?new Date(row.pending_expires_at).toLocaleString():'Policy-defined';
+      return `<div class="task"><div><span class="tag warn">Awaiting approval</span><h3>${esc(String(row.evidence_type||'evidence').replaceAll('_',' '))}</h3><p>Captured ${esc(captured)} · pending until ${esc(expires)}</p><small class="muted">Only an authorized guardian can approve this item before it becomes available for teacher review.</small></div><button class="primary" data-review-pending-evidence="${esc(row.evidence_id)}">Review</button></div>`;
+    }).join('');
+  }
+
+  async function openPendingEvidenceReview(evidenceId){
+    if(!canMutate())return;
+    const row=(pc.pendingEvidence||[]).find(item=>String(item.evidence_id)===String(evidenceId));
+    if(!row||String(row.learner_id)!==String(pc.selectedLearnerId))return toast('That evidence item is no longer available.');
+    const dialog=document.querySelector('#authDialog');
+    if(!dialog)return;
+    let objectUrl=null;
+    const cleanup=()=>{
+      if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}
+      dialog.removeEventListener('close',cleanup);
+    };
+    dialog.addEventListener('close',cleanup,{once:true});
+    dialog.innerHTML=`<div class="modal-inner"><div class="eyebrow">Private learner evidence</div><h2>Guardian approval</h2><div id="pendingEvidencePreview" class="notice">Loading private evidence…</div><p class="muted">Approval makes this evidence available to authorized teacher review according to LMU policy. Rejecting it schedules the raw item for deletion.</p><div class="actions"><button class="ghost" id="pendingEvidenceClose">Close</button><button class="danger" id="pendingEvidenceReject">Reject</button><button class="primary" id="pendingEvidenceApprove">Approve</button></div></div>`;
+    dialog.showModal();
+    dialog.querySelector('#pendingEvidenceClose').onclick=()=>dialog.close();
+
+    const preview=dialog.querySelector('#pendingEvidencePreview');
+    try{
+      if(row.storage_path){
+        const {data:blob,error}=await client.storage.from('learner-evidence-private').download(row.storage_path);
+        if(error)throw error;
+        if(!blob)throw new Error('Private evidence download returned no data');
+        objectUrl=URL.createObjectURL(blob);
+        const mime=String(blob.type||row.mime_type||'');
+        if(mime.startsWith('image/')){
+          preview.innerHTML=`<img src="${esc(objectUrl)}" alt="Private learner evidence preview" style="display:block;max-height:52vh;margin:auto;border-radius:12px"><small>${esc(mime||'image')} · private preview</small>`;
+        }else if(mime.startsWith('video/')){
+          preview.innerHTML=`<video controls playsinline src="${esc(objectUrl)}" style="display:block;width:100%;max-height:52vh"></video><small>${esc(mime)} · private preview</small>`;
+        }else if(mime.startsWith('audio/')){
+          preview.innerHTML=`<audio controls src="${esc(objectUrl)}" style="width:100%"></audio><small>${esc(mime)} · private preview</small>`;
+        }else{
+          preview.innerHTML=`<b>Private attachment</b><br><small>${esc(mime||row.mime_type||'file')} · preview is not rendered in the browser</small>`;
+        }
+      }else if(row.transcript_text){
+        preview.innerHTML=`<b>Speech transcript</b><p>${esc(row.transcript_text)}</p>`;
+      }else{
+        preview.textContent='Evidence metadata is available, but there is no browser preview.';
+      }
+    }catch(error){
+      console.error('Pending evidence preview failed',error);
+      preview.textContent='Private evidence preview could not be loaded. You can close this screen and try again.';
+      dialog.querySelector('#pendingEvidenceApprove').disabled=true;
+    }
+
+    const decide=async approve=>{
+      const button=dialog.querySelector(approve?'#pendingEvidenceApprove':'#pendingEvidenceReject');
+      if(button?.disabled)return;
+      dialog.querySelector('#pendingEvidenceApprove').disabled=true;
+      dialog.querySelector('#pendingEvidenceReject').disabled=true;
+      try{
+        const {error}=await client.rpc('decide_learner_evidence',{
+          p_evidence_id:row.evidence_id,
+          p_approve:approve,
+          p_decision_note:null
+        });
+        if(error)throw error;
+        dialog.close();
+        await refreshAfterMutation(approve?'Evidence approved for authorized teacher review.':'Evidence rejected and queued for deletion.');
+      }catch(error){
+        console.error('Evidence decision failed',error);
+        toast('Evidence decision could not be saved.');
+        if(dialog.open){
+          dialog.querySelector('#pendingEvidenceApprove').disabled=false;
+          dialog.querySelector('#pendingEvidenceReject').disabled=false;
+        }
+      }
+    };
+    dialog.querySelector('#pendingEvidenceApprove').onclick=()=>decide(true);
+    dialog.querySelector('#pendingEvidenceReject').onclick=()=>decide(false);
+  }
+
 
   function renderPanel(){
     if(pc.rendering||!settingsIsVisible()||pc.profile?.role!=='parent')return;
@@ -188,7 +282,7 @@
     const device=pc.device||{};
     const section=document.createElement('section');
     section.id='parentAuthorizationPanel';
-    section.innerHTML=`<h2 class="section-title">Parent authorization & controls</h2><div class="notice"><b>Two separate permissions apply.</b> LittleMindsUniverse records the parent/guardian decision below. Your phone or browser must still separately grant camera or microphone hardware access when a feature is actually used. LMU never treats database consent as device permission.</div><div class="card" style="margin-top:14px"><div class="field"><label for="parentControlLearner">Manage learner</label><select id="parentControlLearner" class="select">${learners.map(row=>`<option value="${esc(row.id)}" ${String(row.id)===String(pc.selectedLearnerId)?'selected':''}>${esc(row.name)}</option>`).join('')}</select></div></div><div class="grid two" style="margin-top:14px"><div class="card"><div class="eyebrow">Caregiver identity</div><h2>How this learner sees you</h2><div class="field"><label for="parentRelationship">Relationship</label><select id="parentRelationship" class="select">${relationshipOptions.map(([value,label])=>`<option value="${value}" ${value===identity.relationship?'selected':''}>${label}</option>`).join('')}</select></div><div class="field"><label for="parentChildLabel">Child-facing name</label><input id="parentChildLabel" class="input" maxlength="40" value="${esc(identity.label)}" placeholder="e.g. Mom, Dad, Gran"></div><button class="primary" id="saveParentIdentity">Save caregiver identity</button></div><div class="card"><div class="eyebrow">Audio experience</div><h2>Playback controls</h2><label class="task"><div><b>Milo read aloud</b><p>Allow Milo responses to be spoken aloud on this learner's device.</p></div><input type="checkbox" id="parentMiloReadAloud" ${device.milo_read_aloud_enabled?'checked':''}></label><label class="task"><div><b>Audio playback</b><p>Allow approved learning audio to play for this learner.</p></div><input type="checkbox" id="parentAudioPlayback" ${device.audio_playback_enabled?'checked':''}></label><button class="primary" id="saveParentAudioControls">Save audio controls</button></div></div><div class="card" style="margin-top:14px"><div class="eyebrow">Evidence privacy</div><h2>Camera, video, audio & transcription consent</h2><p class="muted">Consent is policy-versioned and auditable. Revoking a feature stops future permission; retention and deletion follow the applicable policy and approved LittleMindsUniverse retention rules.</p>${evidenceHtml()}</div><div class="grid two" style="margin-top:14px"><div class="card"><div class="eyebrow">Notifications</div><h2>For ${esc(pref.learner_name||learners.find(row=>String(row.id)===String(pc.selectedLearnerId))?.name||'this learner')}</h2><label class="task"><span>Weekly reports</span><input type="checkbox" id="prefReports" ${pref.can_receive_reports?'checked':''}></label><label class="task"><span>Evidence approval requests</span><input type="checkbox" id="prefEvidence" ${pref.can_receive_evidence_requests?'checked':''}></label><label class="task"><span>LittleMinds Connect class messages</span><input type="checkbox" id="prefClassMessages" ${pref.can_receive_class_messages?'checked':''}></label><button class="primary" id="saveParentNotifications">Save notification preferences</button></div><div class="card"><div class="eyebrow">LittleMinds Connect</div><h2>Private family-school messaging</h2><p class="muted">Connect keeps teacher and guardian communication inside LittleMindsUniverse. Private phone numbers are not shared. Conversation access is rechecked against the verified guardian relationship and active classroom membership.</p><div class="notice ok">Messaging access remains available independently from premium lesson entitlement wherever the verified relationship is active.</div><button class="primary" id="openConnectMessaging">Open Connect messages</button></div></div><div class="card" style="margin-top:14px"><div class="eyebrow">Audit trail</div><h2>Consent history</h2>${receiptsHtml()}</div>`;
+    section.innerHTML=`<h2 class="section-title">Parent authorization & controls</h2><div class="notice"><b>Two separate permissions apply.</b> LittleMindsUniverse records the parent/guardian decision below. Your phone or browser must still separately grant camera or microphone hardware access when a feature is actually used. LMU never treats database consent as device permission.</div><div class="card" style="margin-top:14px"><div class="field"><label for="parentControlLearner">Manage learner</label><select id="parentControlLearner" class="select">${learners.map(row=>`<option value="${esc(row.id)}" ${String(row.id)===String(pc.selectedLearnerId)?'selected':''}>${esc(row.name)}</option>`).join('')}</select></div></div><div class="grid two" style="margin-top:14px"><div class="card"><div class="eyebrow">Caregiver identity</div><h2>How this learner sees you</h2><div class="field"><label for="parentRelationship">Relationship</label><select id="parentRelationship" class="select">${relationshipOptions.map(([value,label])=>`<option value="${value}" ${value===identity.relationship?'selected':''}>${label}</option>`).join('')}</select></div><div class="field"><label for="parentChildLabel">Child-facing name</label><input id="parentChildLabel" class="input" maxlength="40" value="${esc(identity.label)}" placeholder="e.g. Mom, Dad, Gran"></div><button class="primary" id="saveParentIdentity">Save caregiver identity</button></div><div class="card"><div class="eyebrow">Audio experience</div><h2>Playback controls</h2><label class="task"><div><b>Milo read aloud</b><p>Allow Milo responses to be spoken aloud on this learner's device.</p></div><input type="checkbox" id="parentMiloReadAloud" ${device.milo_read_aloud_enabled?'checked':''}></label><label class="task"><div><b>Audio playback</b><p>Allow approved learning audio to play for this learner.</p></div><input type="checkbox" id="parentAudioPlayback" ${device.audio_playback_enabled?'checked':''}></label><button class="primary" id="saveParentAudioControls">Save audio controls</button></div></div><div class="card" style="margin-top:14px"><div class="eyebrow">Evidence privacy</div><h2>Camera, video, audio & transcription consent</h2><p class="muted">Consent is policy-versioned and auditable. Revoking a feature stops future permission; retention and deletion follow the applicable policy and approved LittleMindsUniverse retention rules.</p>${evidenceHtml()}</div><div class="grid two" style="margin-top:14px"><div class="card"><div class="eyebrow">Notifications</div><h2>For ${esc(pref.learner_name||learners.find(row=>String(row.id)===String(pc.selectedLearnerId))?.name||'this learner')}</h2><label class="task"><span>Weekly reports</span><input type="checkbox" id="prefReports" ${pref.can_receive_reports?'checked':''}></label><label class="task"><span>Evidence approval requests</span><input type="checkbox" id="prefEvidence" ${pref.can_receive_evidence_requests?'checked':''}></label><label class="task"><span>LittleMinds Connect class messages</span><input type="checkbox" id="prefClassMessages" ${pref.can_receive_class_messages?'checked':''}></label><button class="primary" id="saveParentNotifications">Save notification preferences</button></div><div class="card"><div class="eyebrow">LittleMinds Connect</div><h2>Private family-school messaging</h2><p class="muted">Connect keeps teacher and guardian communication inside LittleMindsUniverse. Private phone numbers are not shared. Conversation access is rechecked against the verified guardian relationship and active classroom membership.</p><div class="notice ok">Messaging access remains available independently from premium lesson entitlement wherever the verified relationship is active.</div><button class="primary" id="openConnectMessaging">Open Connect messages</button></div></div><div class="card" style="margin-top:14px"><div class="eyebrow">Evidence approval</div><h2>Waiting for your decision</h2><p class="muted">Pending child media remains private from teachers and Milo until an authorized guardian approves it.</p>${pendingEvidenceHtml()}</div><div class="card" style="margin-top:14px"><div class="eyebrow">Audit trail</div><h2>Consent history</h2>${receiptsHtml()}</div>`;
     const footer=content.querySelector('.footer');
     content.insertBefore(section,footer||null);
     wirePanel(section);
@@ -205,6 +299,7 @@
     section.querySelector('#saveParentNotifications')?.addEventListener('click',event=>saveNotifications(event.currentTarget));
     section.querySelector('#openConnectMessaging')?.addEventListener('click',()=>document.querySelector('[data-view="messages"]')?.click());
     section.querySelectorAll('[data-parent-consent]').forEach(button=>button.addEventListener('click',()=>setConsent(button)));
+    section.querySelectorAll('[data-review-pending-evidence]').forEach(button=>button.addEventListener('click',()=>openPendingEvidenceReview(button.dataset.reviewPendingEvidence)));
   }
 
   function canMutate(){
