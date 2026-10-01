@@ -71,30 +71,52 @@ async function assertWithinMiloRateLimit(profileId) {
   }
 }
 
-async function resolveTrustedLearningContext({ user, accessToken, role, requestedHelpLevel, learningItemId }) {
-  const standalone = {
+async function resolveTrustedLearningContext({
+  user,
+  accessToken,
+  role,
+  requestedHelpLevel,
+  requestedAge,
+  learningItemId
+}) {
+  const base = {
     assessment: false,
     level: clamp(requestedHelpLevel),
     learnerId: null,
     learningItemId: null,
     subject: null,
-    curriculum: null
+    curriculum: null,
+    stageCode: null,
+    age: Number.isFinite(Number(requestedAge)) ? Math.min(18, Math.max(2, Number(requestedAge))) : null,
+    learningLanguage: null,
+    homeLanguage: null
   };
 
-  if (learningItemId == null || learningItemId === '') return standalone;
-  if (role !== 'learner') throw new HttpError(403, 'Learning-item Milo context is available to the assigned learner only');
-  if (typeof learningItemId !== 'string' || !UUID_RE.test(learningItemId)) {
-    throw new HttpError(400, 'A valid learning item is required');
-  }
+  if (role !== 'learner') return base;
 
   const learners = await adminGet(
-    `learners?select=id,user_id&id=not.is.null&user_id=eq.${encodeURIComponent(user.id)}&active=eq.true&limit=1`
+    'learners?select=id,user_id,birth_date,country_code,curriculum_code,stage_code,home_language,learning_language,second_language&user_id=eq.'
+      + encodeURIComponent(user.id)
+      + '&active=eq.true&limit=1'
   );
   const learner = Array.isArray(learners) ? learners[0] : null;
   if (!learner?.id) throw new HttpError(403, 'An active learner profile is required');
 
-  // Existing RPC applies the signed-in caller's authorization, assignment, publication,
-  // learner relationship and commercial-access checks. A client-supplied UUID alone is never authority.
+  const trusted = {
+    ...base,
+    learnerId: learner.id,
+    curriculum: learner.curriculum_code || null,
+    stageCode: learner.stage_code || null,
+    age: ageFromBirthDate(learner.birth_date) || ageForStage(learner.stage_code) || base.age,
+    learningLanguage: learner.learning_language || learner.home_language || null,
+    homeLanguage: learner.home_language || null
+  };
+
+  if (learningItemId == null || learningItemId === '') return trusted;
+  if (typeof learningItemId !== 'string' || !UUID_RE.test(learningItemId)) {
+    throw new HttpError(400, 'A valid learning item is required');
+  }
+
   const assigned = await userRpc(accessToken, 'get_assigned_learning_item', {
     p_learning_item_id: learningItemId,
     p_learner_id: learner.id
@@ -105,7 +127,9 @@ async function resolveTrustedLearningContext({ user, accessToken, role, requeste
   }
 
   const items = await adminGet(
-    `learning_items?select=id,item_type,day_role,content_json,curriculum_code,subject&id=eq.${encodeURIComponent(learningItemId)}&limit=1`
+    'learning_items?select=id,item_type,day_role,content_json,curriculum_code,subject&id=eq.'
+      + encodeURIComponent(learningItemId)
+      + '&limit=1'
   );
   const item = Array.isArray(items) ? items[0] : null;
   if (!item?.id) throw new HttpError(404, 'Learning item not found');
@@ -115,21 +139,80 @@ async function resolveTrustedLearningContext({ user, accessToken, role, requeste
     || dayRole === 'assessment'
     || dayRole === 'sunday_assessment';
   const configuredHelp = optionalConfiguredHelp(item.content_json);
-
-  // Assessment help is never selected by the learner/browser. Default to level 1.
-  // A teacher may explicitly configure another level on the authoritative learning item.
-  const level = assessment
-    ? (configuredHelp ?? 1)
-    : (configuredHelp ?? clamp(requestedHelpLevel));
+  const level = assessment ? (configuredHelp ?? 1) : (configuredHelp ?? clamp(requestedHelpLevel));
 
   return {
+    ...trusted,
     assessment,
     level,
-    learnerId: learner.id,
     learningItemId,
     subject: item.subject || assignment.subject || null,
-    curriculum: item.curriculum_code || assignment.curriculum_code || null
+    curriculum: item.curriculum_code || assignment.curriculum_code || trusted.curriculum
   };
+}
+
+async function resolveOrCreateSession({
+  user,
+  accessToken,
+  trusted,
+  engine,
+  sessionMode,
+  requestedSessionId,
+  intent
+}) {
+  if (!trusted.learnerId) return null;
+
+  if (requestedSessionId) {
+    if (typeof requestedSessionId !== 'string' || !UUID_RE.test(requestedSessionId)) {
+      throw new HttpError(400, 'Milo session is invalid');
+    }
+    const rows = await adminGet(
+      'milo_learning_sessions?select=id,profile_id,learner_id,learning_item_id,engine,session_mode,status&id=eq.'
+      + encodeURIComponent(requestedSessionId)
+      + '&profile_id=eq.' + encodeURIComponent(user.id)
+      + '&learner_id=eq.' + encodeURIComponent(trusted.learnerId)
+      + '&status=eq.active&limit=1'
+    );
+    const session = Array.isArray(rows) ? rows[0] : null;
+    const sameItem = String(session?.learning_item_id || '') === String(trusted.learningItemId || '');
+    if (session?.id && sameItem && session.engine === engine && session.session_mode === sessionMode) {
+      return session.id;
+    }
+  }
+
+  const started = await userRpc(accessToken, 'start_milo_learning_session', {
+    p_learner_id: trusted.learnerId,
+    p_learning_item_id: trusted.learningItemId,
+    p_engine: engine,
+    p_session_mode: sessionMode,
+    p_assistance_level: trusted.level,
+    p_metadata: {
+      stageCode: trusted.stageCode,
+      intent: safeIntent(intent),
+      source: trusted.learningItemId ? 'assigned_learning' : 'milo_tutor'
+    }
+  });
+  const sessionId = Array.isArray(started) ? started[0] : started;
+  if (!sessionId || !UUID_RE.test(String(sessionId))) throw new HttpError(502, 'Milo session could not be started');
+  return String(sessionId);
+}
+
+async function recordLearningEvent(accessToken, sessionId, {
+  activityType = 'tutor_turn',
+  assistanceLevel = 0,
+  independence = 'unknown',
+  metadata = {}
+} = {}) {
+  if (!sessionId) return null;
+  return userRpc(accessToken, 'record_milo_learning_event', {
+    p_session_id: sessionId,
+    p_activity_type: activityType,
+    p_attempt_number: 0,
+    p_assistance_level: clamp(assistanceLevel),
+    p_independence: independence,
+    p_transfer_result: null,
+    p_metadata: metadata
+  });
 }
 
 async function recordMiloEvent({ profileId, learnerId, learningItemId, role, assessment, level, model, outcome }) {
