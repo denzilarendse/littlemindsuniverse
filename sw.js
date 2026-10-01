@@ -1,4 +1,4 @@
-const CACHE='lmu-production-v9';
+const CACHE='lmu-production-v12';
 
 const CORE=[
   '/',
@@ -9,6 +9,9 @@ const CORE=[
   '/assets/accessibility.css',
   '/assets/runtime-config.js',
   '/assets/data.js',
+  '/assets/early-learning.js',
+  '/assets/milo-studios.js',
+  '/assets/coding-studio.js',
   '/assets/parent-controls.js',
   '/assets/teacher-reports.js',
   '/assets/app.js',
@@ -75,4 +78,41 @@ self.addEventListener('fetch',event=>{
         return Response.error();
       })
   );
+});
+
+self.addEventListener('push',event=>{
+  // Keep lock-screen content deliberately generic. The app fetches authorized
+  // conversation data only after the user opens Connect.
+  let payload={};
+  try{payload=event.data?.json?.()||{}}catch{}
+  const conversationId=typeof payload.conversationId==='string'?payload.conversationId:'';
+  const target=conversationId
+    ? '/connect.html?conversation='+encodeURIComponent(conversationId)
+    : '/connect.html';
+  event.waitUntil(self.registration.showNotification('LittleMinds Connect',{
+    body:'You have a new private message.',
+    icon:'/assets/icon.svg',
+    badge:'/assets/icon.svg',
+    tag:conversationId?'connect-'+conversationId:'connect-message',
+    renotify:Boolean(conversationId),
+    data:{path:target}
+  }));
+});
+
+self.addEventListener('notificationclick',event=>{
+  event.notification.close();
+  const raw=String(event.notification?.data?.path||'/connect.html');
+  const target=raw.startsWith('/connect')?raw:'/connect.html';
+  event.waitUntil((async()=>{
+    const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+    for(const client of windows){
+      const url=new URL(client.url);
+      if(url.origin===self.location.origin){
+        await client.focus();
+        if('navigate' in client)await client.navigate(target);
+        return;
+      }
+    }
+    if(self.clients.openWindow)await self.clients.openWindow(target);
+  })());
 });
