@@ -7,7 +7,7 @@
 - Classroom membership and learner-active state are revalidated on protected classroom flows.
 - Guardian access requires a verified guardian/learner relationship; report, evidence and class-message permissions are additionally enforced where relevant.
 - Learner evidence is stored in private storage. Learners access their own evidence, verified guardians require evidence permission, and teachers see only approved/reviewable evidence for learners they may access.
-- LittleMinds Connect replaces WhatsApp as the product communication layer. No phone-number discovery, public learner directory or unrestricted adult-to-child messaging is permitted.
+- LittleMinds Connect is the product communication layer. No phone-number discovery, public learner directory or unrestricted adult-to-child messaging is permitted.
 - Connect message mutations use reviewed RPCs; clients do not directly mutate conversation/member/message tables.
 - Learner Connect accounts remain notification/read-only until a separately reviewed age-safe policy explicitly enables interaction.
 - Teacher approval gates academic publishing, interventions, enrichment and reports.
