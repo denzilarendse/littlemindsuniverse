@@ -10,6 +10,7 @@ const sw=read('sw.js');
 const runtime=read('assets/runtime-config.js');
 const data=read('assets/data.js');
 const managedLearner=read('database/migrations/20261001_connect_only_communication_cleanup.sql');
+const feedbackMigration=read('database/migrations/20261001_stage8_pilot_feedback.sql');
 const androidManifest=read('android/connectapp/src/main/AndroidManifest.xml');
 const env=read('.env.example');
 const health=read('api/health.js');
@@ -85,6 +86,18 @@ test('Connect Android pilot keeps a narrow child-privacy permission footprint',(
     'android.permission.AD_ID',
     'android.permission.POST_NOTIFICATIONS'
   ]) assert.equal(androidManifest.includes(permission),false,'unexpected permission '+permission);
+});
+
+
+test('pilot feedback is authenticated, bounded and avoids direct table access',()=>{
+  for(const fragment of [
+    'create table if not exists public.pilot_feedback',
+    'revoke all on table public.pilot_feedback from public, anon, authenticated',
+    'create or replace function public.submit_pilot_feedback',
+    'char_length(v_body) < 3 or char_length(v_body) > 2000'
+  ]) assert.ok(feedbackMigration.includes(fragment),'missing '+fragment);
+  assert.ok(app.includes("rpc('submit_pilot_feedback'"));
+  assert.ok(app.includes('Do not include passwords, phone numbers, private learner conversations'));
 });
 
 test('runtime configuration has no external phone messaging provider dependency',()=>{
