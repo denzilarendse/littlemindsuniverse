@@ -26,12 +26,15 @@ test('embedded LMU loads the Connect retirement bridge after the legacy applicat
   assert.match(sw, /\/assets\/connect-bridge\.js/);
 });
 
-test('every known user-facing WhatsApp-era phrase still emitted by compatibility code has an explicit Connect replacement', () => {
-  const compatibilitySource = app + '\n' + reports;
+test('active LMU source no longer emits known external-messaging-era copy', () => {
+  const activeSource = app + '\n' + reports;
   for (const phrase of retiredCopy) {
-    assert.ok(compatibilitySource.includes(phrase), `expected compatibility source phrase missing: ${phrase}`);
-    assert.ok(bridge.includes(phrase), `Connect bridge does not retire user-facing copy: ${phrase}`);
+    assert.ok(!activeSource.includes(phrase), `retired user-facing copy remains active: ${phrase}`);
   }
+});
+
+test('compatibility bridge may recognize retired copy but cannot restore provider behavior', () => {
+  for (const phrase of retiredCopy) assert.ok(bridge.includes(phrase), `missing stale-client replacement: ${phrase}`);
 });
 
 test('Connect bridge replacements point users to LittleMinds Connect and never restore provider behavior', () => {
