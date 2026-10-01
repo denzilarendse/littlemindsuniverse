@@ -41,7 +41,7 @@ function teacherSavedWork(){if(state.role!=='teacher')return '';const items=stat
 
 function milo(){const locked=state.role==='learner'?'Milo asks for your attempt first.':'Milo drafts; human approval remains required.';return `<div class="card"><div class="split"><div><div class="eyebrow">Role-aware AI companion</div><h2>Milo · ${esc(state.role)}</h2></div><span class="tag">${esc(locked)}</span></div><div class="chat" id="chatBox" aria-live="polite" aria-busy="${state.miloPending?'true':'false'}">${state.chat.length?state.chat.map(m=>`<div class="bubble ${m.who}">${esc(m.text)}</div>`).join(''):`<div class="bubble milo">Hi. ${state.role==='learner'?'Show me what you have tried and I will help you understand the next step.':state.role==='teacher'?'Tell me what you want to teach and I will draft something for your review.':'I can explain teacher-approved progress and suggest safe home support.'}</div>`}</div><div class="field"><textarea id="miloInput" class="textarea" aria-label="Message to Milo" placeholder="Write your message..."></textarea></div><div class="actions"><select id="miloHelp" class="select" style="max-width:180px">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${Number(state.miloHelpLevel)===n?'selected':''}>Help ${n}</option>`).join('')}</select><button class="primary" data-action="milo-send" ${state.miloPending?'disabled':''}>${state.miloPending?'Milo is thinking…':'Send to Milo'}</button></div></div>`}
 function mastery(){return `<div class="grid two"><div class="card"><div class="eyebrow">Skill mastery</div><h2>Evidence over time</h2>${state.mastery.length?state.mastery.map(m=>`<div class="master-row"><div><b>${esc(m.name)}</b><small class="muted">${esc(m.subject)} · ${m.evidence_count||0} evidence items · ${m.independent?'independent':'assisted mix'}</small><div class="bar"><i style="width:${Math.max(0,Math.min(100,m.estimate||0))}%"></i></div></div><div class="master-score">${Math.round(m.estimate||0)}%</div></div>`).join(''):'<div class="empty">Mastery updates appear after reviewed evidence.</div>'}</div><div class="card"><h2>How mastery works</h2><p>LMU keeps an estimate per skill with evidence count, confidence, independent-versus-assisted evidence, misconception tags, teacher notes and intervention history.</p><div class="notice">Scores are not the product. Mastery is built from authentic evidence over time.</div></div></div>`}
-function classroom(){if(state.role==='admin')return `<div class="card"><h2>School administration</h2><p>Organization and school-verification controls are not exposed through learner classroom controls. Admin access will use verified organization membership.</p></div>`;if(state.role==='teacher')return `<div class="grid two"><div class="card"><h2>Classrooms</h2>${state.classrooms.length?state.classrooms.map(c=>`<div class="task"><div><b>${esc(c.name)}</b><p>${esc(c.curriculum_code||'CAPS')} · ${esc(c.age_band||'mixed ages')} · ${esc(c.classroom_type||'normal')}</p></div><button class="ghost" data-manage-class="${esc(c.id)}">Manage</button></div>`).join(''):'<div class="empty">No classroom yet.</div>'}<button class="primary" data-action="create-class">Create classroom</button></div><div class="card"><h2>Temporary groups</h2><p>Intervention and enrichment groups are specific, temporary and teacher-approved. They should dissolve when the target need changes.</p><div class="notice ok">Workflow: evidence → Milo proposal → teacher review → targeted activity → re-estimate mastery → continue, modify or dissolve.</div></div></div>`;if(state.role==='parent')return `<div class="grid two"><div class="card"><div class="eyebrow">Classroom enrolment</div><h2>Join a classroom</h2>${state.learner?`<p>Joining for <b>${esc(state.learner.display_name||'your learner')}</b>.</p><div class="field"><label for="classJoinCode">Teacher join code</label><input id="classJoinCode" class="input" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="LMU-XXXXXX"></div><div class="actions"><button class="primary" data-action="join-classroom">Join classroom</button></div><div class="notice">Only a verified guardian can enrol this learner. The teacher's classroom code must still be active.</div>`:`<div class="empty">No verified learner is linked to this parent account yet.</div>`}</div><div class="card"><h2>Classroom privacy</h2><p>Class membership is managed inside LittleMindsUniverse. Private teacher and family phone numbers are not exposed.</p><div class="notice">WhatsApp may mirror permitted updates through the LittleMindsUniverse business identity.</div></div></div>`;return `<div class="card"><h2>My classroom</h2><p>${state.classrooms[0]?esc(state.classrooms[0].name):'Classroom membership and teacher-approved communication will appear here.'}</p><div class="notice">Private teacher and family numbers are not exposed. WhatsApp mirrors permitted updates through the LittleMindsUniverse business identity.</div></div>`}
+function classroom(){if(state.role==='admin')return `<div class="card"><h2>School administration</h2><p>Organization and school-verification controls are not exposed through learner classroom controls. Admin access will use verified organization membership.</p></div>`;if(state.role==='teacher')return `<div class="grid two"><div class="card"><h2>Classrooms</h2>${state.classrooms.length?state.classrooms.map(c=>`<div class="task"><div><b>${esc(c.name)}</b><p>${esc(c.curriculum_code||'CAPS')} · ${esc(c.age_band||'mixed ages')} · ${esc(c.classroom_type||'normal')}</p></div><button class="ghost" data-manage-class="${esc(c.id)}">Manage</button></div>`).join(''):'<div class="empty">No classroom yet.</div>'}<button class="primary" data-action="create-class">Create classroom</button></div><div class="card"><h2>Temporary groups</h2><p>Intervention and enrichment groups are specific, temporary and teacher-approved. They should dissolve when the target need changes.</p><div class="notice ok">Workflow: evidence → Milo proposal → teacher review → targeted activity → re-estimate mastery → continue, modify or dissolve.</div></div></div>`;if(state.role==='parent')return `<div class="grid two"><div class="card"><div class="eyebrow">Classroom enrolment</div><h2>Join a classroom</h2>${state.learner?`<p>Joining for <b>${esc(state.learner.display_name||'your learner')}</b>.</p><div class="field"><label for="classJoinCode">Teacher join code</label><input id="classJoinCode" class="input" maxlength="20" autocomplete="off" autocapitalize="characters" placeholder="LMU-XXXXXX"></div><div class="actions"><button class="primary" data-action="join-classroom">Join classroom</button></div><div class="notice">Only a verified guardian can enrol this learner. The teacher's classroom code must still be active.</div>`:`<div class="empty">No verified learner is linked to this parent account yet.</div>`}</div><div class="card"><h2>Classroom privacy</h2><p>Class membership is managed inside LittleMindsUniverse. Private teacher and family phone numbers are not exposed.</p><div class="notice">LittleMinds Connect keeps permitted classroom updates inside the verified LittleMindsUniverse relationship.</div></div></div>`;return `<div class="card"><h2>My classroom</h2><p>${state.classrooms[0]?esc(state.classrooms[0].name):'Classroom membership and teacher-approved communication will appear here.'}</p><div class="notice">Private teacher and family phone numbers are not exposed. LittleMinds Connect keeps permitted updates inside the verified classroom relationship.</div></div>`}
 function reports(){return `<div class="card"><div class="eyebrow">Weekly reports</div><h2>Teacher-approved progress</h2>${state.reports.length?state.reports.map(r=>`<div class="task"><div><span class="tag ok">${esc(r.status)}</span><h3>Week of ${esc(r.week_start)}</h3><p><b>Summary:</b> ${esc(r.summary)}</p><p><b>Strengths:</b> ${esc(r.strengths)}</p><p><b>Next steps:</b> ${esc(r.next_steps)}</p><p><b>Home support:</b> ${esc(r.home_support)}</p></div></div>`).join(''):'<div class="empty">No approved report available.</div>'}</div>`}
 async function refreshMessaging(){
   if(state.mode!=='live'||!state.supabase||!['parent','teacher'].includes(state.role)){state.messageThreads=[];state.messageContacts=[];state.threadMessages=[];state.activeThreadId=null;return}
@@ -75,18 +75,31 @@ function messages(){
   const demoRows=state.messages.length?state.messages.map(m=>`<div class="task"><div><p>${esc(m.body)}</p><small class="muted">${new Date(m.created_at).toLocaleString()}</small></div></div>`).join(''):'<div class="empty">No notifications or messages yet.</div>';
   if(state.role==='learner')return `<div class="card"><div class="eyebrow">Learner notifications</div><h2>Notifications</h2>${demoRows}<div class="notice">Learner accounts receive teacher-approved notifications here. They do not have an in-app message composer.</div></div>`;
   if(state.role==='admin')return '<div class="card"><h2>Messaging</h2><div class="notice">Class messaging is available only to the verified teacher and guardian participants for a learner.</div></div>';
-  if(state.mode!=='live')return `<div class="grid two"><div class="card"><h2>Demo communication</h2>${demoRows}<div class="field"><label for="messageInput">Demo message</label><textarea id="messageInput" class="textarea" maxlength="4000" placeholder="Write a demo message..."></textarea></div><div class="actions"><button class="primary" data-action="send-message">Add demo message</button></div></div><div class="card"><h2>WhatsApp mirror</h2><div class="notice warn">Demo mode never sends WhatsApp or production messages.</div></div></div>`;
+  if(state.mode!=='live')return `<div class="grid two"><div class="card"><h2>Demo communication</h2>${demoRows}<div class="field"><label for="messageInput">Demo message</label><textarea id="messageInput" class="textarea" maxlength="4000" placeholder="Write a demo message..."></textarea></div><div class="actions"><button class="primary" data-action="send-message">Add demo message</button></div></div><div class="card"><h2>LittleMinds Connect</h2><div class="notice warn">Demo mode never sends production Connect messages.</div></div></div>`;
   const threadRows=state.messageThreads.length?state.messageThreads.map(t=>{const counterpart=state.role==='teacher'?t.guardian_name:t.teacher_name;const unread=Number(t.unread_count||0);return `<button class="task ghost" style="width:100%;text-align:left" data-message-thread="${esc(t.thread_id)}"><div><b>${esc(counterpart||'Conversation')}</b><p>${esc(t.learner_name||'Learner')} · ${esc(t.classroom_name||'Classroom')}</p><small class="muted">${t.last_message?esc(t.last_message):'No messages yet'}${unread?` · ${unread} unread`:''}</small></div></button>`}).join(''):'<div class="empty">No conversations yet.</div>';
   const contactRows=state.messageContacts.length?state.messageContacts.map(c=>{const counterpart=state.role==='teacher'?c.guardian_name:c.teacher_name;return `<div class="task"><div><b>${esc(counterpart||'Contact')}</b><p>${esc(c.learner_name||'Learner')} · ${esc(c.classroom_name||'Classroom')}</p></div><button class="ghost" data-start-message-contact data-classroom-id="${esc(c.classroom_id)}" data-learner-id="${esc(c.learner_id)}" data-guardian-id="${state.role==='teacher'?esc(c.guardian_profile_id||''):''}">Open</button></div>`}).join(''):'<div class="empty">No eligible classroom contacts are available.</div>';
   const active=state.messageThreads.find(t=>String(t.thread_id)===String(state.activeThreadId));
   const conversation=active?state.threadMessages.map(m=>`<div class="bubble ${m.sent_by_me?'user':'milo'}"><b>${esc(m.sent_by_me?'You':m.sender_name||'Participant')}</b><br>${esc(m.body)}<br><small class="muted">${new Date(m.created_at).toLocaleString()}</small></div>`).join(''):'';
   const activePane=active?`<div class="split"><div><div class="eyebrow">Secure class conversation</div><h2>${esc(state.role==='teacher'?active.guardian_name:active.teacher_name)}</h2><p class="muted">${esc(active.learner_name)} · ${esc(active.classroom_name)}</p></div></div><div class="chat" id="messageThread" aria-live="polite">${conversation||'<div class="empty">No messages yet.</div>'}</div><div class="field"><label for="messageInput">Message</label><textarea id="messageInput" class="textarea" maxlength="4000" placeholder="Write a class message..."></textarea><small class="muted">Visible only to the verified teacher and guardian participants for this learner.</small></div><div class="actions"><button class="primary" data-action="send-message">Send message</button></div>`:'<div class="empty">Choose a conversation or open an eligible classroom contact.</div>';
-  return `<div class="grid two"><div><div class="card"><div class="eyebrow">Existing conversations</div><h2>Messages</h2>${threadRows}</div><div class="card" style="margin-top:14px"><div class="eyebrow">Eligible classroom contacts</div><h2>Start or reopen</h2>${contactRows}</div></div><div class="card">${activePane}<div class="notice" style="margin-top:14px">Private teacher and guardian phone numbers are never exposed. WhatsApp, when enabled, is a separate privacy-minimised mirror through the LittleMindsUniverse business identity.</div></div></div>`;
+  return `<div class="grid two"><div><div class="card"><div class="eyebrow">Existing conversations</div><h2>Messages</h2>${threadRows}</div><div class="card" style="margin-top:14px"><div class="eyebrow">Eligible classroom contacts</div><h2>Start or reopen</h2>${contactRows}</div></div><div class="card">${activePane}<div class="notice" style="margin-top:14px">Private teacher and guardian phone numbers are never exposed. LittleMinds Connect is the relationship-authorized communication channel.</div></div></div>`;
 }
 function settings(){return `<div class="grid two"><div class="card"><h2>Language & accessibility</h2><div class="field"><label for="languagePicker">Interface language</label><select id="languagePicker" class="select"><option value="en">English</option><option value="af">Afrikaans</option><option value="zu">isiZulu</option><option value="xh">isiXhosa</option><option value="st">Sesotho</option><option value="nso">Sepedi</option><option value="tn">Setswana</option><option value="ss">siSwati</option><option value="ve">Tshivenda</option><option value="ts">Xitsonga</option><option value="nr">isiNdebele</option><option value="sasL">South African Sign Language pack</option></select></div><p class="muted">Content packs can add text, audio, captions and sign-language media without changing mastery logic.</p></div><div class="card"><h2>Access model</h2><p><b>Week 1 remains free.</b> Premium weeks can use a no-card trial, paid family/school entitlement or scholarship/sponsored access.</p><p>Payments are delegated to payment providers; LMU does not store card details.</p><div class="notice">Pricing is centralised and configurable rather than hard-coded into lesson logic.</div></div></div>`}
 function main(){const map={home,learning,milo,mastery,classroom,reports,messages,settings};return map[state.view]?.()||home()}
 function render(){document.getElementById('app').innerHTML=`<div class="app">${header()}<div class="layout">${sidebar()}<main class="content">${main()}<div class="footer">LittleMindsUniverse · safe, teacher-led learning · country curriculum first · platform achievements are not accredited qualifications unless explicitly stated.</div></main></div></div>`;wire();const chat=$('#chatBox');if(chat)chat.scrollTop=chat.scrollHeight}
 function wire(){document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{const view=b.dataset.view;if(view==='milo'&&state.view!=='milo')state.miloLearningItemId=null;state.view=view;render();document.querySelector(`[data-view="${view}"]`)?.focus()});document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{const stage=b.dataset.stage;state.stage=stage;if(state.mode==='demo')state.learner.stage_code=stages[state.stage].code;render();document.querySelector(`[data-stage="${stage}"]`)?.focus()});$('#rolePicker')?.addEventListener('change',e=>{state.role=e.target.value;state.chat=[];state.miloLearningItemId=null;demoReset();render();$('#rolePicker')?.focus()});$('#parentLearnerPicker')?.addEventListener('change',e=>selectParentLearner(e.target.value));$('[data-action="add-managed-learner"]')?.addEventListener('click',openManagedLearnerDialog);$('[data-action="auth"]')?.addEventListener('click',openAuth);$('[data-action="milo-send"]')?.addEventListener('click',sendMilo);$('#miloHelp')?.addEventListener('change',e=>{const level=Number(e.target.value);if(Number.isInteger(level)&&level>=0&&level<=5)state.miloHelpLevel=level});$('[data-action="create-lesson"]')?.addEventListener('click',createLesson);if(state.role==='teacher'){const saveTeacherDraft=()=>{state.teacherDraft={classroomId:$('#lessonClassroom')?.value||'',skillId:$('#lessonSkill')?.value||'',title:$('#lessonTitle')?.value||'',subject:$('#lessonSubject')?.value||'',instructions:$('#lessonInstructions')?.value||'',help:Number($('#lessonHelp')?.value??2)};persistTeacherDraft()};['lessonClassroom','lessonSkill','lessonTitle','lessonSubject','lessonInstructions','lessonHelp'].forEach(id=>{const el=$('#'+id);if(el){el.addEventListener('input',saveTeacherDraft);el.addEventListener('change',saveTeacherDraft)}});const classroomPicker=$('#lessonClassroom');if(classroomPicker){classroomPicker.addEventListener('change',async()=>{state.teacherDraft.skillId='';persistTeacherDraft();await loadTeacherSkills(classroomPicker.value);render()})}}$('[data-action="create-class"]')?.addEventListener('click',createClass);$('[data-action="join-classroom"]')?.addEventListener('click',joinClassroom);$('[data-action="send-message"]')?.addEventListener('click',sendMessage);document.querySelectorAll('[data-message-thread]').forEach(b=>b.onclick=()=>openMessageThread(b.dataset.messageThread));document.querySelectorAll('[data-start-message-contact]').forEach(b=>b.onclick=()=>startMessageContact(b.dataset.classroomId,b.dataset.learnerId,b.dataset.guardianId||null,b));document.querySelectorAll('[data-manage-class]').forEach(b=>b.onclick=()=>manageClassroom(b.dataset.manageClass));document.querySelectorAll('[data-start-task]').forEach(b=>b.onclick=()=>openTask(b.dataset.startTask));document.querySelectorAll('[data-approve-rec]').forEach(b=>b.onclick=()=>approveRecommendation(b.dataset.approveRec));document.querySelectorAll('[data-publish-item]').forEach(b=>b.onclick=()=>openPublishItem(b.dataset.publishItem));document.querySelectorAll('[data-review-submission]').forEach(b=>b.onclick=()=>openSubmissionReview(b.dataset.reviewSubmission));const languagePicker=$('#languagePicker');if(languagePicker){languagePicker.value=state.language;languagePicker.addEventListener('change',e=>{state.language=e.target.value;toast(state.mode==='live'?'Language changed for this session':'Demo language changed')})}}
+function wirePasswordVisibility(inputId,buttonId){
+  const input=$('#'+inputId),button=$('#'+buttonId);
+  if(!input||!button)return;
+  button.onclick=()=>{
+    const showing=input.type==='text';
+    input.type=showing?'password':'text';
+    button.textContent=showing?'Show':'Hide';
+    button.setAttribute('aria-pressed',String(!showing));
+    button.setAttribute('aria-label',showing?'Show password':'Hide password');
+    input.focus();
+  };
+}
+
 function openAuth(){
   const d=$('#authDialog');
   if(state.session){
@@ -96,13 +109,132 @@ function openAuth(){
     $('#signOutBtn').onclick=async()=>{const b=$('#signOutBtn');b.disabled=true;b.textContent='Signing out…';await state.supabase.auth.signOut();d.close();toast('Signed out')};
     return;
   }
-  d.innerHTML=`<form class="modal-inner" id="authForm"><div class="eyebrow">Secure account</div><h2>Sign in to LittleMindsUniverse</h2><div class="field"><label for="authEmail">Email</label><input class="input" id="authEmail" type="email" required autocomplete="email"></div><div class="field"><label for="authPassword">Password</label><input class="input" id="authPassword" type="password" required minlength="6" autocomplete="current-password"></div><div class="field"><label for="authDisplayName">Display name (for new parent accounts)</label><input class="input" id="authDisplayName" maxlength="80" autocomplete="name"></div><div class="field"><label for="authAccountType">New account type</label><select id="authAccountType" class="select"><option value="parent">Parent / guardian</option><option value="teacher">Teacher / tutor</option><option value="learner">Learner</option></select></div><div class="actions"><button type="button" class="ghost" id="forgotPasswordBtn">Forgot password</button><button type="button" class="ghost" id="signUpBtn">Create account</button><button class="primary" id="signInBtn">Sign in</button></div><p class="muted">New self-service accounts are parent/guardian accounts. Teacher/tutor roles require trusted verification; learner profiles are created or linked by a parent/guardian.</p></form>`;
+  d.innerHTML=`<form class="modal-inner" id="authForm">
+    <div class="eyebrow">Secure account</div>
+    <h2>Sign in to LittleMindsUniverse</h2>
+    <div class="field"><label for="authRole">Sign in as</label><select id="authRole" class="select" required><option value="parent">Parent / guardian</option><option value="teacher">Teacher / tutor</option><option value="learner">Learner</option><option value="admin">Administrator</option></select></div>
+    <div class="field"><label for="authEmail">Email</label><input class="input" id="authEmail" type="email" required autocomplete="email"></div>
+    <div class="field"><label for="authPassword">Password</label><div class="password-field-row"><input class="input" id="authPassword" type="password" required minlength="6" autocomplete="current-password"><button type="button" class="ghost password-toggle" id="authPasswordToggle" aria-pressed="false" aria-label="Show password">Show</button></div></div>
+    <div class="field"><label for="authDisplayName">Display name (for new parent accounts)</label><input class="input" id="authDisplayName" maxlength="80" autocomplete="name"></div>
+    <div class="field"><label for="authAccountType">New account type</label><select id="authAccountType" class="select"><option value="parent">Parent / guardian</option><option value="teacher">Teacher / tutor</option><option value="learner">Learner</option></select></div>
+    <div class="actions"><button type="button" class="ghost" id="forgotPasswordBtn">Forgot password</button><button type="button" class="ghost" id="signUpBtn">Create account</button><button class="primary" id="signInBtn">Sign in</button></div>
+    <p class="muted">The selected role is checked against the authenticated LMU profile; choosing a role never grants permissions. New self-service accounts are parent/guardian accounts. Teacher/tutor roles require trusted verification; learner profiles are created or linked by a parent/guardian.</p>
+  </form>`;
   d.showModal();
-  $('#authForm').onsubmit=async e=>{e.preventDefault();const button=$('#signInBtn');if(button.disabled)return;button.disabled=true;button.textContent='Signing in…';try{const {error}=await state.supabase.auth.signInWithPassword({email:$('#authEmail').value,password:$('#authPassword').value});if(error)toast(error.message);else d.close()}finally{if(button?.isConnected){button.disabled=false;button.textContent='Sign in'}}};
-  $('#signUpBtn').onclick=async()=>{const type=$('#authAccountType')?.value||'parent';if(type==='teacher')return toast('Teacher or tutor registration requires verification. No account was created.');if(type==='learner')return toast('A parent or guardian creates and manages the learner profile. No account was created.');const email=$('#authEmail').value.trim();const password=$('#authPassword').value;const displayName=$('#authDisplayName').value.trim();if(!email||!password)return toast('Enter an email and password first');if(password.length<8)return toast('Use at least 8 characters for a new password');if(!displayName)return toast('Add your display name for the parent account');const button=$('#signUpBtn');if(button.disabled)return;button.disabled=true;button.textContent='Creating…';try{const {error}=await state.supabase.auth.signUp({email,password,options:{data:{display_name:displayName,preferred_language:state.language}}});toast(error?error.message:'Check your email to complete parent/guardian sign-up')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Create account'}}};
-  $('#forgotPasswordBtn').onclick=async()=>{const email=$('#authEmail').value.trim();if(!email)return toast('Enter your email first');const button=$('#forgotPasswordBtn');if(button.disabled)return;button.disabled=true;button.textContent='Sending…';try{const redirectTo=window.location.origin+'/?recovery=1';const {error}=await state.supabase.auth.resetPasswordForEmail(email,{redirectTo});toast(error?error.message:'If the account exists, check your email for a password-reset link')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Forgot password'}}};
+  wirePasswordVisibility('authPassword','authPasswordToggle');
+
+  $('#authForm').onsubmit=async e=>{
+    e.preventDefault();
+    const button=$('#signInBtn');
+    if(button.disabled)return;
+    button.disabled=true;
+    button.textContent='Signing in…';
+    const selectedRole=$('#authRole')?.value||'parent';
+    try{
+      const {data,error}=await state.supabase.auth.signInWithPassword({
+        email:$('#authEmail').value.trim(),
+        password:$('#authPassword').value
+      });
+      if(error){
+        console.warn('Sign-in rejected',error?.status||error?.code||'auth_error');
+        return toast(error?.status===429?'Too many sign-in attempts. Please wait and try again.':'Sign-in details could not be verified.');
+      }
+      const uid=data?.session?.user?.id;
+      if(!uid){
+        await state.supabase.auth.signOut();
+        return toast('Sign-in could not be completed.');
+      }
+      const {data:profile,error:profileError}=await state.supabase
+        .from('profiles')
+        .select('role')
+        .eq('id',uid)
+        .maybeSingle();
+      if(profileError||!profile?.role){
+        await state.supabase.auth.signOut();
+        return toast('Your LMU account profile is not ready yet.');
+      }
+      if(profile.role!==selectedRole){
+        await state.supabase.auth.signOut();
+        return toast('This account is not registered for the selected role.');
+      }
+      d.close();
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Sign in'}
+    }
+  };
+
+  $('#signUpBtn').onclick=async()=>{
+    const type=$('#authAccountType')?.value||'parent';
+    if(type==='teacher')return toast('Teacher or tutor registration requires verification. No account was created.');
+    if(type==='learner')return toast('A parent or guardian creates and manages the learner profile. No account was created.');
+    const email=$('#authEmail').value.trim();
+    const password=$('#authPassword').value;
+    const displayName=$('#authDisplayName').value.trim();
+    if(!email||!password)return toast('Enter an email and password first');
+    if(password.length<8)return toast('Use at least 8 characters for a new password');
+    if(!displayName)return toast('Add your display name for the parent account');
+    const button=$('#signUpBtn');
+    if(button.disabled)return;
+    button.disabled=true;
+    button.textContent='Creating…';
+    try{
+      const {error}=await state.supabase.auth.signUp({email,password,options:{data:{display_name:displayName,preferred_language:state.language}}});
+      toast(error?'Account creation could not be completed.':'Check your email to complete parent/guardian sign-up');
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Create account'}
+    }
+  };
+
+  $('#forgotPasswordBtn').onclick=async()=>{
+    const email=$('#authEmail').value.trim();
+    if(!email)return toast('Enter your email first');
+    const button=$('#forgotPasswordBtn');
+    if(button.disabled)return;
+    button.disabled=true;
+    button.textContent='Sending…';
+    try{
+      const redirectTo=window.location.origin+'/?recovery=1';
+      const {error}=await state.supabase.auth.resetPasswordForEmail(email,{redirectTo});
+      if(error)console.warn('Password recovery request rejected',error?.status||error?.code||'auth_error');
+      toast('If the account exists, check your email for a password-reset link');
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Forgot password'}
+    }
+  };
 }
-function openPasswordRecovery(){const d=$('#authDialog');d.innerHTML=`<form class="modal-inner" id="recoveryForm"><div class="eyebrow">Password recovery</div><h2>Choose a new password</h2><div class="field"><label for="newPassword">New password</label><input class="input" id="newPassword" type="password" required minlength="8" autocomplete="new-password"></div><div class="field"><label for="confirmPassword">Confirm password</label><input class="input" id="confirmPassword" type="password" required minlength="8" autocomplete="new-password"></div><div class="actions"><button class="primary" id="savePasswordBtn">Save new password</button></div></form>`;if(!d.open)d.showModal();$('#recoveryForm').onsubmit=async e=>{e.preventDefault();const password=$('#newPassword').value;const confirmation=$('#confirmPassword').value;if(password!==confirmation)return toast('Passwords do not match');const button=$('#savePasswordBtn');button.disabled=true;button.textContent='Saving…';try{const {error}=await state.supabase.auth.updateUser({password});if(error)return toast(error.message);history.replaceState({},'',location.pathname);d.close();toast('Password updated')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Save new password'}}}}
+
+function openPasswordRecovery(){
+  const d=$('#authDialog');
+  d.innerHTML=`<form class="modal-inner" id="recoveryForm">
+    <div class="eyebrow">Password recovery</div>
+    <h2>Choose a new password</h2>
+    <div class="field"><label for="newPassword">New password</label><div class="password-field-row"><input class="input" id="newPassword" type="password" required minlength="8" autocomplete="new-password"><button type="button" class="ghost password-toggle" id="newPasswordToggle" aria-pressed="false" aria-label="Show password">Show</button></div></div>
+    <div class="field"><label for="confirmPassword">Confirm password</label><div class="password-field-row"><input class="input" id="confirmPassword" type="password" required minlength="8" autocomplete="new-password"><button type="button" class="ghost password-toggle" id="confirmPasswordToggle" aria-pressed="false" aria-label="Show password">Show</button></div></div>
+    <div class="actions"><button class="primary" id="savePasswordBtn">Save new password</button></div>
+  </form>`;
+  if(!d.open)d.showModal();
+  wirePasswordVisibility('newPassword','newPasswordToggle');
+  wirePasswordVisibility('confirmPassword','confirmPasswordToggle');
+  $('#recoveryForm').onsubmit=async e=>{
+    e.preventDefault();
+    const password=$('#newPassword').value;
+    const confirmation=$('#confirmPassword').value;
+    if(password!==confirmation)return toast('Passwords do not match');
+    const button=$('#savePasswordBtn');
+    button.disabled=true;
+    button.textContent='Saving…';
+    try{
+      const {error}=await state.supabase.auth.updateUser({password});
+      if(error)return toast('Password could not be updated. Request a new recovery link and try again.');
+      history.replaceState({},'',location.pathname);
+      d.close();
+      toast('Password updated');
+    }finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Save new password'}
+    }
+  };
+}
+
 async function selectParentLearner(id){if(state.role!=='parent')return;const learner=state.learners.find(l=>String(l.id)===String(id));if(!learner)return toast('That learner is no longer available');state.selectedLearnerId=learner.id;state.learner=learner;state.stage=stageKey(learner.stage_code);state.tasks=[];state.mastery=[];state.reports=[];await loadRoleData();render();$('#parentLearnerPicker')?.focus()}
 function openManagedLearnerDialog(){if(state.mode!=='live'||state.role!=='parent'||!state.supabase)return toast('Sign in with a parent or guardian account first');const d=$('#authDialog');d.innerHTML=`<form class="modal-inner" id="managedLearnerForm"><div class="eyebrow">Family onboarding</div><h2>Add a learner</h2><p class="muted">Store only the information you choose to enter for this learner.</p><div class="field"><label for="managedLearnerName">Learner display name</label><input id="managedLearnerName" class="input" maxlength="80" required autocomplete="off"></div><div class="field"><label for="managedLearnerStage">Learning stage</label><select id="managedLearnerStage" class="select"><option value="EE24">Early Explorers · 2–4</option><option value="F57">Foundation · 5–7</option><option value="DB810">Discovery Builders · 8–10</option><option value="CA1113">Creator Academy · 11–13</option><option value="PA1415">Pathfinder Academy · 14–15</option><option value="EDGE1618">LittleMinds Edge · 16–18</option></select></div><div class="field"><label for="managedLearnerCurriculum">Curriculum</label><select id="managedLearnerCurriculum" class="select"><option value="CAPS">CAPS</option><option value="CAMBRIDGE">Cambridge</option><option value="GLOBAL">Global</option><option value="LITTLEMinds">LittleMinds</option></select></div><div class="field"><label for="managedLearnerCountry">Country code</label><input id="managedLearnerCountry" class="input" maxlength="2" value="${esc(cfg.defaultCountry||'ZA')}" required autocapitalize="characters"></div><div class="actions"><button type="button" class="ghost" id="managedLearnerCancel">Cancel</button><button class="primary" id="managedLearnerSave">Add learner</button></div></form>`;d.showModal();$('#managedLearnerCancel').onclick=()=>d.close();$('#managedLearnerForm').onsubmit=async e=>{e.preventDefault();const button=$('#managedLearnerSave');if(button.disabled)return;const name=$('#managedLearnerName').value.trim();const stage=$('#managedLearnerStage').value;const curriculum=$('#managedLearnerCurriculum').value;const country=$('#managedLearnerCountry').value.trim().toUpperCase();if(!/^[A-Z]{2}$/.test(country))return toast('Use a two-letter country code');button.disabled=true;button.textContent='Adding…';try{const {data,error}=await state.supabase.rpc('create_managed_learner',{p_display_name:name,p_stage_code:stage,p_curriculum_code:curriculum,p_country_code:country});if(error){console.error('Managed learner creation failed',error);return toast('Learner profile could not be created. Please try again.')}state.selectedLearnerId=Array.isArray(data)?data[0]:data;d.close();await loadLive();render();toast('Learner added to your family account')}catch(error){console.error('Managed learner creation failed',error);toast('Learner profile could not be created. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Add learner'}}}}
 async function joinClassroom(){if(state.mode!=='live'||state.role!=='parent'||!state.supabase||!state.learner?.id)return toast('A verified parent and learner account is required');const input=$('#classJoinCode');const button=$('[data-action="join-classroom"]');const code=(input?.value||'').trim().toUpperCase();if(!/^LMU-[A-Z0-9]{6}$/.test(code))return toast('Enter a valid LMU classroom code');if(button){button.disabled=true;button.textContent='Joining…'}try{const {data,error}=await state.supabase.rpc('join_classroom_by_code',{p_code:code,p_learner_id:state.learner.id});if(error){console.error('Join classroom failed',error);return toast('The classroom could not be joined. Check the code and try again.')}const joined=Array.isArray(data)?data[0]:data;if(input)input.value='';toast(joined?.classroom_name?`Joined ${joined.classroom_name}`:'Classroom joined');await loadLive();render()}catch(e){console.error('Join classroom failed',e);toast('The classroom could not be joined. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Join classroom'}}}
@@ -111,7 +243,331 @@ async function generateClassroomCode(classroomId){if(state.mode!=='live'||state.
 async function revokeClassroomCode(classroomId,codeId){if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!state.profile?.id)return toast('A live teacher account is required');if(!confirm('Revoke this join code? Existing learners will remain in the classroom, but this code can no longer be used.'))return;const button=$('#classRevokeCode');if(button){button.disabled=true;button.textContent='Revoking…'}try{const {error}=await state.supabase.from('classroom_codes').update({active:false}).eq('id',codeId).eq('classroom_id',classroomId);if(error){console.error('Revoke classroom code failed',error);return toast('Join code could not be revoked. Please try again.')}toast('Join code revoked');return manageClassroom(classroomId)}catch(e){console.error('Revoke classroom code failed',e);toast('Join code could not be revoked. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Revoke code'}}}
 async function removeClassroomLearner(classroomId,learnerId,learnerName){if(state.mode!=='live'||state.role!=='teacher'||!state.supabase||!state.profile?.id)return toast('A live teacher account is required');if(!confirm(`Remove ${learnerName||'this learner'} from this classroom? Their previous classroom membership record will be preserved.`))return;const button=document.querySelector(`[data-remove-learner="${learnerId}"]`);if(button){button.disabled=true;button.textContent='Removing…'}try{const {error}=await state.supabase.from('classroom_members').update({status:'removed'}).eq('classroom_id',classroomId).eq('learner_id',learnerId).eq('status','active');if(error){console.error('Remove classroom learner failed',error);return toast('Learner could not be removed. Please try again.')}toast('Learner removed from classroom');return manageClassroom(classroomId)}catch(e){console.error('Remove classroom learner failed',e);toast('Learner could not be removed. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Remove'}}}
 async function manageClassroom(id){const c=state.classrooms.find(x=>String(x.id)===String(id));if(!c)return toast('Classroom could not be found');const d=$('#authDialog');d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><p>${esc(c.curriculum_code||'CAPS')} · ${esc(c.age_band||'mixed ages')}</p><div class="notice">Loading classroom members and join code…</div></div>`;d.showModal();if(state.mode!=='live'||!state.supabase){d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><p>Classroom management uses the live teacher account.</p><div class="actions"><button class="ghost" id="classClose">Close</button></div></div>`;$('#classClose').onclick=()=>d.close();return}try{const [{data:members,error:mErr},{data:codes,error:cErr}]=await Promise.all([state.supabase.from('classroom_members').select('learner_id,status,joined_at').eq('classroom_id',c.id).eq('status','active').order('joined_at',{ascending:true}),state.supabase.from('classroom_codes').select('id,code,active,maximum_uses,current_uses,expires_at,created_at').eq('classroom_id',c.id).eq('active',true).order('created_at',{ascending:false}).limit(1)]);if(mErr||cErr){console.error('Classroom management load failed',mErr||cErr);throw new Error('classroom-load-failed')}const learnerIds=(members||[]).map(m=>m.learner_id).filter(Boolean);let learnerMap=new Map();if(learnerIds.length){const {data:learnerRows,error:lErr}=await state.supabase.from('learners').select('id,display_name,stage_code').in('id',learnerIds);if(lErr){console.error('Classroom learner details failed',lErr);throw new Error('classroom-learners-failed')}learnerMap=new Map((learnerRows||[]).map(l=>[l.id,l]))}const code=codes?.[0];const memberHtml=members?.length?members.map(m=>{const l=learnerMap.get(m.learner_id);return `<div class="task"><div><b>${esc(l?.display_name||'Learner')}</b><p>${esc(l?.stage_code||'Stage not set')}</p><span class="tag">Active</span></div><button class="ghost" data-remove-learner="${esc(m.learner_id)}" data-remove-name="${esc(l?.display_name||'Learner')}">Remove</button></div>`}).join(''):'<div class="empty">No active learners in this classroom yet.</div>';const codeHtml=code?`<div class="notice ok"><b>Join code: ${esc(code.code)}</b><br><span>${code.maximum_uses==null?'No use limit':`${Number(code.current_uses||0)} of ${Number(code.maximum_uses)} uses`} · ${code.expires_at?`expires ${esc(new Date(code.expires_at).toLocaleDateString())}`:'no expiry set'}</span></div><div class="actions"><button class="ghost" id="classRevokeCode">Revoke code</button></div>`:`<div class="notice">No active join code for this classroom.</div><div class="actions"><button class="primary" id="classGenerateCode">Generate join code</button></div>`;d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><p>${esc(c.curriculum_code||'CAPS')} · ${esc(c.age_band||'mixed ages')} · ${members?.length||0} active learner${members?.length===1?'':'s'}</p><h3>Join / invite code</h3>${codeHtml}<h3>Learners</h3>${memberHtml}<div class="actions"><button class="ghost" id="classClose">Close</button></div></div>`;$('#classClose').onclick=()=>d.close();const generateButton=$('#classGenerateCode');if(generateButton)generateButton.onclick=()=>generateClassroomCode(c.id);const revokeButton=$('#classRevokeCode');if(revokeButton&&code)revokeButton.onclick=()=>revokeClassroomCode(c.id,code.id);document.querySelectorAll('[data-remove-learner]').forEach(b=>b.onclick=()=>removeClassroomLearner(c.id,b.dataset.removeLearner,b.dataset.removeName))}catch(e){console.error('Classroom management failed',e);d.innerHTML=`<div class="modal-inner"><div class="eyebrow">Teacher classroom</div><h2>${esc(c.name)}</h2><div class="notice">Classroom details could not be loaded just now. Please try again.</div><div class="actions"><button class="ghost" id="classClose">Close</button></div></div>`;$('#classClose').onclick=()=>d.close()}}
-async function openTask(id){const t=state.tasks.find(x=>String(x.id)===String(id));if(!t)return;if(['submitted','reviewed'].includes(t.recipient_status))return toast(t.recipient_status==='reviewed'?'This work has been reviewed by your teacher.':'This evidence is already submitted for review.');if(state.mode==='live'&&state.learner?.id&&state.supabase){const {error:startError}=await state.supabase.from('learning_item_recipients').update({status:'started'}).eq('learning_item_id',t.id).eq('learner_id',state.learner.id).eq('status','assigned');if(startError)console.warn('Recipient start status update failed',startError);else if(t.recipient_status==='assigned'||!t.recipient_status)t.recipient_status='started'}const d=$('#authDialog');d.innerHTML=`<div class="modal-inner lmu-workspace"><span class="tag">${esc(t.subject||'Learning')}</span><h2>${esc(t.title)}</h2><p>${esc(t.instructions)}</p><div class="field"><label for="evidenceText">Your written attempt / explanation</label><textarea id="evidenceText" class="textarea" placeholder="Show your thinking, explanation, code, reflection, or describe what you drew."></textarea></div><div class="lmu-whiteboard-shell"><div class="split"><div><div class="eyebrow">Learner whiteboard</div><h3>Show your working</h3></div><span class="tag" id="wbStatus">Ready</span></div><div class="lmu-whiteboard-tools" role="toolbar" aria-label="Whiteboard tools"><button type="button" class="ghost wb-tool active" id="wbPen">Pen</button><button type="button" class="ghost wb-tool" id="wbEraser">Eraser</button><label class="wb-control">Colour <input id="wbColour" type="color" value="#172033" aria-label="Pen colour"></label><label class="wb-control">Size <input id="wbSize" type="range" min="2" max="18" value="4" aria-label="Pen thickness"></label><button type="button" class="ghost" id="wbUndo">Undo</button><button type="button" class="ghost" id="wbClear">Clear</button></div><div class="lmu-canvas-wrap"><canvas id="learnerWhiteboard" class="lmu-whiteboard" aria-label="Learner drawing whiteboard"></canvas></div><div class="split wb-meta"><small class="muted">Finger, stylus or mouse · automatically saved on this device</small><small class="muted" id="wbActivityCount">0 actions</small></div><details class="wb-history"><summary>Activity history</summary><div id="wbActivityLog" class="wb-log"><div class="empty">No whiteboard actions yet.</div></div></details></div><div class="actions"><button class="ghost" id="taskHint">Ask Milo for a hint</button><button class="primary" id="taskSubmit">Submit evidence</button></div></div>`;d.showModal();const board=initLearnerWhiteboard(t,d);$('#taskHint').onclick=()=>{const attempt=$('#evidenceText')?.value||'';d.close();state.miloLearningItemId=t.id;state.view='milo';state.chat.push({who:'user',text:`I am working on ${t.title}. My first attempt is: ${attempt||'(not written yet)'}`});render()};$('#taskSubmit').onclick=()=>submitEvidence(t,$('#evidenceText').value,d,board)}
+async function openTask(id){
+  const t=state.tasks.find(x=>String(x.id)===String(id));
+  if(!t)return;
+  if(['submitted','reviewed'].includes(t.recipient_status)){
+    return toast(t.recipient_status==='reviewed'
+      ?'This work has been reviewed by your teacher.'
+      :'This evidence is already submitted for review.');
+  }
+
+  if(state.mode==='live'&&state.learner?.id&&state.supabase){
+    const {error:startError}=await state.supabase
+      .from('learning_item_recipients')
+      .update({status:'started'})
+      .eq('learning_item_id',t.id)
+      .eq('learner_id',state.learner.id)
+      .eq('status','assigned');
+    if(startError)console.warn('Recipient start status update failed',startError);
+    else if(t.recipient_status==='assigned'||!t.recipient_status)t.recipient_status='started';
+  }
+
+  const d=$('#authDialog');
+  d.innerHTML=`<div class="modal-inner lmu-workspace">
+    <span class="tag">${esc(t.subject||'Learning')}</span>
+    <h2>${esc(t.title)}</h2>
+    <p>${esc(t.instructions)}</p>
+    <div class="field">
+      <label for="evidenceText">Your written attempt / explanation</label>
+      <textarea id="evidenceText" class="textarea" placeholder="Show your thinking, explanation, code, reflection, or describe what you drew."></textarea>
+    </div>
+
+    <div class="lmu-whiteboard-shell">
+      <div class="split"><div><div class="eyebrow">Learner whiteboard</div><h3>Show your working</h3></div><span class="tag" id="wbStatus">Ready</span></div>
+      <div class="lmu-whiteboard-tools" role="toolbar" aria-label="Whiteboard tools">
+        <button type="button" class="ghost wb-tool active" id="wbPen">Pen</button>
+        <button type="button" class="ghost wb-tool" id="wbEraser">Eraser</button>
+        <label class="wb-control">Colour <input id="wbColour" type="color" value="#172033" aria-label="Pen colour"></label>
+        <label class="wb-control">Size <input id="wbSize" type="range" min="2" max="18" value="4" aria-label="Pen thickness"></label>
+        <button type="button" class="ghost" id="wbUndo">Undo</button>
+        <button type="button" class="ghost" id="wbClear">Clear</button>
+      </div>
+      <div class="lmu-canvas-wrap"><canvas id="learnerWhiteboard" class="lmu-whiteboard" aria-label="Learner drawing whiteboard"></canvas></div>
+      <div class="split wb-meta"><small class="muted">Finger, stylus or mouse · automatically saved on this device</small><small class="muted" id="wbActivityCount">0 actions</small></div>
+      <details class="wb-history"><summary>Activity history</summary><div id="wbActivityLog" class="wb-log"><div class="empty">No whiteboard actions yet.</div></div></details>
+    </div>
+
+    <div class="lmu-evidence-capture">
+      <div class="split"><div><div class="eyebrow">Private evidence</div><h3>Camera, video, mic & attachments</h3></div><span class="tag" id="captureStatus">Checking permissions…</span></div>
+      <p class="muted" id="capturePermissionNote">LMU is checking guardian consent. Your phone or browser will still ask separately before using camera or microphone hardware.</p>
+      <div class="lmu-evidence-actions" role="toolbar" aria-label="Private evidence capture tools">
+        <button type="button" class="ghost" id="captureCamera" disabled>Camera</button>
+        <button type="button" class="ghost" id="captureVideo" disabled>Video</button>
+        <button type="button" class="ghost" id="captureAudio" disabled>Mic</button>
+        <button type="button" class="ghost" id="captureAttach" disabled>Attach</button>
+      </div>
+      <input id="captureCameraInput" type="file" accept="image/*" capture="environment" hidden>
+      <input id="captureVideoInput" type="file" accept="video/*" capture="environment" hidden>
+      <input id="captureAudioInput" type="file" accept="audio/*" capture hidden>
+      <input id="captureAttachInput" type="file" accept="application/pdf,text/plain,image/jpeg,image/png,image/webp,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+      <div id="capturedEvidenceList" class="lmu-evidence-list"><div class="empty">No additional private evidence added yet.</div></div>
+    </div>
+
+    <div class="actions">
+      <button class="ghost" id="taskHint">Ask Milo for a hint</button>
+      <button class="primary" id="taskSubmit">Submit evidence</button>
+    </div>
+  </div>`;
+  d.showModal();
+
+  const board=initLearnerWhiteboard(t,d);
+  const media=initLearnerEvidenceTools(t,d);
+
+  $('#taskHint').onclick=()=>{
+    const attempt=$('#evidenceText')?.value||'';
+    d.close();
+    state.miloLearningItemId=t.id;
+    state.view='milo';
+    state.chat.push({who:'user',text:`I am working on ${t.title}. My first attempt is: ${attempt||'(not written yet)'}`});
+    render();
+  };
+  $('#taskSubmit').onclick=()=>submitEvidence(t,$('#evidenceText').value,d,board,media);
+}
+
+function evidenceRandomId(){
+  if(crypto.randomUUID)return crypto.randomUUID();
+  const bytes=new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function evidenceExtension(mime){
+  return ({
+    'image/jpeg':'jpg','image/png':'png','image/webp':'webp',
+    'video/mp4':'mp4','video/webm':'webm','video/quicktime':'mov',
+    'audio/mpeg':'mp3','audio/mp4':'m4a','audio/webm':'webm','audio/ogg':'ogg','audio/wav':'wav',
+    'application/pdf':'pdf','text/plain':'txt',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'docx'
+  })[String(mime||'').toLowerCase()]||'bin';
+}
+
+function evidenceMediaDuration(file,kind){
+  if(!['video','audio'].includes(kind))return Promise.resolve(null);
+  return new Promise((resolve,reject)=>{
+    const element=document.createElement(kind);
+    const url=URL.createObjectURL(file);
+    const cleanup=()=>{URL.revokeObjectURL(url);element.removeAttribute('src');element.load?.()};
+    const timer=setTimeout(()=>{cleanup();reject(new Error('Media duration could not be read'))},8000);
+    element.preload='metadata';
+    element.onloadedmetadata=()=>{
+      clearTimeout(timer);
+      const duration=Number(element.duration);
+      cleanup();
+      if(!Number.isFinite(duration)||duration<=0)return reject(new Error('Media duration is invalid'));
+      resolve(Math.ceil(duration*10)/10);
+    };
+    element.onerror=()=>{clearTimeout(timer);cleanup();reject(new Error('Media file could not be read'))};
+    element.src=url;
+  });
+}
+
+function initLearnerEvidenceTools(t,d){
+  const approvedStatuses=new Set(['parent_approved','processing','milo_analyzed','teacher_reviewed']);
+  const model={
+    items:[],
+    status:null,
+    busy:true,
+    hasPending:()=>model.items.some(item=>item.status==='pending_parent_approval'),
+    hasApproved:()=>model.items.some(item=>approvedStatuses.has(item.status))
+  };
+  const camera=$('#captureCamera'),video=$('#captureVideo'),audio=$('#captureAudio'),attach=$('#captureAttach');
+  const note=$('#capturePermissionNote'),statusNode=$('#captureStatus'),list=$('#capturedEvidenceList');
+  const inputs={
+    photo:$('#captureCameraInput'),
+    video:$('#captureVideoInput'),
+    audio:$('#captureAudioInput'),
+    document:$('#captureAttachInput')
+  };
+
+  const setBusy=busy=>{
+    model.busy=busy;
+    for(const button of [camera,video,audio,attach]){
+      if(button)button.disabled=busy||button.dataset.allowed!=='true';
+    }
+    if(statusNode)statusNode.textContent=busy?'Checking / saving…':'Ready';
+  };
+
+  const stateLabel=status=>({
+    pending_parent_approval:['warn','Guardian approval pending'],
+    parent_approved:['ok','Guardian approved'],
+    processing:['ok','Approved · processing'],
+    milo_analyzed:['ok','Approved'],
+    teacher_reviewed:['ok','Teacher reviewed'],
+    parent_rejected:['warn','Guardian rejected'],
+    expired:['warn','Expired'],
+    deleted:['warn','Deleted']
+  })[status]||['','Private evidence'];
+
+  const renderItems=()=>{
+    if(!list)return;
+    const visible=model.items.filter(item=>!['deleted','expired'].includes(item.status));
+    list.innerHTML=visible.length
+      ?visible.map(item=>{
+        const [tagClass,label]=stateLabel(item.status);
+        const kindLabel=item.label||({photo:'Photo',video:'Video',audio:'Audio',document:'Attachment',transcript:'Transcript'}[item.kind]||'Evidence');
+        return `<div class="task"><div><span class="tag ${tagClass}">${esc(label)}</span><b>${esc(kindLabel)}</b><p>${Number(item.size||0).toLocaleString()} bytes · private evidence</p></div></div>`;
+      }).join('')
+      :'<div class="empty">No additional private evidence added yet.</div>';
+  };
+
+  const allow=(button,allowed,title)=>{
+    if(!button)return;
+    button.dataset.allowed=allowed?'true':'false';
+    button.disabled=!allowed||model.busy;
+    button.title=title||'';
+  };
+
+  const loadExistingEvidence=async()=>{
+    const {data:submission,error:submissionError}=await state.supabase
+      .from('learner_submissions')
+      .select('id,status')
+      .eq('learning_item_id',t.id)
+      .eq('learner_id',state.learner.id)
+      .maybeSingle();
+    if(submissionError)throw submissionError;
+    if(!submission?.id){model.items=[];renderItems();return}
+
+    const {data,error}=await state.supabase
+      .from('learner_evidence_items')
+      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,duration_seconds,captured_at')
+      .eq('submission_id',submission.id)
+      .order('captured_at',{ascending:false});
+    if(error)throw error;
+    model.items=(data||[])
+      .filter(item=>item.evidence_type!=='whiteboard')
+      .map(item=>({
+        id:item.id,
+        kind:item.evidence_type,
+        label:{photo:'Photo',video:'Video',audio:'Audio',document:'Attachment',transcript:'Transcript'}[item.evidence_type]||'Evidence',
+        size:item.file_size_bytes||0,
+        path:item.storage_path,
+        mime:item.mime_type,
+        duration:item.duration_seconds,
+        status:item.status
+      }));
+    renderItems();
+  };
+
+  const upload=async(kind,file)=>{
+    if(!file||state.mode!=='live'||!state.learner?.id||!state.supabase)return;
+    if(model.busy)return toast('Wait for the current evidence check or upload to finish.');
+    if(!file.size||file.size>26214400)return toast('Evidence files must be between 1 byte and 25 MB.');
+
+    const mime=String(file.type||'').toLowerCase();
+    if(kind==='photo'&&!mime.startsWith('image/'))return toast('Choose an image for camera evidence.');
+    if(kind==='video'&&!mime.startsWith('video/'))return toast('Choose a video file.');
+    if(kind==='audio'&&!mime.startsWith('audio/'))return toast('Choose an audio recording.');
+    const documentMimes=new Set([
+      'application/pdf','text/plain','image/jpeg','image/png','image/webp',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ]);
+    if(kind==='document'&&!documentMimes.has(mime))return toast('Attach a PDF, text file, image, or DOCX document.');
+
+    setBusy(true);
+    let storagePath=null;
+    try{
+      const duration=await evidenceMediaDuration(file,kind);
+      if(kind==='video'){
+        const max=Number(model.status?.video_max_capture_seconds||0);
+        if(max>0&&duration>max)throw new Error(`Video evidence must be ${max} seconds or shorter.`);
+      }
+
+      const learnerId=state.learner.id;
+      const safeItem=String(t.id).replace(/[^a-zA-Z0-9_-]/g,'');
+      storagePath=`${learnerId}/${kind}/${safeItem}/${evidenceRandomId()}.${evidenceExtension(mime)}`;
+      const bucket=state.supabase.storage.from('learner-evidence-private');
+      const {error:uploadError}=await bucket.upload(storagePath,file,{contentType:mime,cacheControl:'3600',upsert:false});
+      if(uploadError)throw uploadError;
+
+      const {data,error}=await state.supabase.rpc('create_learner_evidence_item',{
+        p_learning_item_id:t.id,
+        p_learner_id:learnerId,
+        p_evidence_type:kind,
+        p_storage_path:storagePath,
+        p_mime_type:mime,
+        p_file_size_bytes:file.size,
+        p_duration_seconds:duration,
+        p_transcript_text:null
+      });
+      if(error)throw error;
+      if(!data)throw new Error('Evidence registration returned no evidence ID');
+
+      const label={photo:'Photo',video:'Video',audio:'Audio',document:'Attachment'}[kind]||'Evidence';
+      model.items.unshift({
+        id:data,kind,label,size:file.size,path:storagePath,mime,duration,
+        status:'pending_parent_approval'
+      });
+      renderItems();
+      const guardian=model.status?.evidence_approver_label||'Guardian';
+      toast(`${label} saved privately. Waiting for ${guardian} approval before final submission.`);
+      storagePath=null;
+    }catch(error){
+      console.error('Private evidence capture failed',error);
+      if(storagePath){
+        try{await state.supabase.storage.from('learner-evidence-private').remove([storagePath])}
+        catch(cleanupError){console.warn('Evidence orphan cleanup failed',cleanupError)}
+      }
+      toast(error?.message?.startsWith('Video evidence must be')
+        ?error.message
+        :'Private evidence could not be saved. Check permission and try again.');
+    }finally{
+      setBusy(false);
+      for(const input of Object.values(inputs))if(input)input.value='';
+    }
+  };
+
+  if(state.mode!=='live'||!state.learner?.id||!state.supabase){
+    model.busy=false;
+    if(statusNode)statusNode.textContent='Live account required';
+    if(note)note.textContent='Sign in with the learner account to add private camera, video, microphone or attachment evidence.';
+    return model;
+  }
+
+  camera.onclick=()=>inputs.photo?.click();
+  video.onclick=()=>inputs.video?.click();
+  audio.onclick=()=>inputs.audio?.click();
+  attach.onclick=()=>inputs.document?.click();
+  inputs.photo.onchange=e=>upload('photo',e.target.files?.[0]);
+  inputs.video.onchange=e=>upload('video',e.target.files?.[0]);
+  inputs.audio.onchange=e=>upload('audio',e.target.files?.[0]);
+  inputs.document.onchange=e=>upload('document',e.target.files?.[0]);
+
+  (async()=>{
+    try{
+      const [{data,error},existingResult]=await Promise.all([
+        state.supabase.rpc('get_learner_evidence_capture_status',{p_learner_id:state.learner.id}),
+        loadExistingEvidence().then(()=>({ok:true})).catch(existingError=>({ok:false,error:existingError}))
+      ]);
+      if(error)throw error;
+      if(!existingResult.ok)console.warn('Existing private evidence status could not be loaded',existingResult.error);
+
+      model.status=Array.isArray(data)?data[0]||{}:data||{};
+      const guardian=model.status.evidence_approver_label||'Guardian';
+      allow(camera,!!model.status.camera_enabled,model.status.camera_enabled?'Camera evidence is enabled':`Ask ${guardian} to enable camera evidence`);
+      allow(video,!!model.status.video_enabled,model.status.video_enabled?'Video evidence is enabled':`Ask ${guardian} to enable video evidence`);
+      allow(audio,!!model.status.audio_evidence_enabled,model.status.audio_evidence_enabled?'Audio evidence is enabled':`Ask ${guardian} to enable audio evidence`);
+      allow(attach,true,'Attachments are stored privately and require guardian approval before teacher review');
+      setBusy(false);
+      if(note){
+        const max=Number(model.status.video_max_capture_seconds||0);
+        const pending=model.hasPending()?' Private evidence is still waiting for guardian approval.':'';
+        note.textContent=`Guardian consent: Camera ${model.status.camera_enabled?'on':'off'} · Video ${model.status.video_enabled?'on':'off'} · Mic ${model.status.audio_evidence_enabled?'on':'off'}.${max?` Video limit: ${max}s.`:''}${pending} Device permission is still requested separately by your phone or browser.`;
+      }
+    }catch(error){
+      console.error('Learner evidence permission status failed',error);
+      allow(camera,false,'Evidence permission status unavailable');
+      allow(video,false,'Evidence permission status unavailable');
+      allow(audio,false,'Evidence permission status unavailable');
+      allow(attach,true,'Attachments are stored privately and require guardian approval before teacher review');
+      setBusy(false);
+      if(statusNode)statusNode.textContent='Permission check unavailable';
+      if(note)note.textContent='Camera, video and microphone stay locked until LMU can verify guardian consent. Attachments remain private and require guardian approval.';
+    }
+  })();
+
+  return model;
+}
 
 
 function whiteboardStorageKey(t){return `lmu-whiteboard-v1:${state.learner?.id||state.session?.user?.id||'local'}:${t.id}`}
@@ -119,9 +575,105 @@ function whiteboardStorageKey(t){return `lmu-whiteboard-v1:${state.learner?.id||
 function initLearnerWhiteboard(t,d){const canvas=$('#learnerWhiteboard');if(!canvas)return null;const ctx=canvas.getContext('2d',{alpha:false});const key=whiteboardStorageKey(t);const model={canvas,ctx,key,tool:'pen',colour:'#172033',size:4,drawing:false,moved:false,last:null,history:[],redo:[],activity:[],dirty:false,saveTimer:null};const status=$('#wbStatus');const count=$('#wbActivityCount');const log=$('#wbActivityLog');const pen=$('#wbPen');const eraser=$('#wbEraser');const colour=$('#wbColour');const size=$('#wbSize');const setStatus=text=>{if(status)status.textContent=text};const updateActivity=()=>{if(count)count.textContent=`${model.activity.length} action${model.activity.length===1?'':'s'}`;if(log)log.innerHTML=model.activity.length?model.activity.slice().reverse().map(a=>`<div class="wb-log-row"><b>${esc(a.action)}</b><small>${esc(new Date(a.at).toLocaleTimeString())}</small></div>`).join(''):'<div class="empty">No whiteboard actions yet.</div>'};const record=(action,detail='')=>{model.activity.push({action:detail?`${action}: ${detail}`:action,at:new Date().toISOString()});if(model.activity.length>80)model.activity=model.activity.slice(-80);updateActivity()};const fill=()=>{ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore()};const snapshot=()=>canvas.toDataURL('image/png');const pushHistory=()=>{const image=snapshot();if(model.history[model.history.length-1]!==image){model.history.push(image);if(model.history.length>30)model.history.shift()}model.redo=[]};const restoreImage=data=>new Promise(resolve=>{if(!data){fill();resolve();return}const img=new Image();img.onload=()=>{fill();ctx.drawImage(img,0,0,canvas.width,canvas.height);resolve()};img.onerror=()=>{fill();resolve()};img.src=data});const save=()=>{clearTimeout(model.saveTimer);model.saveTimer=setTimeout(()=>{try{localStorage.setItem(key,JSON.stringify({version:1,image:snapshot(),activity:model.activity,updatedAt:new Date().toISOString()}));model.dirty=false;setStatus('Saved')}catch(e){console.warn('Whiteboard local save failed',e);setStatus('Save unavailable')}},180)};const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*(canvas.width/r.width),y:(e.clientY-r.top)*(canvas.height/r.height)}};const resize=async()=>{const rect=canvas.getBoundingClientRect();const ratio=Math.max(1,Math.min(2,window.devicePixelRatio||1));const old=canvas.width&&canvas.height?snapshot():null;const w=Math.max(320,Math.round(rect.width*ratio));const h=Math.max(300,Math.round(Math.min(window.innerHeight*.48,520)*ratio));if(canvas.width===w&&canvas.height===h)return;canvas.width=w;canvas.height=h;ctx.lineCap='round';ctx.lineJoin='round';fill();if(old)await restoreImage(old)};const chooseTool=tool=>{model.tool=tool;pen?.classList.toggle('active',tool==='pen');eraser?.classList.toggle('active',tool==='eraser');setStatus(tool==='pen'?'Pen':'Eraser')};const start=e=>{if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();canvas.setPointerCapture?.(e.pointerId);pushHistory();model.drawing=true;model.moved=false;model.last=point(e);ctx.beginPath();ctx.moveTo(model.last.x,model.last.y)};const move=e=>{if(!model.drawing)return;e.preventDefault();const p=point(e);ctx.strokeStyle=model.tool==='eraser'?'#ffffff':model.colour;ctx.lineWidth=model.size*Math.max(1,Math.min(2,window.devicePixelRatio||1));ctx.lineTo(p.x,p.y);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x,p.y);model.last=p;model.moved=true;model.dirty=true;setStatus('Drawing…')};const finish=e=>{if(!model.drawing)return;e?.preventDefault?.();model.drawing=false;ctx.closePath();if(model.moved){record(model.tool==='eraser'?'Erased':'Drew',model.tool==='pen'?`size ${model.size}`:'stroke');save()}else{model.history.pop()}setStatus('Saved locally')};canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',finish);canvas.addEventListener('pointercancel',finish);canvas.addEventListener('contextmenu',e=>e.preventDefault());pen.onclick=()=>{chooseTool('pen');record('Selected pen')};eraser.onclick=()=>{chooseTool('eraser');record('Selected eraser')};colour.oninput=e=>{model.colour=e.target.value;chooseTool('pen');record('Changed colour',model.colour);save()};size.oninput=e=>{model.size=Number(e.target.value)||4;record('Changed pen size',String(model.size));save()};$('#wbUndo').onclick=async()=>{if(!model.history.length)return toast('Nothing to undo');model.redo.push(snapshot());const previous=model.history.pop();await restoreImage(previous);model.dirty=true;record('Undo');save()};$('#wbClear').onclick=async()=>{if(!confirm('Clear the whiteboard? You can still use Undo immediately afterwards.'))return;pushHistory();fill();model.dirty=true;record('Cleared whiteboard');save()};const load=async()=>{await resize();try{const raw=localStorage.getItem(key);if(raw){const saved=JSON.parse(raw);if(saved?.image)await restoreImage(saved.image);if(Array.isArray(saved?.activity))model.activity=saved.activity.slice(-80);record('Restored draft');setStatus('Draft restored')}else{fill();setStatus('Ready')}}catch(e){console.warn('Whiteboard restore failed',e);fill();setStatus('Ready')}updateActivity()};load();return{hasDrawing:()=>model.activity.some(a=>/Drew|Erased|Cleared|Undo/.test(a.action)),snapshot:()=>snapshot(),toBlob:()=>new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Whiteboard PNG could not be created')),'image/png')),activity:()=>model.activity.slice(),save:()=>save(),key}}
 
 
-async function persistWhiteboardEvidence(t,board){if(!board?.hasDrawing?.()||state.mode!=='live'||!state.learner?.id||!state.supabase)return null;const blob=await board.toBlob();if(!blob?.size)throw new Error('Whiteboard PNG is empty');if(blob.size>26214400)throw new Error('Whiteboard PNG exceeds the 25 MB evidence limit');const learnerId=state.learner.id;const safeItem=String(t.id).replace(/[^a-zA-Z0-9_-]/g,'');const stamp=Date.now();const path=`${learnerId}/whiteboard/${safeItem}/${stamp}.png`;const bucket=state.supabase.storage.from('learner-evidence-private');const {error:uploadError}=await bucket.upload(path,blob,{contentType:'image/png',cacheControl:'3600',upsert:false});if(uploadError)throw uploadError;let evidenceId=null;try{const {data,error}=await state.supabase.rpc('create_learner_evidence_item',{p_learning_item_id:t.id,p_learner_id:learnerId,p_evidence_type:'whiteboard',p_storage_path:path,p_mime_type:'image/png',p_file_size_bytes:blob.size,p_duration_seconds:null,p_transcript_text:null});if(error)throw error;evidenceId=data;if(!evidenceId)throw new Error('Whiteboard evidence registration returned no evidence ID');return{evidenceId,path,mimeType:'image/png',size:blob.size,activity:board.activity()}}catch(e){try{await bucket.remove([path])}catch(cleanupError){console.warn('Whiteboard orphan cleanup failed',cleanupError)}throw e}}
+async function persistWhiteboardEvidence(t,board){
+  if(!board?.hasDrawing?.()||state.mode!=='live'||!state.learner?.id||!state.supabase)return null;
+  const blob=await board.toBlob();
+  if(!blob?.size)throw new Error('Whiteboard PNG is empty');
+  if(blob.size>26214400)throw new Error('Whiteboard PNG exceeds the 25 MB evidence limit');
+  const learnerId=state.learner.id;
+  const safeItem=String(t.id).replace(/[^a-zA-Z0-9_-]/g,'');
+  const path=`${learnerId}/whiteboard/${safeItem}/current.png`;
+  const bucket=state.supabase.storage.from('learner-evidence-private');
+  const {error:uploadError}=await bucket.upload(path,blob,{contentType:'image/png',cacheControl:'3600',upsert:true});
+  if(uploadError)throw uploadError;
+  const {data,error}=await state.supabase.rpc('create_learner_evidence_item',{
+    p_learning_item_id:t.id,
+    p_learner_id:learnerId,
+    p_evidence_type:'whiteboard',
+    p_storage_path:path,
+    p_mime_type:'image/png',
+    p_file_size_bytes:blob.size,
+    p_duration_seconds:null,
+    p_transcript_text:null
+  });
+  if(error){
+    console.warn('Whiteboard registration failed; deterministic private object retained for safe retry',error);
+    throw error;
+  }
+  const evidenceId=data;
+  if(!evidenceId)throw new Error('Whiteboard evidence registration returned no evidence ID');
+  return{evidenceId,path,mimeType:'image/png',size:blob.size,activity:board.activity()};
+}
 
-async function submitEvidence(t,text,d,board=null){const clean=text.trim();const hasBoard=!!board?.hasDrawing?.();if(!clean&&!hasBoard)return toast('Add your own written attempt or whiteboard work first');const btn=$('#taskSubmit');if(btn?.disabled)return;if(btn){btn.disabled=true;btn.textContent=hasBoard?'Saving whiteboard…':'Submitting…'}let durableBoard=null;try{const responseText=clean||(hasBoard?'Learner submitted whiteboard working.':'');if(state.mode==='live'&&state.learner){if(hasBoard){durableBoard=await persistWhiteboardEvidence(t,board);if(btn?.isConnected)btn.textContent='Submitting evidence…'}const help=Number(t.content_json?.helpLevel??0);const evidenceJson={source:'web',kind:hasBoard?'whiteboard':(t.content_json?.authenticType||'written')};if(durableBoard)evidenceJson.whiteboard={kind:'whiteboard',version:2,evidence_id:durableBoard.evidenceId,storage_path:durableBoard.path,mime_type:durableBoard.mimeType,file_size_bytes:durableBoard.size,activity:durableBoard.activity};const {data:submitResult,error}=await state.supabase.rpc('save_learner_work',{p_learning_item_id:t.id,p_learner_id:state.learner.id,p_response_text:responseText,p_submit:true});if(error){console.error('Atomic learner submission failed after evidence persistence',error);toast(durableBoard?'Your whiteboard was saved safely, but final submission is not complete yet. Please try again.':'Your work could not be submitted just now. Please try again.');return}const finalRow=Array.isArray(submitResult)?submitResult[0]:submitResult;if(!finalRow||finalRow.submission_status!=='submitted'||finalRow.recipient_status!=='submitted'){console.error('Atomic learner submission returned an unexpected workflow state',submitResult);toast('Your evidence was saved, but submission confirmation was incomplete. Please try again.');return}t.recipient_status='submitted'}else{if(state.mastery[0]){state.mastery[0].estimate=Math.min(100,(state.mastery[0].estimate||0)+3);state.mastery[0].evidence_count=(state.mastery[0].evidence_count||0)+1}}if(hasBoard){try{board.save()}catch(e){console.warn('Final whiteboard local save failed',e)}}d.close();toast(hasBoard?'Whiteboard evidence submitted privately for teacher review':'Learning evidence submitted for teacher review');render()}catch(e){console.error('Evidence submission failed',e);toast(hasBoard?'Your whiteboard is still saved on this device. Private upload or submission failed; please try again.':'Your work could not be submitted just now. Please try again.')}finally{if(btn?.isConnected){btn.disabled=false;btn.textContent='Submit evidence'}}}
+async function submitEvidence(t,text,d,board=null,media=null){
+  const clean=text.trim();
+  const hasBoard=!!board?.hasDrawing?.();
+  const hasApprovedMedia=!!media?.hasApproved?.();
+  const hasPendingMedia=!!media?.hasPending?.();
+
+  if(media?.busy)return toast('Wait for the private evidence check or upload to finish.');
+  if(hasPendingMedia)return toast('Private media is waiting for guardian approval. Submit after the guardian decision.');
+  if(!clean&&!hasBoard&&!hasApprovedMedia)return toast('Add your own written attempt, whiteboard work, or approved private evidence first');
+
+  const btn=$('#taskSubmit');
+  if(btn?.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent=hasBoard?'Saving whiteboard…':'Submitting…'}
+
+  let durableBoard=null;
+  try{
+    const responseText=clean||(hasBoard
+      ?'Learner submitted whiteboard working.'
+      :(hasApprovedMedia?'Learner submitted guardian-approved private evidence.':''));
+
+    if(state.mode==='live'&&state.learner){
+      if(hasBoard){
+        durableBoard=await persistWhiteboardEvidence(t,board);
+        if(btn?.isConnected)btn.textContent='Submitting evidence…';
+      }
+
+      const {data:submitResult,error}=await state.supabase.rpc('save_learner_work',{
+        p_learning_item_id:t.id,
+        p_learner_id:state.learner.id,
+        p_response_text:responseText,
+        p_submit:true
+      });
+      if(error){
+        console.error('Atomic learner submission failed after evidence persistence',error);
+        toast((durableBoard||hasApprovedMedia)
+          ?'Your private evidence was saved safely, but final submission is not complete yet. Please try again.'
+          :'Your work could not be submitted just now. Please try again.');
+        return;
+      }
+      const finalRow=Array.isArray(submitResult)?submitResult[0]:submitResult;
+      if(!finalRow||finalRow.submission_status!=='submitted'||finalRow.recipient_status!=='submitted'){
+        console.error('Atomic learner submission returned an unexpected workflow state',submitResult);
+        toast('Your evidence was saved, but submission confirmation was incomplete. Please try again.');
+        return;
+      }
+      t.recipient_status='submitted';
+    }else if(state.mastery[0]){
+      state.mastery[0].estimate=Math.min(100,(state.mastery[0].estimate||0)+3);
+      state.mastery[0].evidence_count=(state.mastery[0].evidence_count||0)+1;
+    }
+
+    if(hasBoard){
+      try{board.save()}catch(error){console.warn('Final whiteboard local save failed',error)}
+    }
+    d.close();
+    toast(hasApprovedMedia
+      ?'Guardian-approved evidence submitted privately for teacher review.'
+      :(hasBoard?'Whiteboard evidence submitted privately for teacher review':'Learning evidence submitted for teacher review'));
+    render();
+  }catch(error){
+    console.error('Evidence submission failed',error);
+    toast((hasBoard||hasApprovedMedia)
+      ?'Your local/private evidence is preserved. Upload or submission failed; please try again.'
+      :'Your work could not be submitted just now. Please try again.');
+  }finally{
+    if(btn?.isConnected){btn.disabled=false;btn.textContent='Submit evidence'}
+  }
+}
+
 async function sendMilo(){
   if(state.miloPending)return;
   const input=$('#miloInput');
@@ -157,84 +709,110 @@ async function loadTeacherSubmissionEvidence(x,d){
 
   const host=d?.querySelector?.('#teacherEvidenceViewer');
   if(!host)return;
+  host.innerHTML='<div class="notice">Loading approved private learner evidence…</div>';
 
-  host.innerHTML='<div class="notice">Loading private learner evidence…</div>';
+  const objectUrls=[];
+  let loadFailed=false;
 
-  let objectUrl=null;
+  const cleanup=()=>{
+    while(objectUrls.length){
+      const url=objectUrls.pop();
+      try{URL.revokeObjectURL(url)}catch(error){console.warn('Private evidence URL cleanup failed',error)}
+    }
+  };
+  d.addEventListener('close',cleanup,{once:true});
 
   try{
     const {data,error}=await state.supabase
       .from('learner_evidence_items')
-      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,captured_at')
+      .select('id,evidence_type,status,storage_path,mime_type,file_size_bytes,duration_seconds,transcript_text,captured_at')
       .eq('submission_id',x.submission_id)
       .in('status',['parent_approved','processing','milo_analyzed','teacher_reviewed'])
       .order('captured_at',{ascending:false});
 
     if(error)throw error;
-
     const evidence=data||[];
 
     if(!evidence.length){
-      host.innerHTML='<div class="notice">No approved private media evidence is attached to this submission.</div>';
+      host.innerHTML='<div class="notice">No guardian-approved private media evidence is available yet. Written evidence, if present, remains reviewable.</div>';
       return;
     }
 
-    const whiteboard=evidence.find(e=>
-      e.evidence_type==='whiteboard' &&
-      e.storage_path
-    );
+    const rendered=[];
+    for(const item of evidence){
+      const label={
+        whiteboard:'Whiteboard',
+        photo:'Photo',
+        video:'Video',
+        audio:'Audio',
+        transcript:'Transcript',
+        document:'Attachment'
+      }[item.evidence_type]||'Evidence';
 
-    if(!whiteboard){
-      host.innerHTML=`<div class="notice"><b>Approved evidence attached</b><br>${evidence.length} approved evidence item${evidence.length===1?'':'s'} available. Whiteboard preview is not present for this submission.</div>`;
-      return;
-    }
-
-    const {data:blob,error:downloadError}=await state.supabase.storage
-      .from('learner-evidence-private')
-      .download(whiteboard.storage_path);
-
-    if(downloadError)throw downloadError;
-    if(!blob)throw new Error('Private whiteboard download returned no data');
-
-    const mime=String(blob.type||whiteboard.mime_type||'');
-    if(mime && mime!=='image/png' && !mime.startsWith('image/'))
-      throw new Error('Whiteboard evidence is not a supported image');
-
-    objectUrl=URL.createObjectURL(blob);
-
-    host.innerHTML=`
-      <div class="notice">
-        <b>Private whiteboard evidence</b><br>
-        This evidence is visible through the teacher's authorised learner access.
-      </div>
-      <div style="margin-top:10px">
-        <img
-          id="teacherWhiteboardEvidenceImage"
-          src="${esc(objectUrl)}"
-          alt="Learner whiteboard evidence"
-          style="display:block;width:100%;max-height:520px;object-fit:contain;background:#fff;border:1px solid rgba(127,127,127,.25);border-radius:12px"
-        >
-      </div>
-      <p class="muted">
-        ${esc(whiteboard.mime_type||blob.type||'image/png')}
-        · ${Number(whiteboard.file_size_bytes||blob.size||0).toLocaleString()} bytes
-      </p>`;
-
-    const cleanup=()=>{
-      if(objectUrl){
-        URL.revokeObjectURL(objectUrl);
-        objectUrl=null;
+      if(item.transcript_text&&!item.storage_path){
+        rendered.push(`<article class="card teacher-evidence-item"><span class="tag ok">Approved</span><h3>${esc(label)}</h3><p>${esc(item.transcript_text)}</p></article>`);
+        continue;
       }
-    };
 
-    d.addEventListener('close',cleanup,{once:true});
+      if(!item.storage_path){
+        rendered.push(`<article class="card teacher-evidence-item"><span class="tag ok">Approved</span><h3>${esc(label)}</h3><p class="muted">Evidence metadata is available but there is no private file to preview.</p></article>`);
+        continue;
+      }
 
-  }catch(e){
-    if(objectUrl)URL.revokeObjectURL(objectUrl);
-    console.error('Teacher private evidence load failed',e);
+      try{
+        const {data:blob,error:downloadError}=await state.supabase.storage
+          .from('learner-evidence-private')
+          .download(item.storage_path);
+        if(downloadError)throw downloadError;
+        if(!blob)throw new Error('Private evidence download returned no data');
 
+        const mime=String(blob.type||item.mime_type||'');
+        const url=URL.createObjectURL(blob);
+        objectUrls.push(url);
+        let preview='';
+
+        if(mime.startsWith('image/')){
+          preview=`<img src="${esc(url)}" alt="${esc(label)} learner evidence" style="display:block;width:100%;max-height:520px;object-fit:contain;background:#fff;border:1px solid rgba(127,127,127,.25);border-radius:12px">`;
+        }else if(mime.startsWith('video/')){
+          preview=`<video controls playsinline src="${esc(url)}" style="display:block;width:100%;max-height:520px;border-radius:12px"></video>`;
+        }else if(mime.startsWith('audio/')){
+          preview=`<audio controls src="${esc(url)}" style="width:100%"></audio>`;
+        }else{
+          preview=`<a class="ghost" href="${esc(url)}" download="lmu-private-evidence">Open private attachment</a>`;
+        }
+
+        rendered.push(`<article class="card teacher-evidence-item">
+          <span class="tag ok">Guardian approved</span>
+          <h3>${esc(label)}</h3>
+          ${preview}
+          <p class="muted">${esc(mime||item.mime_type||'private file')} · ${Number(item.file_size_bytes||blob.size||0).toLocaleString()} bytes${item.duration_seconds?` · ${esc(item.duration_seconds)}s`:''}</p>
+        </article>`);
+      }catch(error){
+        loadFailed=true;
+        console.error('Teacher private evidence item load failed',error);
+        rendered.push(`<article class="card teacher-evidence-item"><span class="tag warn">Preview unavailable</span><h3>${esc(label)}</h3><p class="muted">This approved private evidence could not be loaded. Do not approve the academic review until it can be inspected.</p></article>`);
+      }
+    }
+
+    host.innerHTML=`<div class="notice"><b>Approved private evidence</b><br>Only evidence that has passed the applicable guardian-approval boundary is shown here.</div><div class="teacher-evidence-grid">${rendered.join('')}</div>`;
+
+    if(loadFailed){
+      const approve=d.querySelector('#saveSubmissionReview');
+      if(approve){
+        approve.disabled=true;
+        approve.title='Private evidence must load before this review can be approved.';
+      }
+    }
+  }catch(error){
+    cleanup();
+    console.error('Teacher private evidence load failed',error);
     if(host?.isConnected){
-      host.innerHTML='<div class="notice">Private evidence could not be loaded. The review remains available, but do not approve it until the required evidence can be inspected.</div>';
+      host.innerHTML='<div class="notice">Private evidence could not be loaded. The review remains on hold until the required evidence can be inspected.</div>';
+      const approve=d.querySelector('#saveSubmissionReview');
+      if(approve){
+        approve.disabled=true;
+        approve.title='Private evidence must load before this review can be approved.';
+      }
     }
   }
 }
