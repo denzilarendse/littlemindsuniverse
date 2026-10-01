@@ -37,7 +37,7 @@ test('push registration foundation keeps endpoint capability data off direct Dat
   assert.match(migration,/revoke all on table public\\.connect_push_subscriptions from public, anon, authenticated/);
   assert.match(migration,/register_connect_push_subscription/);
   assert.match(migration,/unregister_connect_push_subscription/);
-  assert.match(migration,/endpoint ~ '\\^https:\\/\\/'/);
+  assert.ok(migration.includes("endpoint ~ '^https://'"));
 });
 
 test('Connect client has a session-scoped offline outbox with idempotent RPC retry',()=>{
