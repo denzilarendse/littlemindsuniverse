@@ -1,9 +1,11 @@
-const CACHE='lmu-production-v9';
+const CACHE='lmu-production-v10';
 
 const CORE=[
   '/',
   '/index.html',
   '/connect.html',
+  '/privacy.html',
+  '/account-data-request.html',
   '/assets/app.css',
   '/assets/connect.css',
   '/assets/accessibility.css',
@@ -14,6 +16,8 @@ const CORE=[
   '/assets/app.js',
   '/assets/connect-bridge.js',
   '/assets/connect-app.js',
+  '/assets/privacy-controls.js',
+  '/assets/privacy-request.js',
   '/manifest.json',
   '/assets/icon.svg'
 ];
@@ -69,6 +73,8 @@ self.addEventListener('fetch',event=>{
           if(url.pathname==='/connect.html'||url.pathname==='/connect'){
             return caches.match('/connect.html');
           }
+          if(url.pathname==='/privacy.html')return caches.match('/privacy.html');
+          if(url.pathname==='/account-data-request.html')return caches.match('/account-data-request.html');
           return caches.match('/index.html');
         }
 

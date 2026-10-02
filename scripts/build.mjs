@@ -22,7 +22,7 @@ const copyDir = relative => {
   }
 };
 
-for (const file of ['index.html', 'connect.html', 'download-connect.html', 'manifest.json', 'sw.js', '_headers']) copyFile(file);
+for (const file of ['index.html', 'connect.html', 'download-connect.html', 'privacy.html', 'account-data-request.html', 'manifest.json', 'sw.js', '_headers']) copyFile(file);
 for (const dir of ['assets', 'data', '.well-known', 'downloads']) copyDir(dir);
 
 const manifest = JSON.parse(fs.readFileSync(path.join(dist, 'manifest.json'), 'utf8'));
@@ -30,6 +30,10 @@ if (manifest.name !== 'LittleMindsUniverse') throw new Error('Unexpected PWA man
 if (manifest.display !== 'standalone') throw new Error('PWA manifest must use standalone display');
 if (!fs.existsSync(path.join(dist, 'connect.html'))) throw new Error('LittleMinds Connect shell is missing from production build');
 if (!fs.existsSync(path.join(dist, 'download-connect.html'))) throw new Error('LittleMinds Connect download page is missing from production build');
+if (!fs.existsSync(path.join(dist, 'privacy.html'))) throw new Error('Privacy policy is missing from production build');
+if (!fs.existsSync(path.join(dist, 'account-data-request.html'))) throw new Error('Account data request page is missing from production build');
+if (!fs.existsSync(path.join(dist, 'assets', 'privacy-request.js'))) throw new Error('Privacy request client is missing from production build');
+if (!fs.existsSync(path.join(dist, 'assets', 'privacy-controls.js'))) throw new Error('In-app privacy controls are missing from production build');
 if (!fs.existsSync(path.join(dist, '_headers'))) throw new Error('Netlify security headers are missing from production build');
 
 const deployable = [];

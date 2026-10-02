@@ -10,6 +10,8 @@
     "check": "npm run lint && npm test && npm run build",
     "start": "npx serve . -l 5500",
     "verify:production": "node scripts/verify-production.mjs",
+    "verify:play-production": "node scripts/verify-connect-play-production.mjs",
+    "prepare:connect-play-release": "node scripts/prepare-connect-play-release.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:bundle": "npm run android:sync && cd android && ./gradlew :app:bundleRelease",
     "android:apk": "npm run android:sync && cd android && ./gradlew :app:assembleDebug",
