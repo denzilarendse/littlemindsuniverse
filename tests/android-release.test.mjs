@@ -38,12 +38,12 @@ test('Capacitor 8 Android release targets API 36 with the supported minimum', ()
   assert.match(variables, /targetSdkVersion\s*=\s*36/);
 });
 
-test('native shell disables backup and cleartext traffic and requests only internet', () => {
+test('native shell disables backup and cleartext traffic and requests only internet plus consent-gated audio', () => {
   assert.match(manifest, /android:allowBackup="false"/);
   assert.match(manifest, /android:fullBackupContent="false"/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
   const permissions = [...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"/g)].map(([, name]) => name);
-  assert.deepEqual(permissions, ['android.permission.INTERNET']);
+  assert.deepEqual(permissions, ['android.permission.INTERNET', 'android.permission.RECORD_AUDIO']);
 });
 
 test('owner-controlled Android signing material is excluded from source control', () => {
@@ -87,6 +87,7 @@ test('Android CI reruns web checks, native verification, AAB builds and publishe
   assert.match(androidWorkflow, /npm audit --omit=dev --audit-level=moderate/);
   assert.match(androidWorkflow, /npm run check/);
   assert.match(androidWorkflow, /npm run android:sync/);
+  assert.match(androidWorkflow, /android\.permission\.RECORD_AUDIO/);
   assert.match(androidWorkflow, /:app:lintRelease :app:testReleaseUnitTest :app:assembleDebugAndroidTest/);
   assert.match(androidWorkflow, /:connectapp:lintRelease :connectapp:testReleaseUnitTest :connectapp:assembleDebugAndroidTest/);
   assert.match(androidWorkflow, /:app:bundleRelease :app:assembleDebug :connectapp:bundleRelease/);

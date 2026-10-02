@@ -19,8 +19,13 @@ test('every rendered data-action control has an explicit wire binding', () => {
     'create-class',
     'create-lesson',
     'join-classroom',
+    'milo-continue-curriculum',
+    'milo-finish',
+    'milo-read-reply',
     'milo-send',
-    'send-message'
+    'send-message',
+    'voice-attach',
+    'voice-record'
   ]);
   for (const action of actions) {
     assert.ok(wire.includes(`[data-action="${action}"]`), `missing wire binding for data-action=${action}`);
@@ -68,7 +73,8 @@ test('critical Supabase workflow actions remain connected to protected operation
     "rpc('create_teacher_draft_with_skill'",
     "rpc('save_learner_work'",
     "rpc('review_learner_submission'",
-    "rpc('approve_milo_recommendation'"
+    "rpc('approve_milo_recommendation'",
+    "rpc('record_milo_learning_event'"
   ]) {
     assert.ok(app.includes(operation), `missing protected workflow operation: ${operation}`);
   }

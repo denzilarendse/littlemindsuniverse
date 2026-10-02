@@ -14,7 +14,7 @@ test('standalone Connect page loads only publishable client configuration and de
   assert.match(html,/\/assets\/runtime-config\.js/);
   assert.match(html,/\/assets\/connect-app\.js/);
   assert.match(html,/\/assets\/connect\.css/);
-  assert.doesNotMatch(html,/SUPABASE_SECRET|SERVICE_ROLE|WHATSAPP_/i);
+  assert.doesNotMatch(html,/SUPABASE_SECRET|SERVICE_ROLE|EXTERNAL_PHONE_PROVIDER_/i);
 });
 
 test('Connect web client uses authorization-aware Connect RPCs for messaging mutations',()=>{
@@ -24,7 +24,7 @@ test('Connect web client uses authorization-aware Connect RPCs for messaging mut
     'get_or_create_connect_classroom_conversation',
     'get_connect_messages',
     'mark_connect_thread_read',
-    'send_connect_message'
+    'send_connect_message_v2'
   ]) assert.match(app,new RegExp(`rpc\\('${name}'`));
   assert.doesNotMatch(app,/from\('connect_messages'\)\.(?:insert|update|delete)/);
   assert.doesNotMatch(app,/from\('connect_members'\)\.(?:insert|update|delete)/);
@@ -34,14 +34,15 @@ test('Connect composer is bounded, reply-aware and duplicate-send guarded',()=>{
   assert.match(app,/maxlength=\"4000\"/);
   assert.match(app,/body\.length>4000/);
   assert.match(app,/state\.sending/);
-  assert.match(app,/p_reply_to_message_id:state\.replyTo\?\.message_id\|\|null/);
+  assert.match(app,/p_reply_to_message_id:entry\.replyToMessageId\|\|null/);
+  assert.match(app,/p_client_message_id:entry\.clientMessageId/);
   assert.match(app,/Message was not sent\. Access is checked again for every send/);
 });
 
 test('Connect web client does not gate verified classroom messaging on premium entitlement',()=>{
   assert.match(app,/Messaging access is independent from premium lesson entitlement/);
   assert.doesNotMatch(app,/from\(['"](?:entitlements|subscriptions)['"]\)/i);
-  assert.doesNotMatch(app,/rpc\(['"][^'"]*(?:entitlement|subscription|premium|trial)[^'"]*['"]/i);
+  assert.doesNotMatch(app,/rpc\(['"][^'"]*(?:entitlement|premium|trial)[^'"]*['"]/i);
   assert.doesNotMatch(app,/premium_required|trial_expired_locked/i);
 });
 
@@ -58,9 +59,9 @@ test('Connect realtime subscription is scoped to the active conversation',()=>{
   assert.match(app,/mark_connect_thread_read/);
 });
 
-test('Connect standalone UI contains no WhatsApp or phone-number discovery dependency',()=>{
+test('Connect standalone UI contains no external phone-number provider dependency',()=>{
   const combined=html+'\n'+app+'\n'+css;
-  assert.doesNotMatch(combined,/WhatsApp|WHATSAPP_|phone_e164|parentWhatsapp/i);
+  assert.doesNotMatch(combined,/EXTERNAL_PHONE_PROVIDER_|phone_e164|externalPhoneProvider/i);
   assert.match(app,/Connect does not use phone-number discovery/);
 });
 

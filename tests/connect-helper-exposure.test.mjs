@@ -38,7 +38,7 @@ test('public web clients use top-level authorization RPCs, never the internal pr
   assert.doesNotMatch(connectClient, /rpc\(['"]connect_classroom_relationship_active['"]/);
   assert.doesNotMatch(mainClient, /rpc\(['"]connect_classroom_relationship_active['"]/);
   assert.match(connectClient, /rpc\(['"]get_connect_threads['"]\)/);
-  assert.match(connectClient, /rpc\(['"]send_connect_message['"]/);
+  assert.match(connectClient, /rpc\(['"]send_connect_message_v2['"]/);
 });
 
 test('top-level membership and send guards continue to call the internal predicate', () => {
