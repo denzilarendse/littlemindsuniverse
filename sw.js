@@ -1,9 +1,11 @@
-const CACHE='lmu-production-v12';
+const CACHE='lmu-production-v13';
 
 const CORE=[
   '/',
   '/index.html',
   '/connect.html',
+  '/privacy.html',
+  '/account-data-request.html',
   '/assets/app.css',
   '/assets/connect.css',
   '/assets/accessibility.css',
@@ -14,6 +16,8 @@ const CORE=[
   '/assets/coding-studio.js',
   '/assets/parent-controls.js',
   '/assets/teacher-reports.js',
+  '/assets/privacy-controls.js',
+  '/assets/privacy-request.js',
   '/assets/app.js',
   '/assets/connect-bridge.js',
   '/assets/connect-app.js',

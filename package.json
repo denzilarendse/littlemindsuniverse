@@ -17,7 +17,9 @@
     "android:connect:sync": "npm run build && node scripts/build-connect-android.mjs",
     "android:connect:bundle": "npm run android:connect:sync && cd android && ./gradlew :connectapp:bundleRelease",
     "android:connect:assetlinks": "node scripts/generate-connect-assetlinks.mjs",
-    "verify:pilot": "node scripts/verify-production.mjs --pilot"
+    "verify:pilot": "node scripts/verify-production.mjs --pilot",
+    "prepare:connect-play-release": "node scripts/prepare-connect-play-release.mjs",
+    "verify:play-production": "node scripts/verify-connect-play-production.mjs"
   },
   "dependencies": {
     "@capacitor/core": "8.5.2"
