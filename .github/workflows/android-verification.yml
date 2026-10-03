@@ -93,8 +93,8 @@ jobs:
           grep -F 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml
           grep -F 'android.permission.RECORD_AUDIO' android/app/src/main/AndroidManifest.xml
           grep -F 'android.permission.INTERNET' android/connectapp/src/main/AndroidManifest.xml
-          ! grep -Eq 'android.permission.(CAMERA|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/app/src/main/AndroidManifest.xml
-          ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS)' android/connectapp/src/main/AndroidManifest.xml
+          ! grep -Eq 'android.permission.(CAMERA|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS|READ_PHONE_STATE|READ_PHONE_NUMBERS|READ_SMS|READ_CALL_LOG|AD_ID)' android/app/src/main/AndroidManifest.xml
+          ! grep -Eq 'android.permission.(CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|READ_CONTACTS|WRITE_CONTACTS|READ_PHONE_STATE|READ_PHONE_NUMBERS|READ_SMS|READ_CALL_LOG|AD_ID)' android/connectapp/src/main/AndroidManifest.xml
           test -f android/connectapp/src/main/assets/public/index.html
           grep -F 'LittleMinds Connect' android/connectapp/src/main/assets/public/index.html
           ! grep -F 'id="app"' android/connectapp/src/main/assets/public/index.html
