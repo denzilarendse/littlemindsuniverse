@@ -12,6 +12,7 @@ test('public privacy policy identifies LittleMindsUniverse and exposes request m
   const page=read('privacy.html');
   assert.match(page,/<title>Privacy Policy · LittleMindsUniverse<\/title>/);
   assert.match(page,/LittleMinds Connect/);
+  assert.match(page,/LittleMinds Universe \(Pty\) Ltd/);
   assert.match(page,/Information we handle/);
   assert.match(page,/Retention and deletion/);
   assert.match(page,/account-data-request\.html/);
