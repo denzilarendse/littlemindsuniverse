@@ -32,6 +32,8 @@ if (!fs.existsSync(path.join(dist, 'connect.html'))) throw new Error('LittleMind
 if (!fs.existsSync(path.join(dist, 'download-connect.html'))) throw new Error('LittleMinds Connect download page is missing from production build');
 if (!fs.existsSync(path.join(dist, 'privacy.html'))) throw new Error('Privacy policy is missing from production build');
 if (!fs.existsSync(path.join(dist, 'account-data-request.html'))) throw new Error('Account deletion resource is missing from production build');
+if (!fs.existsSync(path.join(dist, 'assets', 'privacy-request.js'))) throw new Error('Privacy request client is missing from production build');
+if (!fs.existsSync(path.join(dist, 'assets', 'privacy-controls.js'))) throw new Error('In-app privacy controls are missing from production build');
 if (!fs.existsSync(path.join(dist, '_headers'))) throw new Error('Netlify security headers are missing from production build');
 
 const deployable = [];
