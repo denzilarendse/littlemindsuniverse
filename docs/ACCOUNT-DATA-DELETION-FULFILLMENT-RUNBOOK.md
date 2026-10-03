@@ -2,7 +2,7 @@
 
 Status: release-control procedure  
 Applies to: LittleMindsUniverse and LittleMinds Connect  
-Last updated: 2026-09-28
+Last updated: 2026-10-03
 
 ## Purpose
 
@@ -89,7 +89,7 @@ Use only for the limited purposes described in the public Privacy Policy. Record
 
 ## 5. Check external processors used by the exact account
 
-Only process services that actually received the account's data. Depending on enabled features this may include Supabase infrastructure and, where the user invoked those features, payment, WhatsApp Business or AI-processing providers.
+Only process services that actually received the account's data. Depending on enabled features this may include Supabase infrastructure and, where the user invoked those features, payment processors or the configured Milo AI-processing provider.
 
 Do not send a deletion request to a provider that never received that user's data. Conversely, do not treat deletion from the primary database as complete if an enabled processor still holds deletable account data that must be removed under its processor controls.
 
