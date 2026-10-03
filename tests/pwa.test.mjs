@@ -24,6 +24,8 @@ test('service worker caches both LMU and Connect offline shells but never interc
   for(const resource of [
     '/index.html',
     '/connect.html',
+    '/privacy.html',
+    '/account-data-request.html',
     '/assets/app.css',
     '/assets/connect.css',
     '/assets/accessibility.css',
@@ -32,6 +34,8 @@ test('service worker caches both LMU and Connect offline shells but never interc
     '/assets/early-learning.js',
     '/assets/parent-controls.js',
     '/assets/teacher-reports.js',
+    '/assets/privacy-controls.js',
+    '/assets/privacy-request.js',
     '/assets/app.js',
     '/assets/connect-bridge.js',
     '/assets/connect-app.js',
@@ -52,5 +56,5 @@ test('service worker cannot cache authenticated cross-origin or arbitrary same-o
   assert.match(sw,/const CACHEABLE_PATHS=new Set\(CORE\)/);
   assert.match(sw,/response\.ok&&CACHEABLE_PATHS\.has\(url\.pathname\)/);
   assert.doesNotMatch(sw,/lmu-production-v9/);
-  assert.match(sw,/lmu-production-v12/);
+  assert.match(sw,/lmu-production-v13/);
 });
