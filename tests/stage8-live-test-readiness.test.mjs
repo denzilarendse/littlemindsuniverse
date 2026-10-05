@@ -23,11 +23,12 @@ test('all six LittleMinds stages remain in the live-test scope and managed-learn
   }
 });
 
-test('pilot runtime explicitly bypasses payment settlement without removing pricing',()=>{
+test('public-testing runtime explicitly disables payment settlement and checkout',()=>{
   assert.ok(runtime.includes('pilotMode: true'));
+  assert.ok(runtime.includes('publicTestingMode: true'));
   assert.ok(runtime.includes('pilotPaymentsRequired: false'));
-  assert.ok(runtime.includes('weekOneAlwaysFree: true'));
-  assert.ok(runtime.includes('monthlyUSD: 3'));
+  assert.ok(runtime.includes('paymentsEnabled: false'));
+  assert.ok(runtime.includes('pricing: null'));
 });
 
 test('Connect stage 8 adds idempotent sends and delivered state behind RPC authorization',()=>{
