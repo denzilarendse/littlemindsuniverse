@@ -14,22 +14,22 @@ The engineering target is an evidence-earned manufactured pass:
 2. Clean install/build/test verification
 3. Live RLS/RPC/storage/security verification
 4. LittleMinds Connect backend and web runtime verification
-5. Payments and entitlement verification
+5. Public-testing access verification (payments disabled)
 6. Production backend/environment configuration
 7. Production domain/HTTPS verification
 8. Authenticated browser/mobile E2E for learner, parent, teacher and admin
 9. PWA/service-worker install, update and offline verification
 10. Backup/restore/rollback evidence
 11. Freeze Android application ID
-12. Establish owner-controlled signing
-13. Publish and verify Digital Asset Links
-14. Confirm the current Google Play target API requirement
-15. Build signed AAB
-16. Physical-device release-artifact test
-17. Play internal testing / pre-launch report
-18. Resolve findings
-19. Production submission
-20. Respond to Play review findings until approved
+12. Build the public-testing web/PWA and direct-distribution Android test artifacts
+13. Physical-device public-testing artifact test
+14. Resolve blocker/critical findings
+15. Verify privacy, account deletion, child-safety and support routes
+16. Verify rollback and incident response
+17. Public-testing deployment and external smoke test
+18. Controlled public tester onboarding and feedback
+19. Monitor, triage and repair public-testing defects
+20. Keep commercial billing and Google Play publication on HOLD until separately authorized
 
 ## Branching rule
 If one branch is blocked by an owner/account/legal/device action, record the exact minimum action and continue every independent branch. Do not claim a blocked branch completed.
@@ -53,14 +53,13 @@ Generated `dist/` output is not canonical source and is rebuilt by CI/hosting fr
 - LittleMinds Connect owns LMU communication; external phone-number messaging providers are outside the launch architecture.
 - Connect relationship authorization, not phone-number or username discovery, determines who can communicate.
 - Learner Connect accounts remain notification/read-only unless a separately reviewed age-safe interaction policy enables more.
-- Payment identity, price, FX policy, duration, settlement state and entitlement are server-authoritative.
-- Payment creation is never treated as settlement.
-- PayFast ITNs are independently verified and processed idempotently before entitlement.
+- Public testing is free: PayFast checkout, ITN routes and payment-provider browser permissions are not part of the public-testing runtime.
+- Existing billing schema/history may remain dormant for future commercial review, but it must not grant or gate public-testing access.
 - Milo does not replace teacher authority; assessment assistance restrictions remain enforced.
 - Week 1 remains free; trial/premium state is determined by backend access logic.
 
 ## Owner-only / external-evidence gates
-Owner/account action may be required for final production-domain/DNS evidence, PayFast provider approval or live credentials, Android signing/Play App Signing ownership, Play Console declarations/submission, Apple/Windows store accounts, and legal/privacy declarations that require the business owner. These gates remain UNKNOWN/BLOCKED until evidenced.
+Owner/account action may be required for final domain/DNS evidence, production-grade Android signing for direct distribution, Apple/Windows store accounts, and legal/privacy declarations that require the business owner. PayFast and Google Play publication are explicitly deferred for this public-testing mission. These gates remain UNKNOWN/BLOCKED until evidenced.
 
 ## Canonical release candidate
 - Repository: `denzilarendse/littlemindsuniverse`
