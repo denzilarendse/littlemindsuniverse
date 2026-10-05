@@ -12,10 +12,6 @@ export default function handler(req, res) {
     connectConfigured: Boolean(
       process.env.SUPABASE_URL &&
       (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
-    ),
-    payfastConfigured: Boolean(
-      process.env.PAYFAST_MERCHANT_ID &&
-      process.env.PAYFAST_MERCHANT_KEY
     )
   });
 }
