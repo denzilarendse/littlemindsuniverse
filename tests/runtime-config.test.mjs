@@ -21,13 +21,12 @@ test('public runtime config identifies the current build as a release candidate,
   assert.equal(cfg.environment, 'release-candidate');
 });
 
-test('public pricing mirrors the active canonical family USD plan values', () => {
+test('public testing explicitly disables commercial checkout and pricing', () => {
   const cfg = loadConfig();
-  assert.equal(cfg.pricing.monthlyUSD, 3);
-  assert.equal(cfg.pricing.annualUSD, 30);
-  assert.equal(cfg.pricing.introductoryUSD, 1);
-  assert.equal('monthlyZAR' in cfg.pricing, false);
-  assert.equal('annualZAR' in cfg.pricing, false);
+  assert.equal(cfg.publicTestingMode, true);
+  assert.equal(cfg.paymentsEnabled, false);
+  assert.equal(cfg.pilotPaymentsRequired, false);
+  assert.equal(cfg.pricing, null);
 });
 
 test('runtime config exposes only browser-safe Supabase configuration', () => {
