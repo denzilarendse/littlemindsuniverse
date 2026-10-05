@@ -30,6 +30,5 @@ test('retired WhatsApp RPCs are no longer executable by app or server API roles'
 test('Vercel no longer references the removed WhatsApp function',()=>{
   assert.doesNotMatch(vercel,/api\/whatsapp\.js/);
   assert.match(vercel,/api\/milo\.js/);
-  assert.match(vercel,/api\/payfast\.js/);
-  assert.match(vercel,/api\/payfast-itn\.js/);
+  assert.doesNotMatch(vercel,/api\/payfast(?:-itn)?\.js/);
 });

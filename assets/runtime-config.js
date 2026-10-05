@@ -7,10 +7,12 @@ window.LMU_CONFIG = Object.freeze({
   demoModeAvailable: true,
   pilotMode: true,
   pilotPaymentsRequired: false,
+  paymentsEnabled: false,
+  publicTestingMode: true,
   connectPushPublicKey: '',
   defaultCountry: 'ZA',
   defaultCurriculum: 'CAPS',
   weekOneAlwaysFree: true,
   trialDays: 7,
-  pricing: { monthlyUSD: 3, annualUSD: 30, introductoryUSD: 1 }
+  pricing: null
 });

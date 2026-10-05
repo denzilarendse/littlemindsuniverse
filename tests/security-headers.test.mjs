@@ -18,7 +18,6 @@ const requiredNetlifyFragments = [
   'https://cdn.jsdelivr.net',
   'https://zcokxljcsfkrlouzragv.supabase.co',
   'wss://zcokxljcsfkrlouzragv.supabase.co',
-  'https://www.payfast.co.za',
   'Cross-Origin-Opener-Policy',
   'X-Permitted-Cross-Domain-Policies',
   'Strict-Transport-Security'
@@ -31,7 +30,8 @@ test('Vercel ships a restrictive CSP for the static app and Connect', () => {
   assert.match(csp, /frame-ancestors 'self'/);
   assert.match(csp, /script-src 'self' https:\/\/cdn\.jsdelivr\.net/);
   assert.match(csp, /connect-src 'self' https:\/\/zcokxljcsfkrlouzragv\.supabase\.co wss:\/\/zcokxljcsfkrlouzragv\.supabase\.co/);
-  assert.match(csp, /form-action 'self' https:\/\/www\.payfast\.co\.za https:\/\/sandbox\.payfast\.co\.za/);
+  assert.match(csp, /form-action 'self';/);
+  assert.doesNotMatch(csp, /payfast/i);
   assert.doesNotMatch(csp, /unsafe-eval|default-src \*/i);
 });
 
@@ -50,7 +50,7 @@ test('Netlify repository configuration mirrors the same security policy', () => 
   assert.match(netlify, /Cross-Origin-Opener-Policy\s*=\s*"same-origin"/);
   assert.match(netlify, /X-Permitted-Cross-Domain-Policies\s*=\s*"none"/);
   assert.match(netlify, /Strict-Transport-Security\s*=\s*"max-age=15552000"/);
-  assert.doesNotMatch(netlify, /unsafe-eval|default-src \*/i);
+  assert.doesNotMatch(netlify, /unsafe-eval|default-src \*|payfast/i);
 });
 
 test('manual Netlify deploy artifact carries the same browser security boundary', () => {
@@ -61,7 +61,7 @@ test('manual Netlify deploy artifact carries the same browser security boundary'
   assert.match(artifactHeaders, /Cross-Origin-Opener-Policy:\s*same-origin/i);
   assert.match(artifactHeaders, /X-Permitted-Cross-Domain-Policies:\s*none/i);
   assert.match(artifactHeaders, /Strict-Transport-Security:\s*max-age=15552000/i);
-  assert.doesNotMatch(artifactHeaders, /unsafe-eval|default-src \*/i);
+  assert.doesNotMatch(artifactHeaders, /unsafe-eval|default-src \*|payfast/i);
   assert.match(buildScript, /'sw\.js',\s*'_headers'/, 'build must copy _headers into dist');
   assert.match(buildScript, /Netlify security headers are missing from production build/);
 });
