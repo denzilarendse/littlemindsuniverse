@@ -1,4 +1,4 @@
-const CACHE='lmu-production-v13';
+const CACHE='lmu-production-v14';
 
 const CORE=[
   '/',
