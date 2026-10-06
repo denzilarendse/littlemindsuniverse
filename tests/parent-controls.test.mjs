@@ -63,3 +63,9 @@ test('parent controls are part of the offline app shell', () => {
   assert.match(sw, /lmu-production-v\d+/);
   assert.match(sw, /\/assets\/parent-controls\.js/);
 });
+
+test('parent authorization panel can render while the guarded mount is running', () => {
+  assert.match(controls, /function renderPanel\(\)\{\s*if\(!settingsIsVisible\(\)\|\|pc\.profile\?\.role!==['"]parent['"]\)return;/);
+  assert.doesNotMatch(controls, /function renderPanel\(\)\{\s*if\(pc\.rendering\|\|/);
+  assert.match(controls, /async function maybeMount\(\)[\s\S]*pc\.rendering=true;[\s\S]*renderPanel\(\);[\s\S]*pc\.rendering=false;/);
+});
