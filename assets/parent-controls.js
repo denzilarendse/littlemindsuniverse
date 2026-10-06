@@ -285,6 +285,7 @@
 
   async function maybeMount(){
     if(pc.rendering||!settingsIsVisible()||!client)return;
+    if(document.querySelector('#parentAuthorizationPanel'))return;
     pc.rendering=true;
     try{
       const ok=await ensureParent();
