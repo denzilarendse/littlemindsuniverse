@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const migration = fs.readFileSync(
-  new URL('../database/migrations/20261001_fix_account_removal_status_ambiguity.sql', import.meta.url),
+  new URL('../database/migrations/20261001213223_fix_account_removal_status_ambiguity.sql', import.meta.url),
   'utf8'
 );
 
