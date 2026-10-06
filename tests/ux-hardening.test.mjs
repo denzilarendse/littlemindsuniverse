@@ -67,3 +67,10 @@ test('submitted learner work cannot regress to Continue when recipient state lag
   assert.match(app, /submissionStatusByItem=new Map/);
   assert.match(app, /recipient_status:resolveLearnerWorkflowStatus\(r\.status,submissionStatus\)/);
 });
+
+
+test('live server-backed learning views refresh authoritative role data on navigation', () => {
+  assert.match(app, /const roleRefreshViews=new Set\(\['learning','mastery','reports'\]\)/);
+  assert.match(app, /document\.querySelectorAll\('\[data-view\]'\)\.forEach\(b=>b\.onclick=async\(\)=>/);
+  assert.match(app, /state\.mode==='live'&&roleRefreshViews\.has\(view\)\)\{await loadRoleData\(\);if\(state\.view===view\)render\(\)\}/);
+});
