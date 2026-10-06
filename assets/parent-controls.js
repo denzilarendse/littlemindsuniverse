@@ -177,7 +177,7 @@
   }
 
   function renderPanel(){
-    if(pc.rendering||!settingsIsVisible()||pc.profile?.role!=='parent')return;
+    if(!settingsIsVisible()||pc.profile?.role!=='parent')return;
     const content=document.querySelector('.content');
     if(!content)return;
     document.querySelector('#parentAuthorizationPanel')?.remove();
@@ -285,6 +285,7 @@
 
   async function maybeMount(){
     if(pc.rendering||!settingsIsVisible()||!client)return;
+    if(document.querySelector('#parentAuthorizationPanel'))return;
     pc.rendering=true;
     try{
       const ok=await ensureParent();

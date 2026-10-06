@@ -31,3 +31,11 @@ test('learner submission repair still blocks empty evidence-free submission', ()
   assert.match(executableSql, /p_submit[\s\S]*trim\(coalesce\(p_response_text,\s*''\)\)\s*=\s*''[\s\S]*not\s+v_has_evidence/i);
   assert.match(executableSql, /Write, draw or attach learning evidence before submitting\./i);
 });
+
+
+test('learner submission atomically advances the recipient workflow to submitted', () => {
+  assert.match(executableSql, /update\s+public\.learning_item_recipients[\s\S]*when\s+p_submit\s+then\s+'submitted'::public\.recipient_learning_status/i);
+  assert.match(executableSql, /where\s+learning_item_id\s*=\s*p_learning_item_id[\s\S]*learner_id\s*=\s*p_learner_id[\s\S]*status\s+in\s*\('assigned',\s*'started'\)/i);
+  assert.match(executableSql, /if\s+not\s+found\s+then[\s\S]*Learner workflow status could not be advanced/i);
+  assert.match(executableSql, /return\s+query[\s\S]*ls\.status::text[\s\S]*lir\.status::text/i);
+});

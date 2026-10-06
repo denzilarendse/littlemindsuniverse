@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { applyCors } from '../api/_lib/http.js';
 
 function responseStub(){
@@ -17,7 +18,6 @@ function productionEnv(){
   process.env.PUBLIC_APP_URL='https://littlemindsuniverse.co.za';
   process.env.VERCEL_ENV='production';
   process.env.NODE_ENV='production';
-  process.env.PAYFAST_SANDBOX='false';
   process.env.CORS_ALLOWED_ORIGINS='https://www.littlemindsuniverse.co.za';
 }
 
@@ -44,7 +44,6 @@ test('development CORS permits explicit localhost origins without wildcarding pr
   process.env.PUBLIC_APP_URL='https://littlemindsuniverse.co.za';
   process.env.VERCEL_ENV='development';
   process.env.NODE_ENV='development';
-  process.env.PAYFAST_SANDBOX='true';
   process.env.CORS_ALLOWED_ORIGINS='';
   const res=responseStub();
   applyCors({method:'POST',headers:{origin:'http://localhost:5500'}},res);
@@ -60,4 +59,11 @@ test('preflight from unknown origin returns no CORS grant',()=>{
   assert.equal(res.statusCode,204);
   assert.equal(res.ended,true);
   assert.equal(res.header('access-control-allow-origin'),undefined);
+});
+
+
+test('public app URL validation has no payment-provider escape hatch',()=>{
+  const source = fs.readFileSync(new URL('../api/_lib/http.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(source,/PAYFAST|payment/i);
+  assert.match(source,/url\.protocol !== 'https:'/);
 });
