@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { applyCors } from '../api/_lib/http.js';
 
 function responseStub(){
@@ -62,7 +63,7 @@ test('preflight from unknown origin returns no CORS grant',()=>{
 
 
 test('public app URL validation has no payment-provider escape hatch',()=>{
-  const source = require('node:fs').readFileSync(new URL('../api/_lib/http.js', import.meta.url), 'utf8');
+  const source = fs.readFileSync(new URL('../api/_lib/http.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source,/PAYFAST|payment/i);
   assert.match(source,/url\.protocol !== 'https:'/);
 });
