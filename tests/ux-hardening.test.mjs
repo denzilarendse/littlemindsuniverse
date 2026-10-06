@@ -59,3 +59,11 @@ test('live learning stage cards are profile-derived and cannot switch the active
 test('parent home exposes the authorization controls entry point', () => {
   assert.match(app, /data-view="settings">Parent authorization<\/button>/);
 });
+
+
+test('submitted learner work cannot regress to Continue when recipient state lags', () => {
+  assert.match(app, /function resolveLearnerWorkflowStatus\(recipientStatus,submissionStatus\).*recipientStatus==='reviewed'.*submissionStatus==='submitted'.*return recipientStatus\|\|'assigned'/s);
+  assert.match(app, /from\('learner_submissions'\)\.select\('learning_item_id,status'\)\.eq\('learner_id',learnerId\)/);
+  assert.match(app, /submissionStatusByItem=new Map/);
+  assert.match(app, /recipient_status:resolveLearnerWorkflowStatus\(r\.status,submissionStatus\)/);
+});
