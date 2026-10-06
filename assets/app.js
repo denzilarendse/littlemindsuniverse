@@ -26,10 +26,64 @@ async function loadLearnerMiloCapabilities(){
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400)}
 function stageKey(code){return Object.keys(stages).find(k=>stages[k].code===code)||'discovery'}
 function currentStage(){return stages[state.stage]}
+function resolveLearnerWorkflowStatus(recipientStatus,submissionStatus){if(recipientStatus==='reviewed')return 'reviewed';if(submissionStatus==='submitted')return 'submitted';return recipientStatus||'assigned'}
 function demoReset(){state.mode='demo';state.connected=false;state.profile={...demo.profile,role:state.role};state.learner={...demo.learner,stage_code:stages[state.stage].code};state.learners=[state.learner];state.selectedLearnerId=state.learner?.id||null;state.tasks=structuredClone(demo.tasks);state.mastery=structuredClone(demo.mastery);state.recommendations=structuredClone(demo.recommendations);state.teacherSubmissions=[];state.teacherSkills=[];state.reports=structuredClone(demo.reports);state.earlySummary=null;state.classrooms=structuredClone(demo.classrooms);state.messages=structuredClone(demo.messages);state.messageThreads=[];state.messageContacts=[];state.threadMessages=[];state.activeThreadId=null;state.chat=[];state.miloLearningItemId=null;state.miloHelpLevel=2;state.miloPending=false;state.miloSessionId=null;state.earlyActivityId=null;state.miloStudioId=null;state.miloFirstAttempt='';state.miloTutorSkillId=null;state.miloTutorSkillName='';state.miloTutorSubject='';state.evidenceFeatures=null;state.tutorCatalog=[];state.tutorSearch='';state.codingSource='';state.voiceCapture=null}
 async function initSupabase(){try{if(!window.supabase?.createClient)throw new Error('SDK unavailable');state.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session}}=await state.supabase.auth.getSession();state.session=session;state.connected=true;if(session)await loadLive();state.supabase.auth.onAuthStateChange(async(event,session)=>{state.session=session;if(session)await loadLive();else demoReset();render();if(event==='PASSWORD_RECOVERY')setTimeout(openPasswordRecovery,0)})}catch(e){console.warn('Supabase init',e);demoReset()}render();if(state.session&&new URLSearchParams(location.search).get('recovery')==='1')setTimeout(openPasswordRecovery,0)}
 async function loadLive(){const uid=state.session?.user?.id;if(!uid)return demoReset();const sb=state.supabase;const {data:profile,error:pErr}=await sb.from('profiles').select('id,role,display_name,preferred_language,country_code').eq('id',uid).maybeSingle();if(pErr||!profile){toast('Account profile is not ready yet');return demoReset()}const enteringLive=state.mode!=='live'||state.profile?.id!==profile.id;state.mode='live';state.profile=profile;state.role=profile.role;state.language=profile.preferred_language||'en';state.tasks=[];state.mastery=[];state.recommendations=[];state.teacherSubmissions=[];state.teacherSkills=[];state.reports=[];state.earlySummary=null;state.classrooms=[];state.messages=[];state.messageThreads=[];state.messageContacts=[];state.threadMessages=[];state.activeThreadId=null;state.learners=[];if(enteringLive){state.chat=[];state.miloLearningItemId=null;state.miloHelpLevel=2;state.miloPending=false;state.miloSessionId=null;state.earlyActivityId=null;state.miloStudioId=null;state.miloFirstAttempt='';state.miloTutorSkillId=null;state.miloTutorSkillName='';state.miloTutorSubject='';state.evidenceFeatures=null;state.tutorCatalog=[];state.tutorSearch='';state.codingSource='';state.voiceCapture=null}if(profile.role==='teacher')loadTeacherDraft();let learner=null;if(profile.role==='learner'){({data:learner}=await sb.from('learners').select('*').eq('user_id',uid).maybeSingle());state.learners=learner?[learner]:[];state.selectedLearnerId=learner?.id||null}else if(profile.role==='parent'){const {data:links}=await sb.from('guardian_learner_links').select('learner_id,learners(*)').eq('guardian_profile_id',uid).eq('verified',true).limit(20);state.learners=(links||[]).map(link=>link.learners).filter(Boolean);learner=state.learners.find(l=>String(l.id)===String(state.selectedLearnerId))||state.learners[0]||null;state.selectedLearnerId=learner?.id||null}else if(profile.role==='teacher'){const {data:cs}=await sb.from('classrooms').select('*').eq('teacher_profile_id',uid).eq('active',true).limit(20);state.classrooms=cs||[];const first=cs?.[0];if(first){const {data:members}=await sb.from('classroom_members').select('learner_id,learners(*)').eq('classroom_id',first.id).eq('status','active').limit(1);learner=members?.[0]?.learners||null}}state.learner=learner;if(learner)state.stage=stageKey(learner.stage_code);await loadRoleData();if(['parent','teacher'].includes(profile.role))await refreshMessaging();if(profile.role==='teacher'){const skillClassroom=state.teacherDraft?.classroomId||state.classrooms?.[0]?.id||'';await loadTeacherSkills(skillClassroom)}}
-async function loadRoleData(){if(state.mode!=='live'||!state.supabase)return;const sb=state.supabase;const learnerId=state.learner?.id;try{if(learnerId){const [{data:recips},{data:mastery},{data:reports},{data:earlySummary,error:earlySummaryError}]=await Promise.all([sb.from('learning_item_recipients').select('status,assigned_at,learning_items(*)').eq('learner_id',learnerId).order('assigned_at',{ascending:false}).limit(30),sb.from('learner_skill_mastery').select('*,skills(name,subject,skill_code)').eq('learner_id',learnerId).limit(30),sb.from('weekly_reports').select('*').eq('learner_id',learnerId).eq('status','approved').order('week_start',{ascending:false}).limit(8),sb.rpc('get_early_learning_summary',{p_learner_id:learnerId})]);state.tasks=(recips||[]).map(r=>r.learning_items?{...r.learning_items,recipient_status:r.status,assigned_at:r.assigned_at}:null).filter(Boolean);state.mastery=(mastery||[]).map(m=>({name:m.skills?.name||'Skill',subject:m.skills?.subject||'',estimate:Number(m.mastery_estimate??m.estimate??0),evidence_count:m.evidence_count??0,confidence:Number(m.confidence??0),independent:m.independent_evidence??true}));state.reports=reports||[];state.earlySummary=earlySummaryError?null:(Array.isArray(earlySummary)?earlySummary[0]:earlySummary)||null;if(earlySummaryError)console.warn('Early learning summary unavailable',earlySummaryError);if(state.role==='learner')await loadLearnerMiloCapabilities()}if(state.role==='teacher'){const [{data:recs},{data:teacherItems,error:teacherItemsError},{data:teacherSubmissions,error:teacherSubmissionsError}]=await Promise.all([sb.from('milo_recommendations').select('*').eq('status','proposed').order('created_at',{ascending:false}).limit(30),sb.from('learning_items').select('*').eq('teacher_profile_id',state.profile.id).order('created_at',{ascending:false}).limit(30),sb.rpc('get_teacher_submission_inbox')]);state.recommendations=recs||[];state.teacherSubmissions=teacherSubmissionsError?[]:(teacherSubmissions||[]);if(teacherSubmissionsError)console.error('Teacher submission inbox load failed',teacherSubmissionsError);if(teacherItemsError)console.error('Teacher learning items load failed',teacherItemsError);else state.tasks=teacherItems||[]}}catch(e){console.warn('Live data load',e);toast('Some live data could not be loaded')}}
+async function loadRoleData(){
+  if(state.mode!=='live'||!state.supabase)return;
+  const sb=state.supabase;
+  const learnerId=state.learner?.id;
+  try{
+    if(learnerId){
+      const [
+        {data:recips,error:recipsError},
+        {data:submissionStates,error:submissionStatesError},
+        {data:mastery},
+        {data:reports},
+        {data:earlySummary,error:earlySummaryError}
+      ]=await Promise.all([
+        sb.from('learning_item_recipients').select('status,assigned_at,learning_items(*)').eq('learner_id',learnerId).order('assigned_at',{ascending:false}).limit(30),
+        sb.from('learner_submissions').select('learning_item_id,status').eq('learner_id',learnerId).limit(100),
+        sb.from('learner_skill_mastery').select('*,skills(name,subject,skill_code)').eq('learner_id',learnerId).limit(30),
+        sb.from('weekly_reports').select('*').eq('learner_id',learnerId).eq('status','approved').order('week_start',{ascending:false}).limit(8),
+        sb.rpc('get_early_learning_summary',{p_learner_id:learnerId})
+      ]);
+      if(recipsError)console.warn('Learner recipient workflow unavailable',recipsError);
+      if(submissionStatesError)console.warn('Learner submission workflow reconciliation unavailable',submissionStatesError);
+      const submissionStatusByItem=new Map((submissionStates||[]).map(row=>[String(row.learning_item_id),String(row.status||'')]));
+      state.tasks=(recips||[]).map(r=>{
+        if(!r.learning_items)return null;
+        const submissionStatus=submissionStatusByItem.get(String(r.learning_items.id))||'';
+        return {...r.learning_items,recipient_status:resolveLearnerWorkflowStatus(r.status,submissionStatus),assigned_at:r.assigned_at};
+      }).filter(Boolean);
+      state.mastery=(mastery||[]).map(m=>({name:m.skills?.name||'Skill',subject:m.skills?.subject||'',estimate:Number(m.mastery_estimate??m.estimate??0),evidence_count:m.evidence_count??0,confidence:Number(m.confidence??0),independent:m.independent_evidence??true}));
+      state.reports=reports||[];
+      state.earlySummary=earlySummaryError?null:(Array.isArray(earlySummary)?earlySummary[0]:earlySummary)||null;
+      if(earlySummaryError)console.warn('Early learning summary unavailable',earlySummaryError);
+      if(state.role==='learner')await loadLearnerMiloCapabilities();
+    }
+    if(state.role==='teacher'){
+      const [
+        {data:recs},
+        {data:teacherItems,error:teacherItemsError},
+        {data:teacherSubmissions,error:teacherSubmissionsError}
+      ]=await Promise.all([
+        sb.from('milo_recommendations').select('*').eq('status','proposed').order('created_at',{ascending:false}).limit(30),
+        sb.from('learning_items').select('*').eq('teacher_profile_id',state.profile.id).order('created_at',{ascending:false}).limit(30),
+        sb.rpc('get_teacher_submission_inbox')
+      ]);
+      state.recommendations=recs||[];
+      state.teacherSubmissions=teacherSubmissionsError?[]:(teacherSubmissions||[]);
+      if(teacherSubmissionsError)console.error('Teacher submission inbox load failed',teacherSubmissionsError);
+      if(teacherItemsError)console.error('Teacher learning items load failed',teacherItemsError);
+      else state.tasks=teacherItems||[];
+    }
+  }catch(e){
+    console.warn('Live data load',e);
+    toast('Some live data could not be loaded');
+  }
+}
 function header(){return `<header class="topbar"><div class="brand">LittleMinds<span>Universe</span></div><div class="top-actions"><span class="pill"><i class="status-dot ${state.mode}"></i> ${state.mode==='live'?'Live':'Demo'}</span>${state.mode==='demo'?`<select class="pill" id="rolePicker" aria-label="Demo role">${['learner','teacher','parent','admin'].map(r=>`<option ${r===state.role?'selected':''}>${r}</option>`).join('')}</select>`:''}<button class="pill" data-action="auth">${state.session?'Account':'Sign in'}</button></div></header>`}
 function sidebar(){return `<nav class="sidebar" aria-label="Primary navigation">${nav.map(([id,label])=>`<button class="navbtn ${state.view===id?'active':''}" data-view="${id}" aria-current="${state.view===id?'page':'false'}">${id==='messages'&&state.role==='learner'?'Notifications':label}</button>`).join('')}</nav>`}
 function stagePicker(){const interactive=state.mode==='demo';return `<div class="grid six">${Object.entries(stages).map(([k,s])=>`<button type="button" class="stage ${state.stage===k?'selected':''}" ${interactive?`data-stage="${k}"`:'disabled aria-disabled="true"'}><span class="emoji">${s.emoji}</span><b>${s.name}</b><small>Ages ${s.ages}</small><em>${s.focus}</em></button>`).join('')}</div>`}
