@@ -72,3 +72,10 @@ test('production build and offline shell include Connect and its LMU bridge',()=
   for(const asset of ['/connect.html','/assets/connect.css','/assets/connect-app.js','/assets/connect-bridge.js'])assert.ok(sw.includes(`'${asset}'`),`service worker missing ${asset}`);
   assert.match(sw,/url\.pathname==='\/connect\.html'\|\|url\.pathname==='\/connect'/);
 });
+
+test('Connect return controls always target the canonical LMU app shell',()=>{
+  const returns=[...app.matchAll(/data-connect-return-lmu/g)];
+  assert.ok(returns.length>=3);
+  assert.doesNotMatch(app,/data-connect-return-lmu[^>]*href="\/"(?:\s|>)/);
+  assert.match(app,/href="\/index\.html" data-connect-return-lmu>Return to LittleMindsUniverse<\/a>/);
+});
