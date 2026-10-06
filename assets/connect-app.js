@@ -474,7 +474,7 @@
       <div class="connect-actions">
         ${signed?`<span class="connect-status"><i class="${state.online?'live':''}"></i>${esc(state.profile?.display_name||'Signed in')}${role?` · ${esc(role)}`:''} · <span data-connect-network-status>${esc(networkLabel)}</span></span>`:''}
         ${pushButton}
-        <a class="pill" href="/">Learning app</a>
+        <a class="pill" href="/index.html" data-connect-return-lmu>Learning app</a>
         ${signed?'<button class="ghost" id="connectSignOut">Sign out</button>':''}
       </div>
     </header>`;
@@ -488,7 +488,7 @@
       <form id="connectAuthForm">
         <div class="field"><label for="connectEmail">Email</label><input class="input" id="connectEmail" type="email" autocomplete="email" required></div>
         <div class="field"><label for="connectPassword">Password</label><input class="input" id="connectPassword" type="password" autocomplete="current-password" required></div>
-        <div class="actions"><a class="ghost" href="/">Create or manage account</a><button class="primary" id="connectSignIn">Sign in</button></div>
+        <div class="actions"><a class="ghost" href="/index.html" data-connect-return-lmu>Create or manage account</a><button class="primary" id="connectSignIn">Sign in</button></div>
       </form>
       <div class="notice" style="margin-top:16px">Private phone numbers are never required or exposed by Connect.</div>
     </section></main>`;
@@ -502,7 +502,7 @@
       <h1>${learner?'Learner communication is protected':'Connect access is role-scoped'}</h1>
       <p>${learner?'Learner accounts do not currently have an unrestricted message composer. Teacher-approved learner notifications remain available in LittleMindsUniverse while age-safe messaging is developed and tested.':'This account does not currently have an eligible classroom messaging role. Connect Business and organization workflows will use separate verified permissions.'}</p>
       <div class="notice">No account can gain classroom messaging access merely by knowing a conversation ID. The backend rechecks role, classroom membership and verified guardian relationships.</div>
-      <div class="actions" style="margin-top:16px"><a class="primary" href="/">Return to LittleMindsUniverse</a></div>
+      <div class="actions" style="margin-top:16px"><a class="primary" href="/index.html" data-connect-return-lmu>Return to LittleMindsUniverse</a></div>
     </section></main>`;
   }
 
