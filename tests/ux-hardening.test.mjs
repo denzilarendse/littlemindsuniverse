@@ -47,3 +47,15 @@ test('accessibility announcements are scoped and mobile controls have visible fo
 test('production secret scanner includes Groq', () => {
   assert.match(build, /GROQ_API_KEY/);
 });
+
+
+test('live learning stage cards are profile-derived and cannot switch the active stage', () => {
+  assert.match(app, /function stagePicker\(\)\{const interactive=state\.mode===['"]demo['"]/);
+  assert.match(app, /interactive\?\`data-stage=/);
+  assert.match(app, /disabled aria-disabled="true"/);
+  assert.match(app, /state\.mode===['"]demo['"]\?'Choose learning stage':'Learning stage'/);
+});
+
+test('parent home exposes the authorization controls entry point', () => {
+  assert.match(app, /data-view="settings">Parent authorization<\/button>/);
+});
