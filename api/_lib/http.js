@@ -30,8 +30,7 @@ export function getPublicAppUrl() {
   if (!raw) throw new HttpError(503, 'PUBLIC_APP_URL is not configured');
   let url;
   try { url = new URL(raw); } catch { throw new HttpError(503, 'PUBLIC_APP_URL is invalid'); }
-  const sandbox = process.env.PAYFAST_SANDBOX === 'true';
-  if (!sandbox && url.protocol !== 'https:') throw new HttpError(503, 'Production app URL must use HTTPS');
+  if (url.protocol !== 'https:') throw new HttpError(503, 'Production app URL must use HTTPS');
   return url;
 }
 
