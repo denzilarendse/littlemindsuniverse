@@ -453,7 +453,7 @@ async function sendMilo(){
       message:message,age:learnerAge(),helpLevel:state.miloHelpLevel,learningItemId:learningItemId,sessionId:state.miloSessionId,
       context:{curriculum:state.learner?.curriculum_code||cfg.defaultCurriculum,subject:subject,intent:intent,sessionMode:sessionMode,engine:studio?.engine||null,skillId:state.miloTutorSkillId||null,firstAttemptMade:!!state.miloFirstAttempt,firstAttemptChars:state.miloFirstAttempt.length}
     })});
-    const body=await res.json();if(!res.ok)throw new Error(body.error||'Milo unavailable');
+    const body=await res.json();if(!res.ok)throw new Error(res.status>=500?'Milo unavailable':(body.error||'Milo unavailable'));
     state.miloSessionId=body.meta?.sessionId||state.miloSessionId;state.chat.push({who:'milo',text:body.reply});
   }catch(error){
     console.error('Milo request failed',error);state.chat.push({who:'milo',text:error?.message&&error.message!=='Milo unavailable'?String(error.message):'Milo could not connect just now. Please try again in a moment. Your message was not treated as an academic answer.'});
