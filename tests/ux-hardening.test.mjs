@@ -74,3 +74,9 @@ test('live server-backed learning views refresh authoritative role data on navig
   assert.match(app, /document\.querySelectorAll\('\[data-view\]'\)\.forEach\(b=>b\.onclick=async\(\)=>/);
   assert.match(app, /state\.mode==='live'&&roleRefreshViews\.has\(view\)\)\{await loadRoleData\(\);if\(state\.view===view\)render\(\)\}/);
 });
+
+
+test('Milo client hides server-side 5xx details from learners', () => {
+  assert.match(app, /res\.status>=500\?'Milo unavailable':\(body\.error\|\|'Milo unavailable'\)/);
+  assert.match(app, /Milo could not connect just now\. Please try again in a moment\./);
+});
