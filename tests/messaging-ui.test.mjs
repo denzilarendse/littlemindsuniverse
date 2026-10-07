@@ -13,7 +13,7 @@ test('live messaging uses only authorization-aware RPCs',()=>{
 });
 
 test('learner accounts remain notification-only',()=>{
-  assert.match(app,/Learner accounts receive teacher-approved notifications here/);
+  assert.match(app,/Learner accounts receive assignment, teacher-review and approved-report updates here/);
   assert.match(app,/Learner accounts receive notifications but cannot send messages/);
 });
 
