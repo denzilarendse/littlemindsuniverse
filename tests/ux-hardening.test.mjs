@@ -9,7 +9,7 @@ const css = read('assets/app.css');
 const build = read('scripts/build.mjs');
 
 test('live mode clears demo collections before loading trusted data', () => {
-  assert.match(app, /state\.tasks=\[\];state\.mastery=\[\];state\.recommendations=\[\];state\.teacherSubmissions=\[\];state\.teacherSkills=\[\];state\.reports=\[\];state\.earlySummary=null;state\.classrooms=\[\];state\.messages=\[\]/);
+  assert.match(app, /state\.tasks=\[\];state\.mastery=\[\];state\.recommendations=\[\];state\.teacherSubmissions=\[\];state\.teacherSkills=\[\];state\.reports=\[\];state\.learnerNotifications=\[\];state\.earlySummary=null;state\.classrooms=\[\];state\.messages=\[\]/);
   assert.match(app, /function demoReset\(\).*state\.chat=\[\].*state\.miloLearningItemId=null/s);
 });
 
@@ -22,7 +22,7 @@ test('Milo preserves selected help level and blocks duplicate sends while pendin
 });
 
 test('learner messaging is notification-only and live messaging never fakes delivery', () => {
-  assert.match(app, /Learner accounts receive teacher-approved notifications here/);
+  assert.match(app, /Learner accounts receive assignment, teacher-review and approved-report updates here/);
   assert.match(app, /Learner accounts receive notifications but cannot send messages/);
   assert.match(app, /rpc\('send_thread_message'/);
   assert.match(app, /Message was not sent\. Please try again\./);
@@ -72,7 +72,7 @@ test('submitted learner work cannot regress to Continue when recipient state lag
 
 
 test('live server-backed learning views refresh authoritative role data on navigation', () => {
-  assert.match(app, /const roleRefreshViews=new Set\(\['learning','mastery','reports'\]\)/);
+  assert.match(app, /const roleRefreshViews=new Set\(\['learning','mastery','classroom','reports','messages'\]\)/);
   assert.match(app, /document\.querySelectorAll\('\[data-view\]'\)\.forEach\(b=>b\.onclick=async\(\)=>/);
   assert.match(app, /state\.mode==='live'&&roleRefreshViews\.has\(view\)\)\{await loadRoleData\(\);if\(state\.view===view\)render\(\)\}/);
 });
