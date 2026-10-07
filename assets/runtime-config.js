@@ -4,6 +4,7 @@ window.LMU_CONFIG = Object.freeze({
   supabaseUrl: 'https://zcokxljcsfkrlouzragv.supabase.co',
   supabasePublishableKey: 'sb_publishable_WS4f-AHMam0z-wdc8WeRfg_30Uvjkm6',
   apiBase: '',
+  publicAppUrl: 'https://www.littlemindsuniverse.co.za',
   demoModeAvailable: true,
   pilotMode: true,
   pilotPaymentsRequired: false,

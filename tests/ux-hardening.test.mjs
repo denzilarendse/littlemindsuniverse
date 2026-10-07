@@ -49,10 +49,12 @@ test('production secret scanner includes Groq', () => {
 });
 
 
-test('live learning stage cards are profile-derived and cannot switch the active stage', () => {
+test('live learning stage cards remain profile-derived but explain why they cannot switch', () => {
   assert.match(app, /function stagePicker\(\)\{const interactive=state\.mode===['"]demo['"]/);
   assert.match(app, /interactive\?\`data-stage=/);
-  assert.match(app, /disabled aria-disabled="true"/);
+  assert.match(app, /data-stage-info=/);
+  assert.match(app, /Your signed-in learner stage is set by the verified learner profile/);
+  assert.match(app, /Your live learner stage cannot be changed from this account/);
   assert.match(app, /state\.mode===['"]demo['"]\?'Choose learning stage':'Learning stage'/);
 });
 
