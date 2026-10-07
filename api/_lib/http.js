@@ -41,6 +41,8 @@ function configuredOrigins() {
     const origin = item.trim();
     if (origin) values.add(origin);
   }
+  values.add('https://localhost');
+  values.add('capacitor://localhost');
   if (process.env.VERCEL_ENV !== 'production' && process.env.NODE_ENV !== 'production') {
     values.add('http://localhost:5500');
     values.add('http://127.0.0.1:5500');
