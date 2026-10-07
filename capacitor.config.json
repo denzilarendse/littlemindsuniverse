@@ -1,5 +1,13 @@
 {
   "appId": "za.co.littlemindsuniverse",
   "appName": "LittleMindsUniverse",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }
