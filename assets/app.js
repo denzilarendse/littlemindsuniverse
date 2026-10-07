@@ -501,7 +501,7 @@ async function sendMilo(){
     if(!res.ok)throw new Error(res.status>=500?'Milo unavailable':(body.error||'Milo unavailable'));
     state.miloSessionId=body.meta?.sessionId||state.miloSessionId;state.chat.push({who:'milo',text:body.reply});
   }catch(error){
-    console.error('Milo request failed',error);state.chat.push({who:'milo',text:error?.message&&error.message!=='Milo unavailable'?String(error.message):'Milo could not connect just now. Please try again in a moment. Your message was not treated as an academic answer.'});
+    console.error('Milo request failed',error);const networkFailure=/failed to fetch|network request failed|networkerror|load failed/i.test(String(error?.message||''));state.chat.push({who:'milo',text:networkFailure?'Milo could not reach the learning service from this device. Check your connection and try again. Your message was not treated as an academic answer.':(error?.message&&error.message!=='Milo unavailable'?String(error.message):'Milo could not connect just now. Please try again in a moment. Your message was not treated as an academic answer.')});
   }finally{state.miloPending=false;render()}
 }
 function stageAge(){return {early:3,foundation:6,discovery:9,creator:12,pathfinder:15,edge:17}[state.stage]}
