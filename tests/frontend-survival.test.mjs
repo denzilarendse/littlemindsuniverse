@@ -55,6 +55,9 @@ test('signup, signin, recovery, signout and session persistence remain wired', (
   assert.match(app, /auth:\{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true\}/);
   assert.match(app, /\$\('#authForm'\)\.onsubmit/);
   assert.match(app, /auth\.signInWithPassword/);
+  assert.match(app, /id="authError" role="alert" aria-live="polite" hidden/);
+  assert.match(app, /error\.code==='email_provider_disabled'/);
+  assert.match(app, /errorBox\.hidden=false/);
   assert.match(app, /\$\('#signUpBtn'\)\.onclick/);
   assert.match(app, /auth\.signUp/);
   assert.match(app, /password\.length<8/);
