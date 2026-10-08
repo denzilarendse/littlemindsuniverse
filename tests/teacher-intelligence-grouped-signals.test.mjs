@@ -32,7 +32,8 @@ test('misconception clustering is conservative and evidence based',()=>{
   assert.match(migration,/mastery_evidence me/i);
   assert.match(migration,/count\(distinct n\.learner_id\).*>= 2/is);
   assert.match(migration,/teacher-reviewed misconception/i);
-  assert.doesNotMatch(migration,/embedding|vector|semantic similarity|diagnos/i);
+  assert.doesNotMatch(migration,/embedding|vector|semantic similarity/i);
+  assert.match(migration,/Milo does not diagnose learners or activate interventions here/i);
 });
 
 test('insufficient evidence is surfaced rather than converted into intervention confidence',()=>{
