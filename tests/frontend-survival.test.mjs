@@ -76,7 +76,7 @@ test('critical Supabase workflow actions remain connected to protected operation
     "rpc('join_classroom_by_code'",
     "rpc('create_teacher_draft_with_skill'",
     "rpc('save_learner_work'",
-    "rpc('review_learner_submission'",
+    "rpc('review_learner_submission_v2'",
     "rpc('approve_milo_recommendation'",
     "rpc('record_milo_learning_event'"
   ]) {
