@@ -9,7 +9,7 @@ const css = read('assets/app.css');
 const build = read('scripts/build.mjs');
 
 test('live mode clears demo collections before loading trusted data', () => {
-  assert.match(app, /state\.tasks=\[\];state\.mastery=\[\];state\.recommendations=\[\];state\.teacherSubmissions=\[\];state\.teacherSkills=\[\];state\.reports=\[\];state\.learnerNotifications=\[\];state\.earlySummary=null;state\.classrooms=\[\];state\.messages=\[\]/);
+  assert.match(app, /state\.tasks=\[\];state\.mastery=\[\];state\.recommendations=\[\];state\.teacherSubmissions=\[\];state\.teacherSkills=\[\];state\.teacherIntelligenceOverviews=\[\];state\.reports=\[\];state\.learnerNotifications=\[\];state\.earlySummary=null;state\.classrooms=\[\];state\.messages=\[\]/);
   assert.match(app, /function demoReset\(\).*state\.chat=\[\].*state\.miloLearningItemId=null/s);
 });
 
