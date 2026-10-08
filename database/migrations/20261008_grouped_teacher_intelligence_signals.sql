@@ -523,7 +523,7 @@ begin
   select
     tis.id,
     lsm.learner_id,
-    'Included because the learner\'s own reviewed trend is declining for this skill.',
+    'Included because the learner''s own reviewed trend is declining for this skill.',
     lsm.evidence_count,
     lsm.independent_evidence_count,
     lsm.assisted_evidence_count,
