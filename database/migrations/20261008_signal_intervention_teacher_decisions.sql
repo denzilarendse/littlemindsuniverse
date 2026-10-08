@@ -60,6 +60,30 @@ begin
    where signal_id=p_signal_id and status::text in ('proposed','deferred') order by created_at desc limit 1;
   if v_id is not null then return v_id; end if;
 
+  -- Reuse a still-open legacy recommendation for the same learner/skill/evidence
+  -- rather than violating the historical uniqueness key. Attach the richer
+  -- signal contract and grouped membership to that proposal.
+  select id into v_id
+  from public.milo_recommendations
+  where classroom_id=v_signal.classroom_id
+    and learner_id=v_first
+    and skill_id=v_signal.skill_id
+    and evidence_count_snapshot=v_count
+    and status::text in ('proposed','deferred')
+  order by created_at desc limit 1;
+  if v_id is not null then
+    update public.milo_recommendations
+       set signal_id=p_signal_id,
+           proposed_learner_ids=v_learner_ids,
+           recommendation_type=v_type,
+           rationale=v_signal.rationale,
+           recommended_action=coalesce(v_signal.recommended_action,recommended_action),
+           source='teacher_intelligence_v1',
+           updated_at=now()
+     where id=v_id;
+    return v_id;
+  end if;
+
   insert into public.milo_recommendations(
     classroom_id,learner_id,skill_id,recommendation_type,rationale,recommended_action,
     evidence_count_snapshot,source,signal_id,proposed_learner_ids
