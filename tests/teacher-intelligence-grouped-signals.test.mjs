@@ -45,9 +45,11 @@ test('insufficient evidence is surfaced rather than converted into intervention 
 test('teacher UI can explicitly refresh and inspect signals without activating intervention',()=>{
   assert.match(app,/rpc\('refresh_teacher_intelligence_signals'/);
   assert.match(app,/rpc\('get_teacher_intelligence_signals'/);
-  assert.match(app,/Teacher intelligence preview/);
+  assert.match(app,/Teacher Intelligence/);
+  assert.match(app,/rpc\('get_teacher_intelligence_dashboard'/);
   assert.match(app,/evidence_sufficiency/);
   assert.match(app,/learner_names/);
-  assert.match(app,/A signal is not an intervention and does not change learner placement without teacher approval/);
+  assert.match(app,/A signal does not change learner placement until the teacher approves a proposal/);
+  assert.match(app,/Demo data is not used for classroom decisions/);
   assert.doesNotMatch(app,/refresh_teacher_intelligence_signals[\s\S]{0,500}approve_milo_recommendation/);
 });
