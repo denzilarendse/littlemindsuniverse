@@ -244,17 +244,17 @@ begin
   sig as (
     select tis.id
     from public.teacher_intelligence_signals tis
-    where tis.classroom_id=p_classroom_id and tis.detected_at>=v_from and tis.detected_at<v_to
+    where tis.classroom_id=p_classroom_id and tis.detected_at>=v_from and tis.detected_at<=v_to
   ),
   reviews as (
     select psr.*
     from public.pilot_signal_reviews psr
-    where psr.classroom_id=p_classroom_id and psr.reviewed_at>=v_from and psr.reviewed_at<v_to
+    where psr.classroom_id=p_classroom_id and psr.reviewed_at>=v_from and psr.reviewed_at<=v_to
   ),
   rec as (
     select mr.*
     from public.milo_recommendations mr
-    where mr.classroom_id=p_classroom_id and mr.updated_at>=v_from and mr.updated_at<v_to
+    where mr.classroom_id=p_classroom_id and mr.updated_at>=v_from and mr.updated_at<=v_to
   ),
   groups as (
     select mr.id recommendation_id,mr.group_classroom_id,sg.id lifecycle_id
@@ -262,26 +262,26 @@ begin
     left join public.support_group_lifecycles sg on sg.group_classroom_id=mr.group_classroom_id
     where mr.classroom_id=p_classroom_id and mr.status::text in ('approved','completed')
       and mr.group_classroom_id is not null
-      and coalesce(mr.approved_at,mr.updated_at)>=v_from and coalesce(mr.approved_at,mr.updated_at)<v_to
+      and coalesce(mr.approved_at,mr.updated_at)>=v_from and coalesce(mr.approved_at,mr.updated_at)<=v_to
   ),
   verification as (
     select vc.*
     from public.learning_verification_cycles vc
     join public.classrooms gc on gc.id=vc.group_classroom_id
     where gc.parent_classroom_id=p_classroom_id
-      and vc.started_at>=v_from and vc.started_at<v_to
+      and vc.started_at>=v_from and vc.started_at<=v_to
   ),
   workload as (
     select pwe.*
     from public.pilot_teacher_workload_events pwe
-    where pwe.classroom_id=p_classroom_id and pwe.created_at>=v_from and pwe.created_at<v_to
+    where pwe.classroom_id=p_classroom_id and pwe.created_at>=v_from and pwe.created_at<=v_to
   ),
   usage as (
     select mpu.*
     from public.milo_provider_usage mpu
     join public.milo_learning_sessions mls on mls.id=mpu.session_id
     where mls.learner_id in (select learner_id from members)
-      and mpu.occurred_at>=v_from and mpu.occurred_at<v_to
+      and mpu.occurred_at>=v_from and mpu.occurred_at<=v_to
   )
   select
     v_from,v_to,
