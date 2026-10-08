@@ -68,7 +68,7 @@ begin
   where classroom_id=v_signal.classroom_id
     and learner_id=v_first
     and skill_id=v_signal.skill_id
-    and evidence_count_snapshot=v_count
+    and evidence_count_snapshot=coalesce((select max(tisl.evidence_count) from public.teacher_intelligence_signal_learners tisl where tisl.signal_id=p_signal_id),v_count)
     and status::text in ('proposed','deferred')
   order by created_at desc limit 1;
   if v_id is not null then
@@ -90,7 +90,7 @@ begin
   ) values (
     v_signal.classroom_id,v_first,v_signal.skill_id,v_type,v_signal.rationale,
     coalesce(v_signal.recommended_action,'Review the evidence and choose the appropriate teacher-led response.'),
-    v_count,'teacher_intelligence_v1',p_signal_id,v_learner_ids
+    coalesce((select max(tisl.evidence_count) from public.teacher_intelligence_signal_learners tisl where tisl.signal_id=p_signal_id),v_count),'teacher_intelligence_v1',p_signal_id,v_learner_ids
   ) returning id into v_id;
   return v_id;
 end $$;
