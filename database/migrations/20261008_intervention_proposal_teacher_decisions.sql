@@ -463,6 +463,7 @@ create or replace function public.get_teacher_intervention_proposals(
 )
 returns table(
   proposal_id uuid,
+  classroom_id uuid,
   source_signal_id uuid,
   proposal_type text,
   skill_id uuid,
@@ -492,6 +493,7 @@ begin
   return query
   select
     p.id,
+    p.classroom_id,
     p.source_signal_id,
     p.proposal_type,
     p.skill_id,
