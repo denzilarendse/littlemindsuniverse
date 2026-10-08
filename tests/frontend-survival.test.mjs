@@ -23,6 +23,7 @@ test('every rendered data-action control has an explicit wire binding', () => {
     'milo-finish',
     'milo-read-reply',
     'milo-send',
+    'refresh-teacher-intelligence',
     'send-message',
     'voice-attach',
     'voice-record'
