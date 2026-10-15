@@ -1,0 +1,210 @@
+name: public-release
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/public-release.yml'
+      - 'android/**'
+      - 'api/**'
+      - 'assets/**'
+      - 'netlify/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'index.html'
+      - 'connect.html'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'netlify.toml'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/public-release.yml'
+      - 'android/**'
+      - 'api/**'
+      - 'assets/**'
+      - 'netlify/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'index.html'
+      - 'connect.html'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'netlify.toml'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-package-deploy:
+    runs-on: ubuntu-24.04
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      LMU_ANDROID_KEYSTORE_BASE64: ${{ secrets.LMU_ANDROID_KEYSTORE_BASE64 }}
+      LMU_ANDROID_STORE_PASSWORD: ${{ secrets.LMU_ANDROID_STORE_PASSWORD }}
+      LMU_ANDROID_KEY_ALIAS: ${{ secrets.LMU_ANDROID_KEY_ALIAS }}
+      LMU_ANDROID_KEY_PASSWORD: ${{ secrets.LMU_ANDROID_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit shipped runtime dependencies
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Verify web source and build production bundle
+        run: npm run check
+
+      - name: Sync Android production bundle
+        run: npm run android:sync
+
+      - name: Detect owner release-signing material
+        id: signing
+        shell: bash
+        run: |
+          if [ -n "$LMU_ANDROID_KEYSTORE_BASE64" ] &&
+             [ -n "$LMU_ANDROID_STORE_PASSWORD" ] &&
+             [ -n "$LMU_ANDROID_KEY_ALIAS" ] &&
+             [ -n "$LMU_ANDROID_KEY_PASSWORD" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare owner-controlled Android signing
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
+        shell: bash
+        run: |
+          umask 077
+          printf '%s' "$LMU_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/lmu-upload-key.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/lmu-upload-key.jks
+          storePassword=$LMU_ANDROID_STORE_PASSWORD
+          keyAlias=$LMU_ANDROID_KEY_ALIAS
+          keyPassword=$LMU_ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Build Android release APK and AAB
+        shell: bash
+        run: |
+          cd android
+          ./gradlew :app:assembleRelease :app:bundleRelease
+
+      - name: Verify and publish signed APK into web bundle
+        id: signed_apk
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
+        shell: bash
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          mkdir -p dist/downloads
+          cp "$APK" dist/downloads/LittleMindsUniverse-1.0.apk
+          sha256sum "$APK" | tee dist/downloads/LittleMindsUniverse-1.0.apk.sha256
+          echo "published=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload signed Android release artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-signed-public-release
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload unsigned release candidate when signing is unavailable
+        if: steps.signing.outputs.ready != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-unsigned-release-candidate
+          path: |
+            android/app/build/outputs/apk/release/*
+            android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Detect Netlify deployment credentials
+        id: netlify
+        shell: bash
+        run: |
+          if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy production web app to Netlify
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.netlify.outputs.ready == 'true'
+        shell: bash
+        run: |
+          npx --yes netlify-cli@27.12.1 deploy             --prod             --dir=dist             --functions=netlify/functions             --site="$NETLIFY_SITE_ID"             --auth="$NETLIFY_AUTH_TOKEN"             --json | tee netlify-deploy.json
+
+      - name: Smoke-test Netlify production deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.netlify.outputs.ready == 'true'
+        shell: bash
+        run: |
+          URL="$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('netlify-deploy.json','utf8'));console.log(j.url||j.deploy_url||j.ssl_url||'')")"
+          test -n "$URL"
+          curl --fail --silent --show-error --location "$URL/" > /tmp/lmu-index.html
+          grep -qi 'LittleMinds' /tmp/lmu-index.html
+          curl --fail --silent --show-error --location "$URL/.netlify/functions/health" > /tmp/lmu-health.json
+          cat /tmp/lmu-health.json
+
+      - name: Upload Netlify deployment evidence
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.netlify.outputs.ready == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: netlify-production-deploy-evidence
+          path: netlify-deploy.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Release-gate summary
+        shell: bash
+        run: |
+          {
+            echo "## LMU public release gate"
+            echo
+            echo "- Source verification: passed"
+            echo "- Android release build: passed"
+            echo "- Owner signing material available: ${{ steps.signing.outputs.ready }}"
+            echo "- Netlify deployment credentials available: ${{ steps.netlify.outputs.ready }}"
+            if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              if [ "${{ steps.signing.outputs.ready }}" != "true" ]; then
+                echo "- Signed public APK: BLOCKED until repository signing secrets are configured"
+              fi
+              if [ "${{ steps.netlify.outputs.ready }}" != "true" ]; then
+                echo "- Netlify production deployment: BLOCKED until NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID are configured"
+              fi
+            else
+              echo "- Production signing/deployment: intentionally not executed for pull_request"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
