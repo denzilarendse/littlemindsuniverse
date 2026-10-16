@@ -1,7 +1,7 @@
 (function(){
 const {stages,demo}=window.LMU_DATA; const cfg=window.LMU_CONFIG;
 const nav=[['home','Home'],['learning','Learning'],['milo','Milo'],['mastery','Mastery'],['classroom','Classroom'],['reports','Reports'],['messages','Messages'],['settings','Settings']];
-const state={view:'home',stage:'discovery',role:'learner',language:'en',connected:false,mode:'demo',session:null,profile:null,learner:null,learners:[],selectedLearnerId:null,tasks:[],mastery:[],recommendations:[],teacherSubmissions:[],teacherSkills:[],teacherIntelligenceOverviews:[],teacherIntelligenceSignals:[],teacherIntelligenceDashboard:[],pilotAnalytics:[],teacherIntelligenceViewedAt:null,reports:[],learnerNotifications:[],earlySummary:null,classrooms:[],messages:[],messageThreads:[],messageContacts:[],threadMessages:[],activeThreadId:null,chat:[],miloLearningItemId:null,miloHelpLevel:2,miloPending:false,miloSessionId:null,earlyActivityId:null,earlyNarrationEnabled:true,miloStudioId:null,miloFirstAttempt:'',miloTutorSkillId:null,miloTutorSkillName:'',miloTutorSubject:'',evidenceFeatures:null,tutorCatalog:[],tutorSearch:'',codingSource:'',voiceCapture:null,supabase:null,teacherDraft:{classroomId:'',title:'',subject:'',instructions:'',help:2}};
+const state={view:'home',stage:'discovery',role:'learner',language:'en',connected:false,mode:'demo',session:null,profile:null,learner:null,learners:[],selectedLearnerId:null,tasks:[],mastery:[],recommendations:[],teacherSubmissions:[],teacherSkills:[],teacherIntelligenceOverviews:[],teacherIntelligenceSignals:[],teacherIntelligenceDashboard:[],pilotAnalytics:[],teacherIntelligenceViewedAt:null,teacherIntelligenceLoadErrors:0,reports:[],learnerNotifications:[],earlySummary:null,classrooms:[],messages:[],messageThreads:[],messageContacts:[],threadMessages:[],activeThreadId:null,chat:[],miloLearningItemId:null,miloHelpLevel:2,miloPending:false,miloSessionId:null,earlyActivityId:null,earlyNarrationEnabled:true,miloStudioId:null,miloFirstAttempt:'',miloTutorSkillId:null,miloTutorSkillName:'',miloTutorSubject:'',evidenceFeatures:null,tutorCatalog:[],tutorSearch:'',codingSource:'',voiceCapture:null,supabase:null,teacherDraft:{classroomId:'',title:'',subject:'',instructions:'',help:2}};
 const $=s=>document.querySelector(s); const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 function teacherDraftKey(){return 'lmu-teacher-draft-'+(state.session?.user?.id||'local')}
 function loadTeacherDraft(){try{const raw=localStorage.getItem(teacherDraftKey());if(!raw)return;const d=JSON.parse(raw);if(d&&typeof d==='object')state.teacherDraft={classroomId:String(d.classroomId||''),skillId:String(d.skillId||''),title:String(d.title||''),subject:String(d.subject||''),instructions:String(d.instructions||''),help:Number.isFinite(Number(d.help))?Number(d.help):2}}catch(e){console.warn('Teacher draft restore failed',e)}}
@@ -12,7 +12,7 @@ async function loadTeacherSkills(classroomId){if(state.mode!=='live'||state.role
 
 async function loadTeacherIntelligence(){
   if(state.mode!=='live'||state.role!=='teacher'||!state.supabase){
-    state.teacherIntelligenceOverviews=[];state.teacherIntelligenceSignals=[];state.teacherIntelligenceDashboard=[];state.pilotAnalytics=[];state.teacherIntelligenceViewedAt=null;return;
+    state.teacherIntelligenceOverviews=[];state.teacherIntelligenceSignals=[];state.teacherIntelligenceDashboard=[];state.pilotAnalytics=[];state.teacherIntelligenceViewedAt=null;state.teacherIntelligenceLoadErrors=0;return;
   }
   const classrooms=(state.classrooms||[]).filter(c=>String(c.classroom_type||'normal')==='normal').slice(0,20);
   const results=await Promise.all(classrooms.map(async classroom=>{
@@ -30,8 +30,9 @@ async function loadTeacherIntelligence(){
     const signals=signalResult.error?[]:(signalResult.data||[]).map(row=>({...row,classroom_name:classroom.name||'Classroom'}));
     const dashboard=dashboardResult.error?[]:(dashboardResult.data||[]).map(row=>({...row,classroom_name:row.classroom_name||classroom.name||'Classroom'}));
     const pilot=pilotResult.error?null:{...((Array.isArray(pilotResult.data)?pilotResult.data[0]:pilotResult.data)||{}),classroom_id:classroom.id,classroom_name:classroom.name||'Classroom'};
-    return {overview,signals,dashboard,pilot};
+    return {overview,signals,dashboard,pilot,loadErrors:[overviewResult,signalResult,dashboardResult,pilotResult].filter(result=>result.error).length};
   }));
+  state.teacherIntelligenceLoadErrors=results.reduce((total,result)=>total+result.loadErrors,0);
   state.teacherIntelligenceOverviews=results.map(r=>r.overview).filter(Boolean);
   state.teacherIntelligenceSignals=results.flatMap(r=>r.signals);
   state.teacherIntelligenceDashboard=results.flatMap(r=>r.dashboard);
@@ -77,6 +78,7 @@ function teacherIntelligenceDashboard(){
   if(state.role!=='teacher')return '';
   if(state.mode!=='live')return `<div class="card"><div class="eyebrow">Teacher Intelligence</div><h2>Live evidence required</h2><p>Sign in with a verified teacher account to view Teacher Intelligence. Demo data is not used for classroom decisions.</p></div>`;
   const rows=state.teacherIntelligenceDashboard||[];
+  const loadWarning=state.teacherIntelligenceLoadErrors?'<div class="card" role="alert"><h3>Some Teacher Intelligence data could not be loaded</h3><p>Displayed results may be incomplete. Refresh to retry. A loading failure does not mean there are no learner signals.</p></div>':'';
   const body=rows.map(row=>{
     const contradictions=Array.isArray(row.contradictory_evidence)&&row.contradictory_evidence.length?esc(JSON.stringify(row.contradictory_evidence)):'None recorded';
     const outcome=row.lifecycle_status
@@ -94,7 +96,7 @@ function teacherIntelligenceDashboard(){
       <div style="margin-top:10px"><b>Outcome</b>${outcome}</div>
     </article>`;
   }).join('');
-  return `<div class="card" style="margin-top:14px"><div class="split"><div><div class="eyebrow">Phase 1F · Teacher Intelligence</div><h2>Need → Why → Evidence → Strength → Next goal → Recommended action → Teacher decision → Outcome</h2></div><button class="ghost" data-action="refresh-teacher-intelligence">Refresh intelligence</button></div><p>All rows come from live teacher-reviewed LMU evidence and governed intervention records.</p></div>${body||'<div class="card"><div class="empty">No live Teacher Intelligence signals are available yet. Review learner evidence, then refresh intelligence.</div></div>'}`;
+  return `<div class="card" style="margin-top:14px"><div class="split"><div><div class="eyebrow">Phase 1F · Teacher Intelligence</div><h2>Need → Why → Evidence → Strength → Next goal → Recommended action → Teacher decision → Outcome</h2></div><button class="ghost" data-action="refresh-teacher-intelligence">Refresh intelligence</button></div><p>All rows come from live teacher-reviewed LMU evidence and governed intervention records.</p></div>${loadWarning}${body||(state.teacherIntelligenceLoadErrors?'':'<div class="card"><div class="empty">No live Teacher Intelligence signals are available yet. Review learner evidence, then refresh intelligence.</div></div>')}`;
 }
 function pilotAnalyticsPanel(){
   if(state.role!=='teacher'||state.mode!=='live')return '';
