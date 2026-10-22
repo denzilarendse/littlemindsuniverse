@@ -26,6 +26,9 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - name: Verify live production release and Connect download (read-only gate for PR #96)
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 96
+        run: node scripts/verify-production.mjs https://www.littlemindsuniverse.co.za
       - name: Verify deployable artifact has no repository backups
         run: |
           test -f dist/index.html
