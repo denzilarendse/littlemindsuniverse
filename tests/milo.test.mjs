@@ -8,6 +8,10 @@ const jsonResponse = (data, status = 200) => new Response(JSON.stringify(data), 
 });
 
 function configure() {
+  delete process.env.MILO_PROVIDER;
+  delete process.env.OMNIROUTE_API_KEY;
+  delete process.env.OMNIROUTE_BASE_URL;
+  delete process.env.GROQ_API_KEY;
   process.env.SUPABASE_URL = 'https://project.supabase.co';
   process.env.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test';
   process.env.SUPABASE_SECRET_KEY = 'sb_secret_test';
@@ -267,4 +271,42 @@ test('Milo records categorical learning-event metadata without conversation text
   assert.equal(eventBody.p_metadata.messageChars, 'Help me understand fractions'.length);
   assert.equal('message' in eventBody.p_metadata, false);
   assert.equal('response' in eventBody.p_metadata, false);
+});
+
+
+test('Milo supports a server-side OmniRoute OpenAI-compatible endpoint and records provider metadata', async () => {
+  configure();
+  process.env.MILO_PROVIDER = 'omniroute';
+  process.env.OMNIROUTE_API_KEY = 'omni-secret';
+  process.env.OMNIROUTE_BASE_URL = 'https://omniroute.example/v1';
+  process.env.MILO_MODEL = 'auto';
+
+  const userId = 'abababab-abab-4bab-8bab-abababababab';
+  let providerRequest = null;
+  let auditBody = null;
+  global.fetch = async (url, options = {}) => {
+    const u = String(url);
+    if (u.endsWith('/auth/v1/user')) return jsonResponse({ id: userId });
+    if (u.includes('/rest/v1/profiles?')) return jsonResponse([{ id: userId, role: 'parent' }]);
+    if (u.includes('/rest/v1/milo_assistance_events?')) return jsonResponse([]);
+    if (u.endsWith('/rest/v1/rpc/log_milo_assistance_event')) {
+      auditBody = JSON.parse(options.body);
+      return jsonResponse('abababab-abab-4bab-8bab-abababababac');
+    }
+    if (u === 'https://omniroute.example/v1/chat/completions') {
+      providerRequest = { headers: options.headers, body: JSON.parse(options.body) };
+      return jsonResponse({ choices: [{ message: { content: 'Let us explore one fraction at a time.' } }] });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  };
+
+  const result = await createMiloReply(request({ message: 'Explain fractions in a simple way.' }));
+  assert.equal(result.meta.provider, 'omniroute');
+  assert.equal(result.meta.model, 'auto');
+  assert.equal(providerRequest.headers.Authorization, 'Bearer omni-secret');
+  assert.equal(providerRequest.body.model, 'auto');
+  assert.match(providerRequest.body.messages[0].content, /Parent Milo/);
+  assert.equal(auditBody.p_provider, 'omniroute');
+  assert.equal(result.reply, 'Let us explore one fraction at a time.');
+  assert.doesNotMatch(JSON.stringify(result), /omni-secret/);
 });
