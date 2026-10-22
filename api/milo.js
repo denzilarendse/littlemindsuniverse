@@ -54,7 +54,7 @@ function validateOmniRouteBaseUrl(value) {
       throw new Error('HTTPS required');
     }
     if (url.username || url.password || url.search || url.hash) throw new Error('Invalid URL');
-    const path = url.pathname.replace(/\\/+$/, '');
+    const path = url.pathname.replace(/\/+$/, '');
     if (!path.endsWith('/v1')) throw new Error('OpenAI-compatible /v1 endpoint required');
     return url.origin + path;
   } catch {
