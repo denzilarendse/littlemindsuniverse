@@ -357,5 +357,5 @@ test('LMU chat sends only the recent pre-current turns for server-side normaliza
   const appSource = fs.readFileSync(new URL('../assets/app.js', import.meta.url), 'utf8');
   assert.match(appSource, /history:state\.chat\.slice\(-9,-1\)\.map/);
   assert.match(appSource, /role:entry\.who==='milo'\?'assistant':'user'/);
-  assert.match(appSource, /content:String\(entry\.text\|\|' '\)\.slice\(0,1200\)/);
+  assert.match(appSource, /content:String\(entry\.text\|\|''\)\.slice\(0,1200\)/);
 });
