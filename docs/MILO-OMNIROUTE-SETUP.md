@@ -31,4 +31,6 @@ If OmniRoute is running only on the Android phone at `http://localhost:20128`, V
 
 Milo remains a teacher-led learning companion for ages 2–18. It uses eight specialist engine routes, server-trusted learner stage/curriculum/assignment context, six assistance levels, bounded learning sessions, a reviewed mastery snapshot where available, categorical learning-event auditing, and a rule that AI responses do not directly write teacher-approved mastery. Assessment help remains derived from an authorized assigned learning item rather than a client-supplied flag.
 
+Milo also receives up to the last eight chat turns for in-session continuity. The server accepts only user/assistant roles, caps each turn at 1,200 characters and the total history at 4,800 characters, discards other roles, and treats the transcript as untrusted context. Conversation text is not written to the current Milo learning-event audit; only categorical/length metadata is recorded. This is bounded in-session context, not a claim of persistent conversational memory.
+
 OmniRoute changes model/provider routing, not these governance requirements. Different models may behave differently, so the exact selected models still require age-appropriateness, assessment-integrity, and child-safety regression testing before a public rollout.
