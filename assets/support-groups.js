@@ -12,7 +12,6 @@
     if(!client)return false;
     const {data:{session},error}=await client.auth.getSession();
     if(error||!session){reset();return false;}
-    if(s.profile?.id===session.user.id&&s.profile?.role==='teacher')return true;
     const {data:p,error:e}=await client.from('profiles').select('id,role').eq('id',session.user.id).maybeSingle();
     if(e||!p||p.role!=='teacher'){reset();return false;}
     s.profile=p;return true;
@@ -75,5 +74,8 @@
   const observer=new MutationObserver(()=>{if(visible())tick();else document.querySelector('#supportGroupsPanel')?.remove();});
   observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
   window.addEventListener('online',tick);
+  // Re-check the database role periodically so a revoked teacher role does not leave learner data visible in a stale panel.
+  setInterval(()=>{if(visible())load();},60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&visible())load();});
   setTimeout(tick,0);
 })();
