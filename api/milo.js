@@ -46,6 +46,22 @@ function selectProvider() {
   return 'groq';
 }
 
+function validateOmniRouteBaseUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) {
+      throw new Error('HTTPS required');
+    }
+    if (url.username || url.password || url.search || url.hash) throw new Error('Invalid URL');
+    const path = url.pathname.replace(/\\/+$/, '');
+    if (!path.endsWith('/v1')) throw new Error('OpenAI-compatible /v1 endpoint required');
+    return url.origin + path;
+  } catch {
+    throw new HttpError(503, 'Milo provider is not configured');
+  }
+}
+
 function ageFromBirthDate(value) {
   if (!value) return null;
   const date = new Date(String(value) + 'T00:00:00Z');
@@ -348,7 +364,9 @@ export async function createMiloReply(req) {
   if (provider === 'omniroute' && !String(configuredBaseUrl || '').trim()) {
     throw new HttpError(503, 'Milo provider is not configured');
   }
-  const baseUrl = normalizeBaseUrl(configuredBaseUrl);
+  const baseUrl = provider === 'omniroute'
+    ? validateOmniRouteBaseUrl(configuredBaseUrl)
+    : normalizeBaseUrl(configuredBaseUrl);
   const model = process.env.MILO_MODEL || (provider === 'omniroute' ? 'auto' : 'openai/gpt-oss-120b');
   const role = profile.role;
   const trusted = await resolveTrustedLearningContext({
