@@ -2,7 +2,7 @@ name: android-verification
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, architecture-2.0]
     paths:
       - 'android/**'
       - 'assets/**'
@@ -18,7 +18,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/android-verification.yml'
   push:
-    branches: [main]
+    branches: [main, architecture-2.0]
     paths:
       - 'android/**'
       - 'assets/**'
