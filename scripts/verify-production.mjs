@@ -141,7 +141,7 @@ export async function verifyProduction(rawOrigin, { requirePayfast = false } = {
     throw new Error('Connect APK download redirected outside the production HTTPS site');
   }
   if (apkResponse.status !== 200) throw new Error(`Connect APK download returned HTTP ${apkResponse.status}`);
-  if (!/application\\/vnd\\.android\\.package-archive/i.test(apkResponse.headers.get('content-type') || '')) {
+  if (!/application\/vnd\.android\.package-archive/i.test(apkResponse.headers.get('content-type') || '')) {
     throw new Error('Connect APK download has an unexpected Content-Type');
   }
   if (!/attachment/i.test(apkResponse.headers.get('content-disposition') || '')) {
