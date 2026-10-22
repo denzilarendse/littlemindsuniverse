@@ -175,7 +175,7 @@ test('Milo derives assessment mode and help level from the assigned server learn
     firstAttemptMade: true,
     firstAttemptChars: 24,
     learningItemId: itemId,
-    context: { subject: 'client-spoofed subject' }
+    context: { subject: 'client-spoofed subject', firstAttemptMade: true, firstAttemptChars: 24 }
   }));
 
   assert.equal(result.meta.assessment, true);
