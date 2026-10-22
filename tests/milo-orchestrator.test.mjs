@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildTutorPolicy,
+  engineAllowedForStage,
   normalizeSessionMode,
   normalizeStage,
   selectMiloEngine
@@ -38,4 +39,22 @@ test('assessment tutor policy caps assistance and requires first attempt',()=>{
 test('stage normalization prefers trusted stage code over spoofed age',()=>{
   assert.equal(normalizeStage('DB810',3).code,'DB810');
   assert.equal(normalizeStage('',3).code,'EE24');
+});
+
+test('inferred Milo routes never bypass stage engine eligibility',()=>{
+  const foundationCode=selectMiloEngine({stageCode:'F57',message:'Teach me to code a Python game'});
+  assert.equal(foundationCode,'adaptive_practice');
+  assert.equal(engineAllowedForStage(foundationCode,'F57'),true);
+  for (const [stageCode,message] of [
+    ['EE24','Count three apples'],
+    ['F57','Practise English pronunciation'],
+    ['F57','How does AI bias work?'],
+    ['DB810','Debug my JavaScript loop'],
+    ['CA1113','Explain a word problem'],
+    ['PA1415','Help me revise'],
+    ['EDGE1618','Explain a coding algorithm']
+  ]) {
+    const engine=selectMiloEngine({stageCode,message});
+    assert.equal(engineAllowedForStage(engine,stageCode),true,`${stageCode} must not route to ineligible engine ${engine}`);
+  }
 });

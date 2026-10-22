@@ -356,7 +356,7 @@ async function sendMilo(){
     const intent=[earlyActivity?.intent,studio?.intent,state.miloTutorSkillName].filter(Boolean).join(' ').slice(0,300);
     const sessionMode=studio?.engine==='coding_ai'?'project':earlyActivity||studio?.engine==='adaptive_practice'||studio?.engine==='reasoning_missions'||studio?.engine==='voice_language'?'practice':'learn';
     const res=await fetch(cfg.apiBase+'/api/milo',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({
-      message:message,age:learnerAge(),helpLevel:state.miloHelpLevel,learningItemId:learningItemId,sessionId:state.miloSessionId,
+      message:message,history:state.chat.slice(-9,-1).map(entry=>({role:entry.who==='milo'?'assistant':'user',content:String(entry.text||'').slice(0,1200)})),age:learnerAge(),helpLevel:state.miloHelpLevel,learningItemId:learningItemId,sessionId:state.miloSessionId,
       context:{curriculum:state.learner?.curriculum_code||cfg.defaultCurriculum,subject:subject,intent:intent,sessionMode:sessionMode,engine:studio?.engine||null,skillId:state.miloTutorSkillId||null,firstAttemptMade:!!state.miloFirstAttempt,firstAttemptChars:state.miloFirstAttempt.length}
     })});
     const body=await res.json();if(!res.ok)throw new Error(body.error||'Milo unavailable');

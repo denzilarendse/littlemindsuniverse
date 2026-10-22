@@ -75,7 +75,10 @@ function selectMiloEngine({stageCode,age,subject,message,intent,assessment=false
     return 'voice_language';
   }
   if(/coding|code|javascript|python|html|css|program|debug|algorithm|scratch/.test(text)){
-    return 'coding_ai';
+    // Stage eligibility applies to inferred routes as well as client-preferred engines.
+    // Foundation learners receive age-appropriate adaptive practice rather than the
+    // older-learner coding engine; teacher-approved curriculum can introduce coding later.
+    return engineAllowedForStage('coding_ai',stage.code)?'coding_ai':'adaptive_practice';
   }
   if(/artificial intelligence|\bai\b|machine learning|computer vision|bias|prompt engineering/.test(text)){
     return 'ai_literacy';

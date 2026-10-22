@@ -18,7 +18,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/android-verification.yml'
   push:
-    branches: [main, architecture-2.0]
+    branches: [main, architecture-2.0, 'release/**']
     paths:
       - 'android/**'
       - 'assets/**'
@@ -109,13 +109,52 @@ jobs:
       - name: Build unsigned API 36 release bundles and Connect APK
         run: |
           cd android
-          ./gradlew :app:bundleRelease :app:assembleDebug :connectapp:bundleRelease :connectapp:assembleRelease
+          ./gradlew :app:bundleRelease :app:assembleDebug :app:assembleRelease :connectapp:assembleDebug :connectapp:bundleRelease :connectapp:assembleRelease
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab 2>&1 | tee /tmp/lmu-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/lmu-jarsigner.txt
           jarsigner -verify connectapp/build/outputs/bundle/release/connectapp-release.aab 2>&1 | tee /tmp/connect-jarsigner.txt
           grep -F 'jar is unsigned.' /tmp/connect-jarsigner.txt
           test -s connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
           sha256sum connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
+
+      - name: Verify built APK package IDs and debug signatures
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -n "$SDK_ROOT"
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -mindepth 2 -maxdepth 2 -type f -name apksigner -print -quit)"
+          AAPT="$(find "$SDK_ROOT/build-tools" -mindepth 2 -maxdepth 2 -type f -name aapt -print -quit)"
+          test -x "$APKSIGNER"
+          test -x "$AAPT"
+          check_package() {
+            apk="$1"
+            expected="$2"
+            "$AAPT" dump badging "$apk" | grep -F "package: name='$expected'"
+          }
+          check_package android/app/build/outputs/apk/debug/app-debug.apk za.co.littlemindsuniverse
+          check_package android/app/build/outputs/apk/release/app-release-unsigned.apk za.co.littlemindsuniverse
+          check_package android/connectapp/build/outputs/apk/debug/connectapp-debug.apk za.co.littlemindsuniverse.connect
+          check_package android/connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk za.co.littlemindsuniverse.connect
+          "$APKSIGNER" verify --verbose --print-certs android/app/build/outputs/apk/debug/app-debug.apk | tee /tmp/lmu-debug-signature.txt
+          "$APKSIGNER" verify --verbose --print-certs android/connectapp/build/outputs/apk/debug/connectapp-debug.apk | tee /tmp/connect-debug-signature.txt
+          grep -F 'certificate SHA-256 digest:' /tmp/lmu-debug-signature.txt
+          grep -F 'certificate SHA-256 digest:' /tmp/connect-debug-signature.txt
+          sha256sum android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/release/app-release-unsigned.apk android/connectapp/build/outputs/apk/debug/connectapp-debug.apk android/connectapp/build/outputs/apk/release/connectapp-release-unsigned.apk
+
+      - name: Upload LMU installable debug APK for owner live testing
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-android-api36-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload LMU unsigned release APK candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: littlemindsuniverse-android-api36-unsigned-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload LMU unsigned release-candidate artifact
         uses: actions/upload-artifact@v7
@@ -125,11 +164,11 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload LMU debug APK for physical-device pilot testing
+      - name: Upload installable LittleMinds Connect debug APK for live testing
         uses: actions/upload-artifact@v7
         with:
-          name: littlemindsuniverse-android-api36-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: littleminds-connect-android-api36-debug-apk
+          path: android/connectapp/build/outputs/apk/debug/connectapp-debug.apk
           if-no-files-found: error
           retention-days: 30
 
