@@ -45,13 +45,13 @@ export function assertRuntimeConfig(text) {
   }
 }
 
-const CONNECT_APK_SHA_RE = /official version 1\\.0\\.0 APK has this SHA-256 checksum:[\\s\\S]*?<code[^>]*>\\s*([a-f0-9]{64})\\s*<\\/code>/i;
-const CONNECT_CERT_RE = /signing certificate SHA-256 is:[\\s\\S]*?<code[^>]*>\\s*([a-f0-9:]{95})\\s*<\\/code>/i;
+const CONNECT_APK_SHA_RE = /official version 1\.0\.0 APK has this SHA-256 checksum:[\s\S]*?<code[^>]*>\s*([a-f0-9]{64})\s*<\/code>/i;
+const CONNECT_CERT_RE = /signing certificate SHA-256 is:[\s\S]*?<code[^>]*>\s*([a-f0-9:]{95})\s*<\/code>/i;
 
 export function assertConnectDownloadPage(text) {
-  if (!/za\\.co\\.littlemindsuniverse\\.connect/.test(text)) throw new Error('Connect download page package identity is missing');
-  if (!/\\/downloads\\/LittleMinds-Connect-1\\.0\\.0\\.apk/.test(text)) throw new Error('Connect download page APK route is missing');
-  if (!/Version:<\\/strong>\\s*1\\.0\\.0/.test(text)) throw new Error('Connect download page version is not 1.0.0');
+  if (!/za\.co\.littlemindsuniverse\.connect/.test(text)) throw new Error('Connect download page package identity is missing');
+  if (!/\/downloads\/LittleMinds-Connect-1\.0\.0\.apk/.test(text)) throw new Error('Connect download page APK route is missing');
+  if (!/Version:<\/strong>\s*1\.0\.0/.test(text)) throw new Error('Connect download page version is not 1.0.0');
   if (!CONNECT_APK_SHA_RE.test(text)) throw new Error('Connect download page does not expose a valid SHA-256 checksum');
   if (!CONNECT_CERT_RE.test(text)) throw new Error('Connect download page does not expose the expected signing-certificate fingerprint');
   return {
