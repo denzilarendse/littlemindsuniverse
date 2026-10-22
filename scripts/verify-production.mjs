@@ -1,5 +1,6 @@
 import dns from 'node:dns/promises';
 import tls from 'node:tls';
+import { createHash } from 'node:crypto';
 
 const SECRET_RE = /(?:SUPABASE_(?:SECRET_KEY|SERVICE_ROLE(?:_KEY)?)|SERVICE_ROLE(?:_KEY)?|PAYFAST_(?:MERCHANT_KEY|PASSPHRASE)|GROQ_API_KEY|NINEROUTER_API_KEY|EXTERNAL_PHONE_PROVIDER_TOKEN)\s*[:=]/i;
 
@@ -42,6 +43,30 @@ export function assertRuntimeConfig(text) {
   if (!/environment\s*:\s*['"]release-candidate['"]/i.test(text)) {
     throw new Error('Runtime config is not marked release-candidate');
   }
+}
+
+const CONNECT_APK_SHA_RE = /official version 1\\.0\\.0 APK has this SHA-256 checksum:[\\s\\S]*?<code[^>]*>\\s*([a-f0-9]{64})\\s*<\\/code>/i;
+const CONNECT_CERT_RE = /signing certificate SHA-256 is:[\\s\\S]*?<code[^>]*>\\s*([a-f0-9:]{95})\\s*<\\/code>/i;
+
+export function assertConnectDownloadPage(text) {
+  if (!/za\\.co\\.littlemindsuniverse\\.connect/.test(text)) throw new Error('Connect download page package identity is missing');
+  if (!/\\/downloads\\/LittleMinds-Connect-1\\.0\\.0\\.apk/.test(text)) throw new Error('Connect download page APK route is missing');
+  if (!/Version:<\\/strong>\\s*1\\.0\\.0/.test(text)) throw new Error('Connect download page version is not 1.0.0');
+  if (!CONNECT_APK_SHA_RE.test(text)) throw new Error('Connect download page does not expose a valid SHA-256 checksum');
+  if (!CONNECT_CERT_RE.test(text)) throw new Error('Connect download page does not expose the expected signing-certificate fingerprint');
+  return {
+    sha256: text.match(CONNECT_APK_SHA_RE)[1].toLowerCase(),
+    certificateSha256: text.match(CONNECT_CERT_RE)[1].toUpperCase()
+  };
+}
+
+export function verifyConnectApkBytes(pageText, bytes) {
+  const metadata = assertConnectDownloadPage(pageText);
+  const apk = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
+  if (apk.length < 4 || apk[0] !== 0x50 || apk[1] !== 0x4b) throw new Error('Connect download is not an APK/ZIP payload');
+  const actual = createHash('sha256').update(apk).digest('hex');
+  if (actual !== metadata.sha256) throw new Error('Connect APK bytes do not match the published SHA-256 checksum');
+  return { sha256: actual, sizeBytes: apk.length };
 }
 
 function tlsProbe(hostname, port = 443, timeoutMs = 10000) {
@@ -101,6 +126,31 @@ export async function verifyProduction(rawOrigin, { requirePayfast = false } = {
     throw new Error('Production Connect shell is missing or stale');
   }
   results.push('LittleMinds Connect shell: PASS');
+
+  const downloadPage = await fetchText(origin, '/download-connect.html');
+  const downloadMetadata = assertConnectDownloadPage(downloadPage.text);
+  results.push('Connect download page package/version/checksum/certificate metadata: PASS');
+
+  const apkResponse = await fetch(new URL('/downloads/LittleMinds-Connect-1.0.0.apk', origin), {
+    redirect: 'follow',
+    signal: AbortSignal.timeout(20000),
+    headers: { 'User-Agent': 'LittleMindsUniverse-release-probe/1.0' }
+  });
+  const finalApkUrl = new URL(apkResponse.url);
+  if (finalApkUrl.protocol !== 'https:' || !sameSiteHost(finalApkUrl.hostname, origin.hostname)) {
+    throw new Error('Connect APK download redirected outside the production HTTPS site');
+  }
+  if (apkResponse.status !== 200) throw new Error(`Connect APK download returned HTTP ${apkResponse.status}`);
+  if (!/application\\/vnd\\.android\\.package-archive/i.test(apkResponse.headers.get('content-type') || '')) {
+    throw new Error('Connect APK download has an unexpected Content-Type');
+  }
+  if (!/attachment/i.test(apkResponse.headers.get('content-disposition') || '')) {
+    throw new Error('Connect APK download is not served as an attachment');
+  }
+  const apkBytes = Buffer.from(await apkResponse.arrayBuffer());
+  const apkVerification = verifyConnectApkBytes(downloadPage.text, apkBytes);
+  if (apkVerification.sha256 !== downloadMetadata.sha256) throw new Error('Connect APK checksum metadata changed during verification');
+  results.push(`Connect APK download SHA-256: PASS (${apkVerification.sizeBytes} bytes; ${apkVerification.sha256})`);
 
   const manifestResponse = await fetchText(origin, '/manifest.json');
   let manifest;
