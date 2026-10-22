@@ -70,7 +70,7 @@
       finally{s.busy=false;await load();}
     }));
   }
-  function tick(){if(visible()){if(!s.profile)load();else render();}else document.querySelector('#supportGroupsPanel')?.remove();}
+  function tick(){if(visible()){if(!s.profile)load();else if(!document.querySelector('#supportGroupsPanel'))render();}else document.querySelector('#supportGroupsPanel')?.remove();}
   window.addEventListener('lmu:auth-changed',()=>{reset();tick();});
   const observer=new MutationObserver(()=>{if(visible())tick();else document.querySelector('#supportGroupsPanel')?.remove();});
   observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
