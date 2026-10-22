@@ -12,6 +12,7 @@ function configure() {
   delete process.env.OMNIROUTE_API_KEY;
   delete process.env.OMNIROUTE_BASE_URL;
   delete process.env.GROQ_API_KEY;
+  delete process.env.NODE_ENV;
   process.env.SUPABASE_URL = 'https://project.supabase.co';
   process.env.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test';
   process.env.SUPABASE_SECRET_KEY = 'sb_secret_test';
@@ -313,8 +314,9 @@ test('Milo supports a server-side OmniRoute OpenAI-compatible endpoint and recor
 
 
 test('Milo rejects missing or unsafe OmniRoute endpoints before any upstream call', async () => {
-  for (const baseUrl of [null, 'http://omniroute.example/v1', 'https://omniroute.example/not-v1']) {
+  for (const baseUrl of [null, 'http://omniroute.example/v1', 'http://localhost:20128/v1', 'https://omniroute.example/not-v1']) {
     configure();
+    process.env.NODE_ENV = 'production';
     process.env.MILO_PROVIDER = 'omniroute';
     process.env.OMNIROUTE_API_KEY = 'omni-secret';
     if (baseUrl) process.env.OMNIROUTE_BASE_URL = baseUrl;
