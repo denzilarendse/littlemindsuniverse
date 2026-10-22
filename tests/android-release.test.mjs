@@ -89,8 +89,9 @@ test('Android CI reruns web checks, runtime dependency audit, native lint, unit/
   assert.match(androidWorkflow, /npm run android:sync/);
   assert.match(androidWorkflow, /:app:lintRelease :app:testReleaseUnitTest :app:assembleDebugAndroidTest/);
   assert.match(androidWorkflow, /:connectapp:lintRelease :connectapp:testReleaseUnitTest :connectapp:assembleDebugAndroidTest/);
-  assert.match(androidWorkflow, /:app:bundleRelease :app:assembleDebug :app:assembleRelease :connectapp:bundleRelease/);
+  assert.match(androidWorkflow, /:app:bundleRelease :app:assembleDebug :app:assembleRelease :connectapp:assembleDebug :connectapp:bundleRelease/);
   assert.match(androidWorkflow, /littlemindsuniverse-android-api36-debug-apk/);
   assert.match(androidWorkflow, /littlemindsuniverse-android-api36-unsigned-apk/);
+  assert.match(androidWorkflow, /littleminds-connect-android-api36-debug-apk/);
   assert.match(androidWorkflow, /jarsigner -verify/);
 });
