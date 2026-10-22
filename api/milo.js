@@ -50,7 +50,10 @@ function validateOmniRouteBaseUrl(value) {
   try {
     const url = new URL(String(value || ''));
     const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) {
+    const allowLoopbackDevelopment = process.env.NODE_ENV !== 'production'
+      && url.protocol === 'http:'
+      && loopback;
+    if (url.protocol !== 'https:' && !allowLoopbackDevelopment) {
       throw new Error('HTTPS required');
     }
     if (url.username || url.password || url.search || url.hash) throw new Error('Invalid URL');
