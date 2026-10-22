@@ -310,3 +310,30 @@ test('Milo supports a server-side OmniRoute OpenAI-compatible endpoint and recor
   assert.equal(result.reply, 'Let us explore one fraction at a time.');
   assert.doesNotMatch(JSON.stringify(result), /omni-secret/);
 });
+
+
+test('Milo rejects missing or unsafe OmniRoute endpoints before any upstream call', async () => {
+  for (const baseUrl of [null, 'http://omniroute.example/v1', 'https://omniroute.example/not-v1']) {
+    configure();
+    process.env.MILO_PROVIDER = 'omniroute';
+    process.env.OMNIROUTE_API_KEY = 'omni-secret';
+    if (baseUrl) process.env.OMNIROUTE_BASE_URL = baseUrl;
+
+    const userId = 'abababab-abab-4bab-8bab-abababababab';
+    let upstreamCalls = 0;
+    global.fetch = async (url) => {
+      const u = String(url);
+      if (u.endsWith('/auth/v1/user')) return jsonResponse({ id: userId });
+      if (u.includes('/rest/v1/profiles?')) return jsonResponse([{ id: userId, role: 'parent' }]);
+      if (u.includes('/rest/v1/milo_assistance_events?')) return jsonResponse([]);
+      if (u.includes('/chat/completions')) upstreamCalls += 1;
+      return jsonResponse({});
+    };
+
+    await assert.rejects(
+      () => createMiloReply(request({ message: 'Explain fractions.' })),
+      error => error?.status === 503
+    );
+    assert.equal(upstreamCalls, 0);
+  }
+});
