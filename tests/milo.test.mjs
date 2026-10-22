@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { createMiloReply } from '../api/milo.js';
 
 const jsonResponse = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -349,4 +350,12 @@ test('Milo rejects missing or unsafe OmniRoute endpoints before any upstream cal
     );
     assert.equal(upstreamCalls, 0);
   }
+});
+
+
+test('LMU chat sends only the recent pre-current turns for server-side normalization', () => {
+  const appSource = fs.readFileSync(new URL('../assets/app.js', import.meta.url), 'utf8');
+  assert.match(appSource, /history:state\.chat\.slice\(-9,-1\)\.map/);
+  assert.match(appSource, /role:entry\.who==='milo'\?'assistant':'user'/);
+  assert.match(appSource, /content:String\(entry\.text\|\|' '\)\.slice\(0,1200\)/);
 });
