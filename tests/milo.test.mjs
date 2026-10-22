@@ -172,6 +172,8 @@ test('Milo derives assessment mode and help level from the assigned server learn
     message: 'Is my answer 42?',
     helpLevel: 5,
     assessment: false,
+    firstAttemptMade: true,
+    firstAttemptChars: 24,
     learningItemId: itemId,
     context: { subject: 'client-spoofed subject' }
   }));
