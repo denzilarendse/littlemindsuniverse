@@ -10,6 +10,8 @@ const migration=fs.readFileSync(new URL('../database/migrations/20261001171947_a
 test('support groups load only for authenticated teacher role and visible classroom view',()=>{
   assert.match(moduleSource,/async function ensureTeacher/);
   assert.match(moduleSource,/p\.role!=='teacher'/);
+  assert.doesNotMatch(moduleSource,/s\.profile\?\.id===session\.user\.id&&s\.profile\?\.role==='teacher'/);
+  assert.match(moduleSource,/setInterval\(\(\)=>\{if\(visible\(\)\)load\(\)\},60000\)/);
   assert.match(moduleSource,/function visible\(\)/);
   assert.match(moduleSource,/data-view="classroom"/);
 });
