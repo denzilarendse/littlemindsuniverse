@@ -18,7 +18,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/android-verification.yml'
   push:
-    branches: [main, architecture-2.0]
+    branches: [main, architecture-2.0, 'release/**']
     paths:
       - 'android/**'
       - 'assets/**'
