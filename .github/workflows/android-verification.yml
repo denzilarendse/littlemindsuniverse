@@ -2,7 +2,7 @@ name: android-verification
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, architecture-2.0, release/live-test-apk-batch6-connect-20261001]
     paths:
       - 'android/**'
       - 'assets/**'
