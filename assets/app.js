@@ -15,13 +15,13 @@ async function loadTeacherIntelligence(){
     state.teacherIntelligenceOverviews=[];state.teacherIntelligenceSignals=[];state.teacherIntelligenceDashboard=[];state.pilotAnalytics=[];state.teacherIntelligenceViewedAt=null;state.teacherIntelligenceLoadErrors=0;return;
   }
   const classrooms=(state.classrooms||[]).filter(c=>String(c.classroom_type||'normal')==='normal').slice(0,20);
-  const safeRpc=async(name,args)=>{try{return await state.supabase.rpc(name,args)}catch(error){return {data:null,error}}};
+  const safeRpc=async(request)=>{try{return await request()}catch(error){return {data:null,error}}};
   const results=await Promise.all(classrooms.map(async classroom=>{
     const [overviewResult,signalResult,dashboardResult,pilotResult]=await Promise.all([
-      safeRpc('get_teacher_intelligence_overview',{p_classroom_id:classroom.id}),
-      safeRpc('get_teacher_intelligence_signals',{p_classroom_id:classroom.id}),
-      safeRpc('get_teacher_intelligence_dashboard',{p_classroom_id:classroom.id}),
-      safeRpc('get_teacher_pilot_analytics',{p_classroom_id:classroom.id,p_from:null,p_to:null})
+      safeRpc(()=>state.supabase.rpc('get_teacher_intelligence_overview',{p_classroom_id:classroom.id})),
+      safeRpc(()=>state.supabase.rpc('get_teacher_intelligence_signals',{p_classroom_id:classroom.id})),
+      safeRpc(()=>state.supabase.rpc('get_teacher_intelligence_dashboard',{p_classroom_id:classroom.id})),
+      safeRpc(()=>state.supabase.rpc('get_teacher_pilot_analytics',{p_classroom_id:classroom.id,p_from:null,p_to:null}))
     ]);
     if(overviewResult.error)console.error('Teacher intelligence overview load failed',overviewResult.error);
     if(signalResult.error)console.error('Teacher intelligence signal load failed',signalResult.error);
