@@ -114,7 +114,8 @@
       <div class="actions">
         <button type="button" class="ghost" id="miloDictateBtn">🎙 Dictate message</button>
         <button type="button" class="ghost" id="miloVoiceNoteBtn">● Record voice note</button>
-        <button type="button" class="ghost" id="miloExportTranscriptBtn">Export chat transcript (.txt)</button>\n        <button type="button" class="ghost" id="miloPrintTranscriptBtn">Print chat / Save PDF</button>
+        <button type="button" class="ghost" id="miloExportTranscriptBtn">Export chat transcript (.txt)</button>
+        <button type="button" class="ghost" id="miloPrintTranscriptBtn">Print chat / Save PDF</button>
       </div>
       <p id="miloTranscriptionStatus" class="muted" role="status" aria-live="polite">Ready. Review speech-to-text before sending.</p>
       <div class="field"><label for="miloTranscriptPreview">Voice-note transcript preview (editable)</label><textarea id="miloTranscriptPreview" class="textarea" maxlength="12000" placeholder="Your speech transcript will appear here…"></textarea></div>
