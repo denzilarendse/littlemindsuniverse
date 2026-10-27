@@ -90,6 +90,7 @@ on storage.objects
 for select to authenticated
 using (
   bucket_id = 'teacher-chat-evidence-quarantine'
+  and array_length(storage.foldername(name), 1) = 3
   and (storage.foldername(name))[1] = (select auth.uid())::text
   and exists (
     select 1
@@ -109,6 +110,7 @@ on storage.objects
 for delete to authenticated
 using (
   bucket_id = 'teacher-chat-evidence-quarantine'
+  and array_length(storage.foldername(name), 1) = 3
   and (storage.foldername(name))[1] = (select auth.uid())::text
   and exists (
     select 1
@@ -151,7 +153,7 @@ begin
     raise exception 'Unsupported file type.';
   end if;
   if not (
-    (p_mime_type = 'image/jpeg' and lower(coalesce(p_storage_path,'')) ~ '\\.(jpg|jpeg)  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
+    (p_mime_type = 'image/jpeg' and lower(coalesce(p_storage_path,'')) ~ '\.(jpg|jpeg)  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
     raise exception 'File must be between 1 byte and 20 MiB.';
   end if;
   if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
@@ -186,7 +188,7 @@ $function$;
 revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
 grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
 )
-    or (p_mime_type = 'image/png' and lower(coalesce(p_storage_path,'')) ~ '\\.png  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
+    or (p_mime_type = 'image/png' and lower(coalesce(p_storage_path,'')) ~ '\.png  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
     raise exception 'File must be between 1 byte and 20 MiB.';
   end if;
   if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
@@ -221,7 +223,7 @@ $function$;
 revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
 grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
 )
-    or (p_mime_type = 'image/webp' and lower(coalesce(p_storage_path,'')) ~ '\\.webp  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
+    or (p_mime_type = 'image/webp' and lower(coalesce(p_storage_path,'')) ~ '\.webp  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
     raise exception 'File must be between 1 byte and 20 MiB.';
   end if;
   if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
@@ -256,7 +258,7 @@ $function$;
 revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
 grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
 )
-    or (p_mime_type = 'application/pdf' and lower(coalesce(p_storage_path,'')) ~ '\\.pdf  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
+    or (p_mime_type = 'application/pdf' and lower(coalesce(p_storage_path,'')) ~ '\.pdf  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
     raise exception 'File must be between 1 byte and 20 MiB.';
   end if;
   if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
