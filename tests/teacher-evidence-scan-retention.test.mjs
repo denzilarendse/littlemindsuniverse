@@ -8,8 +8,8 @@ const migration = await readFile(new URL("../database/migrations/20261028_teache
 const supabaseConfig = await readFile(new URL("../supabase/config.toml", import.meta.url), "utf8");
 
 test("scheduler-only workers disable gateway JWT only while retaining handler-level secret verification", () => {
-  assert.match(supabaseConfig, /\[functions\.teacher-chat-evidence-scan\][\s\S]*?verify_jwt = false/);
-  assert.match(supabaseConfig, /\[functions\.teacher-chat-evidence-retention\][\s\S]*?verify_jwt = false/);
+  assert.match(supabaseConfig, /^\[functions\.teacher-chat-evidence-scan\]\s*\r?\nverify_jwt = false\s*$/m);
+  assert.match(supabaseConfig, /^\[functions\.teacher-chat-evidence-retention\]\s*\r?\nverify_jwt = false\s*$/m);
   assert.match(scan, /x-lmu-cron-secret/);
   assert.match(retention, /x-lmu-cron-secret/);
   assert.match(scan, /verify_lmu_retention_secret/);
