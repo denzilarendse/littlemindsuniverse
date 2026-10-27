@@ -15,7 +15,8 @@ test('teacher chat exposes dictation, local voice-note preview and transcript ex
   for (const label of [
     'Dictate message',
     'Record voice note',
-    'Export chat transcript (.txt)',\n    'Print chat / Save PDF',
+    'Export chat transcript (.txt)',
+    'Print chat / Save PDF',
     'Use transcript in message',
     'Discard voice note'
   ]) assert.ok(moduleSource.includes(label), 'Missing control: ' + label);
