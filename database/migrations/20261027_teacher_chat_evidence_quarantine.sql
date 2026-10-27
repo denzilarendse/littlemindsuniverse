@@ -1,7 +1,5 @@
 -- Teacher-origin schoolwork capture for Teacher–Milo.
 -- Quarantine-only: uploads remain private and are not exposed to Milo until a trusted scanner/review pipeline marks them safe.
-begin;
-
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'teacher-chat-evidence-quarantine',
@@ -185,5 +183,3 @@ $function$;
 
 revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
 grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
-
-commit;
