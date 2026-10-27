@@ -357,6 +357,7 @@ as $function$
   select count(*)::bigint
   from public.teacher_chat_evidence e
   where e.storage_deleted_at is null
+    and (e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes')
     and coalesce(e.retention_next_attempt_at, '-infinity'::timestamptz) <= now()
     and (
       e.status = 'deleted'
