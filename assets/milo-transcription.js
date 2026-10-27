@@ -128,7 +128,7 @@
     const parent = input.closest('.field') || chat.parentElement;
     parent.insertAdjacentElement('afterend', controlsRoot);
     $('#miloDictateBtn', controlsRoot).addEventListener('click', () => {
-      if (listening && !recording) { stopRecognition(); updateStatus('Dictation stopped.'); $('#miloDictateBtn').textContent = '🎙 Dictate message'; return; }
+      if (listening && !recording) { stopRecognition(); if (finalTranscript) appendToInput(finalTranscript); updateStatus(finalTranscript ? 'Dictation stopped. Transcript added to the message box for review.' : 'Dictation stopped.'); $('#miloDictateBtn').textContent = '🎙 Dictate message'; return; }
       const started = startRecognition();
       if (started) {
         $('#miloDictateBtn').textContent = '■ Stop dictation';
@@ -189,10 +189,10 @@
         updateStatus(finalTranscript ? 'Voice note ready. Review the transcript; the audio remains local.' : 'Voice note recorded, but no speech was transcribed. Type a transcript or retry dictation.');
       };
       recording = recorder;
-      startRecognition({ voiceNote: true });
+      const speechStarted = startRecognition({ voiceNote: true });
       recorder.start(250);
       const button = $('#miloVoiceNoteBtn'); if (button) button.textContent = '■ Stop voice note';
-      updateStatus('Recording and transcribing. Speak clearly; press Stop voice note when finished.');
+      updateStatus(speechStarted ? 'Recording and transcribing. Speak clearly; press Stop voice note when finished.' : 'Recording audio only. Speech transcription is unavailable; type or add a transcript after stopping.');
       window.setTimeout(() => { if (recording === recorder) stopVoiceNote(); }, MAX_NOTE_MS);
     } catch (error) {
       stopRecognition(); stopTracks(); recording = null;
