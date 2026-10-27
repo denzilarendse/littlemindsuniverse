@@ -137,7 +137,7 @@ begin
       scan_claimed_at = null,
       retention_delete_after = case
         when v_status = 'scan_failed' then now() + interval '1 day'
-        when v_status = 'scan_passed' then least(retention_delete_after, created_at + interval '30 days')
+        when v_status = 'scan_passed' then created_at + interval '30 days'
         else retention_delete_after
       end,
       updated_at = now()
@@ -306,3 +306,48 @@ grant execute on function public.claim_teacher_chat_evidence_retention_candidate
 grant execute on function public.finalize_teacher_chat_evidence_retention(uuid,text,uuid,text) to service_role;
 grant execute on function public.release_teacher_chat_evidence_retention_claim(uuid,uuid) to service_role;
 grant execute on function public.review_teacher_chat_evidence(uuid) to authenticated;
+
+
+-- Keep deadlines consistent for new rows and status transitions, including rows created after this migration.
+create or replace function public.set_teacher_chat_evidence_retention_deadline()
+returns trigger
+language plpgsql
+set search_path = public
+as $function$
+begin
+  if tg_op = 'INSERT' or new.status is distinct from old.status then
+    if new.status = 'pending_scan' then
+      new.retention_delete_after := new.created_at + interval '7 days';
+    elsif new.status = 'scan_failed' then
+      new.retention_delete_after := now() + interval '1 day';
+    elsif new.status in ('scan_passed','teacher_reviewed') then
+      new.retention_delete_after := new.created_at + interval '30 days';
+    end if;
+  end if;
+  return new;
+end;
+$function$;
+
+drop trigger if exists teacher_chat_evidence_retention_deadline on public.teacher_chat_evidence;
+create trigger teacher_chat_evidence_retention_deadline
+before insert or update of status on public.teacher_chat_evidence
+for each row execute function public.set_teacher_chat_evidence_retention_deadline();
+
+create or replace function public.count_due_teacher_chat_evidence_retention_candidates()
+returns bigint
+language sql
+security definer
+set search_path = public
+as $function$
+  select count(*)::bigint
+  from public.teacher_chat_evidence e
+  where e.storage_deleted_at is null
+    and coalesce(e.retention_next_attempt_at, '-infinity'::timestamptz) <= now()
+    and (
+      e.status = 'deleted'
+      or e.retention_delete_after <= now()
+    );
+$function$;
+
+revoke all on function public.count_due_teacher_chat_evidence_retention_candidates() from public, anon, authenticated;
+grant execute on function public.count_due_teacher_chat_evidence_retention_candidates() to service_role;
