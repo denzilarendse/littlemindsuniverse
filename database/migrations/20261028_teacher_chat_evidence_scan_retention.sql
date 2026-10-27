@@ -315,7 +315,15 @@ language plpgsql
 set search_path = public
 as $function$
 begin
-  if tg_op = 'INSERT' or new.status is distinct from old.status then
+  if tg_op = 'INSERT' then
+    if new.status = 'pending_scan' then
+      new.retention_delete_after := new.created_at + interval '7 days';
+    elsif new.status = 'scan_failed' then
+      new.retention_delete_after := now() + interval '1 day';
+    elsif new.status in ('scan_passed','teacher_reviewed') then
+      new.retention_delete_after := new.created_at + interval '30 days';
+    end if;
+  elsif new.status is distinct from old.status then
     if new.status = 'pending_scan' then
       new.retention_delete_after := new.created_at + interval '7 days';
     elsif new.status = 'scan_failed' then
