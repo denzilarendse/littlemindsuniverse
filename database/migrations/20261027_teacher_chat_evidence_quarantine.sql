@@ -153,7 +153,12 @@ begin
     raise exception 'Unsupported file type.';
   end if;
   if not (
-    (p_mime_type = 'image/jpeg' and lower(coalesce(p_storage_path,'')) ~ '\.(jpg|jpeg)  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
+    (p_mime_type = 'image/jpeg' and lower(coalesce(p_storage_path,'')) ~ '\.(jpg|jpeg)$')
+    or (p_mime_type = 'image/png' and lower(coalesce(p_storage_path,'')) ~ '\.png$')
+    or (p_mime_type = 'image/webp' and lower(coalesce(p_storage_path,'')) ~ '\.webp$')
+    or (p_mime_type = 'application/pdf' and lower(coalesce(p_storage_path,'')) ~ '\.pdf$')
+  ) then raise exception 'File extension does not match the declared MIME type.'; end if;
+  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
     raise exception 'File must be between 1 byte and 20 MiB.';
   end if;
   if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
