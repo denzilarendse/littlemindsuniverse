@@ -40,6 +40,7 @@ test('camera flow has explicit permission, preview, retake, cancel and separate 
   assert.match(moduleSource, /getUserMedia\(\{ video:/);
   assert.match(moduleSource, /stopCamera\(\)/);
   assert.match(moduleSource, /document\.hidden/);
+  assert.match(moduleSource, /closeCameraDialog\(true\)/);
 });
 
 test('quarantine migration is private, teacher-scoped, learner-scoped and defaults to pending scan', () => {
@@ -49,8 +50,9 @@ test('quarantine migration is private, teacher-scoped, learner-scoped and defaul
   assert.match(migration, /alter table public\.teacher_chat_evidence enable row level security/);
   assert.match(migration, /teacher_read_own_chat_evidence/);
   assert.match(migration, /teacher_upload_chat_evidence_quarantine/);
-  assert.match(migration, /teacher_delete_chat_evidence_quarantine/);\n  assert.match(migration, /delete_teacher_chat_evidence/);\n  assert.match(migration, /deleted_by_profile_id/);
-  assert.match(migration, /delete_teacher_chat_evidence/);\n  assert.match(migration, /deleted_by_profile_id/);
+  assert.match(migration, /teacher_delete_chat_evidence_quarantine/);
+  assert.match(migration, /delete_teacher_chat_evidence/);
+  assert.match(migration, /deleted_by_profile_id/);
   assert.match(migration, /public\.teacher_can_access_learner/);
   assert.match(migration, /revoke all on function public\.register_teacher_chat_evidence/);
   assert.match(migration, /grant execute on function public\.register_teacher_chat_evidence[\s\S]*to authenticated/);
