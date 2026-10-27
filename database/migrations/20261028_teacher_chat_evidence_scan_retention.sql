@@ -73,7 +73,8 @@ begin
       and (e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes')
     order by e.created_at
     for update skip locked
-    limit greatest(1, least(coalesce(p_limit, 25), 100))
+    -- One item per invocation keeps the 10-minute lease valid for the 60-second scanner timeout.
+    limit 1
   ), claimed as (
     update public.teacher_chat_evidence e
     set scan_claim_token = p_claim_token,
