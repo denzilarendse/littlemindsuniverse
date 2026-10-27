@@ -1,0 +1,9 @@
+# These workers authenticate with the dedicated x-lmu-cron-secret header and
+# verify it server-side through verify_lmu_retention_secret. The Supabase gateway
+# must not require a user JWT for those scheduler requests; keep the application-
+# level secret check mandatory in both handlers.
+[functions.teacher-chat-evidence-scan]
+verify_jwt = false
+
+[functions.teacher-chat-evidence-retention]
+verify_jwt = false
