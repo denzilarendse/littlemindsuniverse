@@ -154,7 +154,8 @@
       const player = $('#miloVoiceNotePreview'); if (player) player.replaceChildren();
       updateStatus('Local voice note and transcript discarded.');
     });
-    $('#miloExportTranscriptBtn', controlsRoot).addEventListener('click', exportTranscript);\n    $('#miloPrintTranscriptBtn', controlsRoot).addEventListener('click', printTranscript);
+    $('#miloExportTranscriptBtn', controlsRoot).addEventListener('click', exportTranscript);
+    $('#miloPrintTranscriptBtn', controlsRoot).addEventListener('click', printTranscript);
   }
   async function toggleVoiceNote() {
     if (recording) { stopVoiceNote(); return; }
