@@ -214,6 +214,11 @@ begin
         e.status = 'deleted'
         or e.retention_delete_after <= now()
       )
+      and (
+        e.status <> 'pending_scan'
+        or e.scan_claimed_at is null
+        or e.scan_claimed_at < now() - interval '10 minutes'
+      )
     order by e.retention_delete_after nulls first, e.created_at
     for update skip locked
     limit greatest(1, least(coalesce(p_limit, 100), 500))
@@ -354,6 +359,11 @@ as $function$
     and (
       e.status = 'deleted'
       or e.retention_delete_after <= now()
+    )
+    and (
+      e.status <> 'pending_scan'
+      or e.scan_claimed_at is null
+      or e.scan_claimed_at < now() - interval '10 minutes'
     );
 $function$;
 
