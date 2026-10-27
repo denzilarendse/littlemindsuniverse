@@ -106,7 +106,8 @@ Deno.serve(async (req: Request) => {
   let body: { limit?: number; dryRun?: boolean } = {};
   try { body = await req.json(); } catch { /* use safe defaults */ }
   const requestedLimit = Number(body.limit ?? 10);
-  const limit = Math.max(1, Math.min(Number.isFinite(requestedLimit) ? Math.trunc(requestedLimit) : 10, 25));
+  // Claims have a 10-minute lease; process one item per invocation so later items cannot age out while queued.
+  const limit = 1;
   if (body.dryRun === true) {
     return json({ ok: false, error: "scanner_dry_run_not_supported" }, 400);
   }
