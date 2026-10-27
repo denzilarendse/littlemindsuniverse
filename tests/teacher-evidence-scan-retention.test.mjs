@@ -60,6 +60,7 @@ test("database keeps scan and retention mutation service-only and teacher review
   assert.match(migration, /review_teacher_chat_evidence/);
   assert.match(migration, /p\.role::text = 'teacher'/);
   assert.match(migration, /for update skip locked/i);
+  assert.ok(migration.includes("and (e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes')"));
 });
 
 test("retention defaults are bounded and cover abandoned quarantine items", () => {
