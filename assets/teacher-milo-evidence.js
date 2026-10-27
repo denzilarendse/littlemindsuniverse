@@ -139,8 +139,20 @@
     list.style.paddingLeft = '20px';
     for (const row of data) {
       const item = document.createElement('li');
+      item.style.marginBottom = '8px';
+      const label = document.createElement('span');
       const date = row.created_at ? new Date(row.created_at).toLocaleString() : '';
-      item.textContent = row.original_filename + ' — ' + row.status.replaceAll('_', ' ') + (date ? ' · ' + date : '');
+      label.textContent = row.original_filename + ' — ' + row.status.replaceAll('_', ' ') + (date ? ' · ' + date : '');
+      item.appendChild(label);
+      if (row.status !== 'deleted') {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ghost';
+        remove.textContent = 'Delete upload';
+        remove.style.marginLeft = '8px';
+        remove.addEventListener('click', () => deleteEvidence(row));
+        item.appendChild(remove);
+      }
       list.appendChild(item);
     }
     target.appendChild(list);
@@ -226,6 +238,28 @@
     $('#teacherEvidenceCameraDialog').addEventListener('cancel', event => { event.preventDefault(); closeCameraDialog(); });
     loadRoster();
     refreshRecent();
+  }
+  async function deleteEvidence(row) {
+    const ctx = context();
+    if (!ctx?.supabase || ctx.role !== 'teacher' || !ctx.userId) return;
+    if (!window.confirm('Delete this private schoolwork upload? It will not be available for analysis.')) return;
+    setStatus('Marking the selected upload deleted and removing its private file…');
+    try {
+      const { data: path, error } = await ctx.supabase.rpc('delete_teacher_chat_evidence', { p_evidence_id: row.id });
+      if (error) throw error;
+      const { error: removeError } = await ctx.supabase.storage.from('teacher-chat-evidence-quarantine').remove([path]);
+      await refreshRecent();
+      if (removeError) {
+        console.warn('Private evidence file cleanup failed:', removeError.message || 'storage cleanup failed');
+        setStatus('Upload marked deleted and hidden from reading, but storage cleanup needs administrator follow-up.', true);
+      } else {
+        setStatus('Private upload deleted. It was never sent to Milo.');
+        toast('Schoolwork upload deleted.');
+      }
+    } catch (error) {
+      console.warn('Teacher evidence delete failed:', error?.message || 'delete failed');
+      setStatus('Could not delete this upload. No change was confirmed; retry or contact the administrator.', true);
+    }
   }
   async function uploadSelected() {
     if (uploading) return;
