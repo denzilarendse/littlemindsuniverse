@@ -1,6 +1,6 @@
 /* Teacher–Milo transcription tools.
- * Browser-local only: speech recognition is provided by the browser; audio notes are
- * held in memory for preview and are never uploaded by this module.
+ * Audio notes are held in memory for preview and are never uploaded by this module.
+ * Browser speech-recognition privacy and processing depend on browser/device settings.
  */
 (function () {
   'use strict';
@@ -110,7 +110,7 @@
     controlsRoot.style.marginTop = '12px';
     controlsRoot.innerHTML = `
       <div class="eyebrow">Teacher–Milo voice & transcript</div>
-      <p class="muted">Speech is transcribed in this browser. Voice notes stay on this device until you choose to discard them. Nothing is uploaded by these controls.</p>
+      <p class="muted">Speech recognition is provided by your browser and may use its configured processing service. Audio-note files stay in this page's memory and are not uploaded by these controls.</p>
       <div class="actions">
         <button type="button" class="ghost" id="miloDictateBtn">🎙 Dictate message</button>
         <button type="button" class="ghost" id="miloVoiceNoteBtn">● Record voice note</button>
