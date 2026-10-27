@@ -97,7 +97,7 @@
     $('#lmuReportPrint', actions).addEventListener('click', printReport);
   }
   const style = document.createElement('style');
-  style.textContent = '@media print{body.lmu-print-report-only #app>*{display:none!important}body.lmu-print-report-only #teacherReportsPanel{display:block!important}body.lmu-print-report-only #teacherReportsPanel>*{display:none!important}body.lmu-print-report-only #teacherReportsPanel .lmu-report-print-target{display:block!important;box-shadow:none!important;border:0!important}body.lmu-print-report-only .lmu-report-export-actions{display:none!important}body.lmu-print-report-only .lmu-report-print-target textarea{border:0!important;white-space:pre-wrap!important}body.lmu-print-report-only .footer{display:none!important}}';
+  style.textContent = '@media print{body.lmu-print-report-only #app .app{display:block!important}body.lmu-print-report-only #app .layout{display:block!important}body.lmu-print-report-only #app .content{display:block!important}body.lmu-print-report-only #app .content>*{display:none!important}body.lmu-print-report-only #teacherReportsPanel{display:block!important}body.lmu-print-report-only #teacherReportsPanel>*{display:none!important}body.lmu-print-report-only #teacherReportsPanel .lmu-report-print-target{display:block!important;box-shadow:none!important;border:0!important}body.lmu-print-report-only .lmu-report-export-actions{display:none!important}body.lmu-print-report-only .lmu-report-print-target textarea{border:0!important;white-space:pre-wrap!important}body.lmu-print-report-only .footer{display:none!important}}';
   document.head.appendChild(style);
   const observer = new MutationObserver(decorate);
   function boot() {
