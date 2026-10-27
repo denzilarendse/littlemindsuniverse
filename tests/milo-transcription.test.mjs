@@ -25,7 +25,7 @@ test('teacher chat exposes dictation, local voice-note preview and transcript ex
 });
 
 test('transcription module keeps recordings local and does not upload learner or teacher media', () => {
-  assert.match(moduleSource, /Audio notes stay on this device/);
+  assert.match(moduleSource, /Browser speech-recognition privacy and processing depend on browser\/device settings/);
   assert.match(moduleSource, /Audio is not uploaded/);
   assert.doesNotMatch(moduleSource, /\.storage\.from\s*\(/);
   assert.doesNotMatch(moduleSource, /fetch\s*\(/);
