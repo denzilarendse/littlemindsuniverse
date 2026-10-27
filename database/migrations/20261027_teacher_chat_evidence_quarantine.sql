@@ -157,7 +157,7 @@ begin
     raise exception 'Invalid filename.';
   end if;
   if coalesce(p_storage_path,'') !~ (
-    '^' || v_uid::text || '/' || p_classroom_id::text || '/' || p_learner_id::text || '/[0-9a-fA-F-]{36}\\.(jpg|jpeg|png|webp|pdf)$'
+    '^' || v_uid::text || '/' || p_classroom_id::text || '/' || p_learner_id::text || '/[0-9a-fA-F-]{36}\.(jpg|jpeg|png|webp|pdf)$'
   ) then raise exception 'Evidence path does not match this teacher, classroom, and learner.'; end if;
   if not exists (
     select 1 from public.classrooms c
