@@ -1,5 +1,6 @@
 -- Teacher-origin schoolwork capture for Teacher–Milo.
 -- Quarantine-only: uploads remain private and are not exposed to Milo until a trusted scanner/review pipeline marks them safe.
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'teacher-chat-evidence-quarantine',
@@ -155,10 +156,10 @@ begin
     select 1 from public.profiles p
     where p.id = v_uid and p.role::text = 'teacher'
   ) then raise exception 'Only a teacher account may register teacher-origin evidence.'; end if;
-  if p_source_type not in ('teacher_upload','camera_capture') then
+  if p_source_type is null or p_source_type not in ('teacher_upload','camera_capture') then
     raise exception 'Unsupported evidence source.';
   end if;
-  if p_mime_type not in ('image/jpeg','image/png','image/webp','application/pdf') then
+  if p_mime_type is null or p_mime_type not in ('image/jpeg','image/png','image/webp','application/pdf') then
     raise exception 'Unsupported file type.';
   end if;
   if not (
@@ -166,147 +167,6 @@ begin
     or (p_mime_type = 'image/png' and lower(coalesce(p_storage_path,'')) ~ '\.png$')
     or (p_mime_type = 'image/webp' and lower(coalesce(p_storage_path,'')) ~ '\.webp$')
     or (p_mime_type = 'application/pdf' and lower(coalesce(p_storage_path,'')) ~ '\.pdf$')
-  ) then raise exception 'File extension does not match the declared MIME type.'; end if;
-  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
-    raise exception 'File must be between 1 byte and 20 MiB.';
-  end if;
-  if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
-     or p_original_filename ~ '[[:cntrl:]]' then
-    raise exception 'Invalid filename.';
-  end if;
-  if coalesce(p_storage_path,'') !~ (
-    '^' || v_uid::text || '/' || p_classroom_id::text || '/' || p_learner_id::text || '/[0-9a-fA-F-]{36}\.(jpg|jpeg|png|webp|pdf)$'
-  ) then raise exception 'Evidence path does not match this teacher, classroom, and learner.'; end if;
-  if not exists (
-    select 1 from public.classrooms c
-    join public.classroom_members cm on cm.classroom_id = c.id
-    where c.id = p_classroom_id and c.teacher_profile_id = v_uid and c.active = true
-      and cm.learner_id = p_learner_id and cm.status::text = 'active'
-  ) then raise exception 'The selected learner is not in your active classroom.'; end if;
-  if not exists (
-    select 1 from storage.objects o
-    where o.bucket_id = 'teacher-chat-evidence-quarantine'
-      and o.name = p_storage_path and o.owner_id = v_uid::text
-  ) then raise exception 'Private upload could not be verified.'; end if;
-  insert into public.teacher_chat_evidence (
-    teacher_profile_id, classroom_id, learner_id, source_type, original_filename,
-    storage_path, mime_type, file_size_bytes, status
-  ) values (
-    v_uid, p_classroom_id, p_learner_id, p_source_type, trim(p_original_filename),
-    p_storage_path, p_mime_type, p_file_size_bytes, 'pending_scan'
-  ) returning id into v_id;
-  return v_id;
-end;
-$function$;
-
-revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
-grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
-)
-    or (p_mime_type = 'image/png' and lower(coalesce(p_storage_path,'')) ~ '\.png  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
-    raise exception 'File must be between 1 byte and 20 MiB.';
-  end if;
-  if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
-     or p_original_filename ~ '[[:cntrl:]]' then
-    raise exception 'Invalid filename.';
-  end if;
-  if coalesce(p_storage_path,'') !~ (
-    '^' || v_uid::text || '/' || p_classroom_id::text || '/' || p_learner_id::text || '/[0-9a-fA-F-]{36}\.(jpg|jpeg|png|webp|pdf)$'
-  ) then raise exception 'Evidence path does not match this teacher, classroom, and learner.'; end if;
-  if not exists (
-    select 1 from public.classrooms c
-    join public.classroom_members cm on cm.classroom_id = c.id
-    where c.id = p_classroom_id and c.teacher_profile_id = v_uid and c.active = true
-      and cm.learner_id = p_learner_id and cm.status::text = 'active'
-  ) then raise exception 'The selected learner is not in your active classroom.'; end if;
-  if not exists (
-    select 1 from storage.objects o
-    where o.bucket_id = 'teacher-chat-evidence-quarantine'
-      and o.name = p_storage_path and o.owner_id = v_uid::text
-  ) then raise exception 'Private upload could not be verified.'; end if;
-  insert into public.teacher_chat_evidence (
-    teacher_profile_id, classroom_id, learner_id, source_type, original_filename,
-    storage_path, mime_type, file_size_bytes, status
-  ) values (
-    v_uid, p_classroom_id, p_learner_id, p_source_type, trim(p_original_filename),
-    p_storage_path, p_mime_type, p_file_size_bytes, 'pending_scan'
-  ) returning id into v_id;
-  return v_id;
-end;
-$function$;
-
-revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
-grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
-)
-    or (p_mime_type = 'image/webp' and lower(coalesce(p_storage_path,'')) ~ '\.webp  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
-    raise exception 'File must be between 1 byte and 20 MiB.';
-  end if;
-  if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
-     or p_original_filename ~ '[[:cntrl:]]' then
-    raise exception 'Invalid filename.';
-  end if;
-  if coalesce(p_storage_path,'') !~ (
-    '^' || v_uid::text || '/' || p_classroom_id::text || '/' || p_learner_id::text || '/[0-9a-fA-F-]{36}\.(jpg|jpeg|png|webp|pdf)$'
-  ) then raise exception 'Evidence path does not match this teacher, classroom, and learner.'; end if;
-  if not exists (
-    select 1 from public.classrooms c
-    join public.classroom_members cm on cm.classroom_id = c.id
-    where c.id = p_classroom_id and c.teacher_profile_id = v_uid and c.active = true
-      and cm.learner_id = p_learner_id and cm.status::text = 'active'
-  ) then raise exception 'The selected learner is not in your active classroom.'; end if;
-  if not exists (
-    select 1 from storage.objects o
-    where o.bucket_id = 'teacher-chat-evidence-quarantine'
-      and o.name = p_storage_path and o.owner_id = v_uid::text
-  ) then raise exception 'Private upload could not be verified.'; end if;
-  insert into public.teacher_chat_evidence (
-    teacher_profile_id, classroom_id, learner_id, source_type, original_filename,
-    storage_path, mime_type, file_size_bytes, status
-  ) values (
-    v_uid, p_classroom_id, p_learner_id, p_source_type, trim(p_original_filename),
-    p_storage_path, p_mime_type, p_file_size_bytes, 'pending_scan'
-  ) returning id into v_id;
-  return v_id;
-end;
-$function$;
-
-revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
-grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
-)
-    or (p_mime_type = 'application/pdf' and lower(coalesce(p_storage_path,'')) ~ '\.pdf  if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
-    raise exception 'File must be between 1 byte and 20 MiB.';
-  end if;
-  if coalesce(length(trim(p_original_filename)),0) < 1 or length(p_original_filename) > 180
-     or p_original_filename ~ '[[:cntrl:]]' then
-    raise exception 'Invalid filename.';
-  end if;
-  if coalesce(p_storage_path,'') !~ (
-    '^' || v_uid::text || '/' || p_classroom_id::text || '/' || p_learner_id::text || '/[0-9a-fA-F-]{36}\.(jpg|jpeg|png|webp|pdf)$'
-  ) then raise exception 'Evidence path does not match this teacher, classroom, and learner.'; end if;
-  if not exists (
-    select 1 from public.classrooms c
-    join public.classroom_members cm on cm.classroom_id = c.id
-    where c.id = p_classroom_id and c.teacher_profile_id = v_uid and c.active = true
-      and cm.learner_id = p_learner_id and cm.status::text = 'active'
-  ) then raise exception 'The selected learner is not in your active classroom.'; end if;
-  if not exists (
-    select 1 from storage.objects o
-    where o.bucket_id = 'teacher-chat-evidence-quarantine'
-      and o.name = p_storage_path and o.owner_id = v_uid::text
-  ) then raise exception 'Private upload could not be verified.'; end if;
-  insert into public.teacher_chat_evidence (
-    teacher_profile_id, classroom_id, learner_id, source_type, original_filename,
-    storage_path, mime_type, file_size_bytes, status
-  ) values (
-    v_uid, p_classroom_id, p_learner_id, p_source_type, trim(p_original_filename),
-    p_storage_path, p_mime_type, p_file_size_bytes, 'pending_scan'
-  ) returning id into v_id;
-  return v_id;
-end;
-$function$;
-
-revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
-grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
-)
   ) then raise exception 'File extension does not match the declared MIME type.'; end if;
   if p_file_size_bytes is null or p_file_size_bytes <= 0 or p_file_size_bytes > 20971520 then
     raise exception 'File must be between 1 byte and 20 MiB.';
