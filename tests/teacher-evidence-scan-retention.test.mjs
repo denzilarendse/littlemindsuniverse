@@ -63,6 +63,12 @@ test("database keeps scan and retention mutation service-only and teacher review
   assert.ok(migration.includes("and (e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes')"));
 });
 
+test("retention dry-run counts exclude items with an active deletion lease", () => {
+  const countFunction = migration.split("create or replace function public.count_due_teacher_chat_evidence_retention_candidates()")[1];
+  assert.ok(countFunction, "count RPC must exist");
+  assert.ok(countFunction.includes("(e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes')"));
+});
+
 test("retention defaults are bounded and cover abandoned quarantine items", () => {
   assert.match(migration, /interval '7 days'/);
   assert.match(migration, /interval '1 day'/);
