@@ -8,7 +8,7 @@
 - `supabase/functions/teacher-chat-evidence-retention/index.ts`
 - `database/migrations/20261028_teacher_chat_evidence_scan_retention.sql`
 
-Both workers require POST and the existing scheduler header `x-lmu-cron-secret`; they validate it with `verify_lmu_retention_secret`. They use server-only Supabase credentials, bounded batch sizes, claim tokens, short leases, and avoid logging file contents, filenames, scanner response bodies or secrets.
+Both workers require POST and the existing scheduler header `x-lmu-cron-secret`; they validate it with `verify_lmu_retention_secret`. They use server-only Supabase credentials, claim tokens, short leases, and avoid logging file contents, filenames, scanner response bodies or secrets. The scan worker claims one item per invocation: its lease is 10 minutes and scanner requests have a 60-second timeout, so larger sequential batches could let later items' leases expire before processing.
 
 ## Scanner adapter contract
 
