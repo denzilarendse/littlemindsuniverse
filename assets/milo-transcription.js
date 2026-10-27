@@ -114,7 +114,7 @@
       <div class="actions">
         <button type="button" class="ghost" id="miloDictateBtn">🎙 Dictate message</button>
         <button type="button" class="ghost" id="miloVoiceNoteBtn">● Record voice note</button>
-        <button type="button" class="ghost" id="miloExportTranscriptBtn">Export chat transcript (.txt)</button>
+        <button type="button" class="ghost" id="miloExportTranscriptBtn">Export chat transcript (.txt)</button>\n        <button type="button" class="ghost" id="miloPrintTranscriptBtn">Print chat / Save PDF</button>
       </div>
       <p id="miloTranscriptionStatus" class="muted" role="status" aria-live="polite">Ready. Review speech-to-text before sending.</p>
       <div class="field"><label for="miloTranscriptPreview">Voice-note transcript preview (editable)</label><textarea id="miloTranscriptPreview" class="textarea" maxlength="12000" placeholder="Your speech transcript will appear here…"></textarea></div>
@@ -154,7 +154,7 @@
       const player = $('#miloVoiceNotePreview'); if (player) player.replaceChildren();
       updateStatus('Local voice note and transcript discarded.');
     });
-    $('#miloExportTranscriptBtn', controlsRoot).addEventListener('click', exportTranscript);
+    $('#miloExportTranscriptBtn', controlsRoot).addEventListener('click', exportTranscript);\n    $('#miloPrintTranscriptBtn', controlsRoot).addEventListener('click', printTranscript);
   }
   async function toggleVoiceNote() {
     if (recording) { stopVoiceNote(); return; }
@@ -225,11 +225,26 @@
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast('Current chat transcript exported as a text file.');
   }
+  function printTranscript() {
+    const chat = $('#chatBox');
+    const card = chat?.closest('.card');
+    if (!chat || !card) return toast('Open the current Milo chat first.');
+    card.classList.add('lmu-chat-print-card');
+    document.body.classList.add('lmu-print-chat-only');
+    window.print();
+    window.setTimeout(() => {
+      document.body.classList.remove('lmu-print-chat-only');
+      card.classList.remove('lmu-chat-print-card');
+    }, 500);
+  }
   function cleanup() {
     stopRecognition();
     if (recording) { try { recording.stop(); } catch (_) {} recording = null; }
     stopTracks();
   }
+  const printStyle = document.createElement('style');
+  printStyle.textContent = '@media print{body.lmu-print-chat-only #app .app{display:block!important}body.lmu-print-chat-only #app .layout{display:block!important}body.lmu-print-chat-only #app .content{display:block!important}body.lmu-print-chat-only #app .content>*{display:none!important}body.lmu-print-chat-only .lmu-chat-print-card{display:block!important;box-shadow:none!important;border:0!important}body.lmu-print-chat-only .lmu-chat-print-card>*{display:none!important}body.lmu-print-chat-only .lmu-chat-print-card #chatBox{display:block!important;overflow:visible!important;max-height:none!important}body.lmu-print-chat-only #chatBox::before{content:"LittleMindsUniverse — Teacher–Milo transcript";display:block;font-weight:bold;margin-bottom:12px}body.lmu-print-chat-only .footer{display:none!important}}';
+  document.head.appendChild(printStyle);
   const observer = new MutationObserver(renderControls);
   function boot() {
     const root = $('#app');
