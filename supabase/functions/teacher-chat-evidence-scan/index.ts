@@ -79,7 +79,9 @@ Deno.serve(async (req: Request) => {
   try { body = await req.json(); } catch { /* use safe defaults */ }
   const requestedLimit = Number(body.limit ?? 10);
   const limit = Math.max(1, Math.min(Number.isFinite(requestedLimit) ? Math.trunc(requestedLimit) : 10, 25));
-  const dryRun = body.dryRun === true;
+  if (body.dryRun === true) {
+    return json({ ok: false, error: "scanner_dry_run_not_supported" }, 400);
+  }
   const claimToken = crypto.randomUUID();
   const { data: candidates, error: claimError } = await supabase.rpc(
     "claim_teacher_chat_evidence_scan_candidates",
@@ -90,22 +92,6 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "claim_failed" }, 500);
   }
   const rows = Array.isArray(candidates) ? candidates : [];
-  if (dryRun) {
-    // Release each claim without downloading or scanning file contents.
-    for (const item of rows) {
-      // Scan claims are safely reclaimed after the 10-minute lease if this RPC fails.
-      await supabase.rpc("complete_teacher_chat_evidence_scan", {
-        p_evidence_id: item.evidence_id,
-        p_claim_token: claimToken,
-        p_verdict: "unknown",
-        p_engine: "dry-run",
-        p_engine_version: "none",
-        p_result_code: "dry_run_released",
-      });
-    }
-    return json({ ok: true, dryRun: true, candidates: rows.length, scanned: 0 });
-  }
-
   let passed = 0;
   let failed = 0;
   let deferred = 0;
