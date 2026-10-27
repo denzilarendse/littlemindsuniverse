@@ -26,6 +26,9 @@ create table if not exists public.teacher_chat_evidence (
   file_size_bytes bigint not null check (file_size_bytes > 0 and file_size_bytes <= 20971520),
   status text not null default 'pending_scan' check (status in ('pending_scan','scan_passed','scan_failed','teacher_reviewed','deleted')),
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  deleted_by_profile_id uuid references public.profiles(id) on delete restrict,
   reviewed_at timestamptz,
   reviewed_by_profile_id uuid references public.profiles(id) on delete restrict,
   scan_completed_at timestamptz,
@@ -101,6 +104,12 @@ using (
       and c.teacher_profile_id = (select auth.uid())
       and c.active = true
       and cm.status::text = 'active'
+  )
+  and exists (
+    select 1 from public.teacher_chat_evidence e
+    where e.storage_path = objects.name
+      and e.teacher_profile_id = (select auth.uid())
+      and e.status <> 'deleted'
   )
 );
 
@@ -333,3 +342,36 @@ $function$;
 
 revoke all on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) from public, anon;
 grant execute on function public.register_teacher_chat_evidence(uuid,uuid,text,text,text,bigint,text) to authenticated;
+
+create or replace function public.delete_teacher_chat_evidence(p_evidence_id uuid)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $function$
+declare
+  v_uid uuid := auth.uid();
+  v_path text;
+begin
+  if v_uid is null then raise exception 'Sign-in is required.'; end if;
+  select e.storage_path into v_path
+  from public.teacher_chat_evidence e
+  join public.classrooms c on c.id = e.classroom_id
+  join public.classroom_members cm on cm.classroom_id = c.id and cm.learner_id = e.learner_id
+  where e.id = p_evidence_id
+    and e.teacher_profile_id = v_uid
+    and e.status <> 'deleted'
+    and c.teacher_profile_id = v_uid
+    and c.active = true
+    and cm.status::text = 'active'
+  for update;
+  if not found then raise exception 'Evidence was not found or is not available to this teacher.'; end if;
+  update public.teacher_chat_evidence
+  set status = 'deleted', deleted_at = now(), deleted_by_profile_id = v_uid, updated_at = now()
+  where id = p_evidence_id and teacher_profile_id = v_uid;
+  return v_path;
+end;
+$function$;
+
+revoke all on function public.delete_teacher_chat_evidence(uuid) from public, anon;
+grant execute on function public.delete_teacher_chat_evidence(uuid) to authenticated;
