@@ -160,8 +160,10 @@
   function render() {
     const input = $('#miloInput');
     if (!input || !isTeacherChat()) {
-      if (panel && !panel.isConnected) panel = null;
-      if (!isTeacherChat()) stopCamera();
+      if (panel?.isConnected) panel.remove();
+      panel = null;
+      stopCamera();
+      resetSelectedFile();
       return;
     }
     if (panel?.isConnected) return;
