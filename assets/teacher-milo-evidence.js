@@ -234,8 +234,8 @@
     $('#teacherEvidenceCameraTake').addEventListener('click', takePhoto);
     $('#teacherEvidenceCameraRetake').addEventListener('click', retakePhoto);
     $('#teacherEvidenceCameraUse').addEventListener('click', usePhoto);
-    $('#teacherEvidenceCameraCancel').addEventListener('click', closeCameraDialog);
-    $('#teacherEvidenceCameraDialog').addEventListener('cancel', event => { event.preventDefault(); closeCameraDialog(); });
+    $('#teacherEvidenceCameraCancel').addEventListener('click', () => closeCameraDialog(true));
+    $('#teacherEvidenceCameraDialog').addEventListener('cancel', event => { event.preventDefault(); closeCameraDialog(true); });
     loadRoster();
     refreshRecent();
   }
@@ -313,6 +313,8 @@
   }
   async function openCameraDialog() {
     if (!currentClassroomId() || !currentLearnerId()) return setStatus('Choose an active classroom and learner before opening the camera.', true);
+    resetSelectedFile();
+    $('#teacherEvidenceDiscard').disabled = true;
     const dialog = $('#teacherEvidenceCameraDialog');
     const status = $('#teacherEvidenceCameraStatus');
     const preview = $('#teacherEvidenceCameraPreview');
@@ -385,16 +387,20 @@
   }
   function usePhoto() {
     if (!selectedFile) return;
-    closeCameraDialog();
+    closeCameraDialog(false);
     showPreview(selectedFile);
     $('#teacherEvidenceDiscard').disabled = false;
     setStatus('Camera photo ready for review. Press Upload to send it to private quarantine; it will not be sent to Milo.');
   }
-  function closeCameraDialog() {
+  function closeCameraDialog(discardCapture = true) {
     stopCamera();
     const dialog = $('#teacherEvidenceCameraDialog');
     if (dialog?.open) dialog.close();
-    if (selectedFile && selectedSource === 'camera_capture') {
+    if (discardCapture && selectedSource === 'camera_capture') {
+      resetSelectedFile();
+      const discard = $('#teacherEvidenceDiscard'); if (discard) discard.disabled = true;
+      setStatus('Camera capture cancelled. No photo was uploaded.');
+    } else if (selectedFile && selectedSource === 'camera_capture') {
       const submit = $('#teacherEvidenceUpload');
       if (submit) submit.disabled = !!validateFile(selectedFile) || uploading;
     }
