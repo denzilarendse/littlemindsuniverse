@@ -243,7 +243,7 @@
     if (choose) choose.disabled = true;
     setStatus('Uploading to private quarantine. Milo cannot access this file.');
     const extension = ({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf'})[file.type];
-    const evidenceId = (crypto.randomUUID?.() || ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)));
+    const evidenceId = window.crypto?.randomUUID ? window.crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => { const random = Math.random() * 16 | 0; return (char === 'x' ? random : (random & 3 | 8)).toString(16); });
     const storagePath = ctx.userId + '/' + classroomId + '/' + learnerId + '/' + evidenceId + '.' + extension;
     let uploaded = false;
     try {
