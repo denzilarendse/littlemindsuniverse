@@ -32,7 +32,7 @@ test("scanner uses scheduler authorization, bounded batches and claim-token fina
   assert.match(scan, /60_000/);
   assert.match(scan, /readBoundedResponseText/);
   assert.match(scan, /total > maxBytes/);
-  assert.doesNotMatch(scan, /await response\\.text\\(\\)/);
+  assert.doesNotMatch(scan, /await\s+response\.text\s*\(/);
 });
 
 test("retention worker has read-only dry run and idempotent storage cleanup", () => {
