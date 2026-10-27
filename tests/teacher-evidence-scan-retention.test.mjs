@@ -37,7 +37,7 @@ test("retention worker has read-only dry run and idempotent storage cleanup", ()
   assert.match(retention, /claim_teacher_chat_evidence_retention_candidates/);
   assert.match(retention, /finalize_teacher_chat_evidence_retention/);
   assert.match(retention, /release_teacher_chat_evidence_retention_claim/);
-  assert.match(retention, /storage\(\)\.from\(BUCKET\)\.remove\(\[storagePath\]\)/);
+  assert.match(retention, /supabase\.storage\.from\(BUCKET\)\.remove\(\[storagePath\]\)/);
   assert.match(retention, /teacher-chat-evidence-quarantine/);
 });
 
