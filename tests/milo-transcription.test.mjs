@@ -22,6 +22,7 @@ test('teacher chat exposes dictation, local voice-note preview and transcript ex
   ]) assert.ok(moduleSource.includes(label), 'Missing control: ' + label);
   assert.match(moduleSource, /SpeechRecognition\s*\|\|\s*window\.webkitSpeechRecognition/);
   assert.match(moduleSource, /MediaRecorder/);
+  assert.match(moduleSource, /stopRecognition\(\); if \(finalTranscript\) appendToInput\(finalTranscript\)/);
   assert.match(moduleSource, /text\/plain;charset=utf-8/);
 });
 
