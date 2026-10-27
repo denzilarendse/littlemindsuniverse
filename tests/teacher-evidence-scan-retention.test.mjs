@@ -5,6 +5,16 @@ import { readFile } from "node:fs/promises";
 const scan = await readFile(new URL("../supabase/functions/teacher-chat-evidence-scan/index.ts", import.meta.url), "utf8");
 const retention = await readFile(new URL("../supabase/functions/teacher-chat-evidence-retention/index.ts", import.meta.url), "utf8");
 const migration = await readFile(new URL("../database/migrations/20261028_teacher_chat_evidence_scan_retention.sql", import.meta.url), "utf8");
+const supabaseConfig = await readFile(new URL("../supabase/config.toml", import.meta.url), "utf8");
+
+test("scheduler-only workers disable gateway JWT only while retaining handler-level secret verification", () => {
+  assert.match(supabaseConfig, /\[functions\.teacher-chat-evidence-scan\][\s\S]*?verify_jwt = false/);
+  assert.match(supabaseConfig, /\[functions\.teacher-chat-evidence-retention\][\s\S]*?verify_jwt = false/);
+  assert.match(scan, /x-lmu-cron-secret/);
+  assert.match(retention, /x-lmu-cron-secret/);
+  assert.match(scan, /verify_lmu_retention_secret/);
+  assert.match(retention, /verify_lmu_retention_secret/);
+});
 
 test("scanner fails closed when private scanner configuration is absent", () => {
   assert.match(scan, /!scannerUrl \|\| !scannerToken/);
