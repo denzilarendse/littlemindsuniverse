@@ -364,7 +364,7 @@ begin
     and c.teacher_profile_id = v_uid
     and c.active = true
     and cm.status::text = 'active'
-  for update;
+  for update of e;
   if not found then raise exception 'Evidence was not found or is not available to this teacher.'; end if;
   update public.teacher_chat_evidence
   set status = 'deleted', deleted_at = now(), deleted_by_profile_id = v_uid, updated_at = now()
