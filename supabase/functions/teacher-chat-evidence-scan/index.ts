@@ -103,9 +103,8 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false, error: "forbidden" }, 403);
   }
 
-  let body: { limit?: number; dryRun?: boolean } = {};
+  let body: { dryRun?: boolean } = {};
   try { body = await req.json(); } catch { /* use safe defaults */ }
-  const requestedLimit = Number(body.limit ?? 10);
   // Claims have a 10-minute lease; process one item per invocation so later items cannot age out while queued.
   const limit = 1;
   if (body.dryRun === true) {
