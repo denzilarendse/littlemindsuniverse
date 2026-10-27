@@ -37,7 +37,8 @@ test("scanner uses scheduler authorization, bounded batches and claim-token fina
   assert.match(scan, /verify_lmu_retention_secret/);
   assert.match(scan, /claim_teacher_chat_evidence_scan_candidates/);
   assert.match(scan, /complete_teacher_chat_evidence_scan/);
-  assert.match(scan, /Math\.min\([^\n]*25\)/);
+  assert.match(scan, /const limit = 1;/);
+  assert.match(migration, /One item per invocation[\s\S]*?limit 1/);
   assert.match(scan, /redirect: "error"/);
   assert.match(scan, /60_000/);
   assert.match(scan, /readBoundedResponseText/);
