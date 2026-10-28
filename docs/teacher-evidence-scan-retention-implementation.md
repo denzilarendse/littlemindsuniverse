@@ -35,7 +35,7 @@ Response JSON, maximum 4 KiB:
 }
 ```
 
-Only exact `verdict: clean` plus a matching SHA-256 permits the worker to mark `scan_passed`. `malicious` and `invalid` fail the file. Missing/mismatched hash, unknown verdict, timeout, HTTP error, malformed response or network error is unknown/unavailable and cannot mark the file safe. A maximum of five attempts leads to `scan_failed` and a short cleanup deadline. This worker also checks file signatures, stored size and the allowlist before sending bytes to the scanner.
+Only exact `verdict: clean` plus a matching SHA-256 permits the worker to mark `scan_passed`. `malicious` and `invalid` fail the file. Missing/mismatched hash, unknown verdict, timeout, HTTP error, malformed response or network error is unknown/unavailable and cannot mark the file safe. Five completed unknown/unavailable attempts lead to `scan_failed`. If a worker crashes after claiming the fifth attempt, the next claim invocation marks the stale exhausted row `scan_failed` after the 10-minute lease expires, with a one-day cleanup deadline. This worker also checks file signatures, stored size and the allowlist before sending bytes to the scanner.
 
 The chosen scanner must be a trusted private service with documented file-size limits, parser/archive-bomb protection, malware signatures, no content retention beyond processing, and approved privacy/data-processing terms for children's work. Do not use public upload-to-scan sites or third-party AI analysis as a substitute. This repository change does not establish those assurances by itself.
 
