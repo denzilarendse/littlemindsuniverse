@@ -85,4 +85,4 @@ jobs:
           fi
       - name: Stop disposable local Supabase stack
         if: always()
-        run: supabase stop --no-backup
+        run: if command -v supabase >/dev/null 2>&1; then supabase stop --no-backup; else echo "Supabase CLI was not installed; nothing to stop."; fi
