@@ -60,6 +60,8 @@ declare
   candidates text[];
   before_count bigint;
   after_count bigint;
+  before_snapshot text;
+  after_snapshot text;
   err text;
 begin
   if has_function_privilege('anon', 'public.list_teacher_chat_evidence_orphan_candidates(interval,integer)', 'EXECUTE')
@@ -98,11 +100,27 @@ begin
   end;
 
   begin
+    perform * from public.list_teacher_chat_evidence_orphan_candidates(null, 100);
+    raise exception 'NULL minimum age should be rejected';
+  exception when others then
+    get stacked diagnostics err = message_text;
+    if err not like 'Minimum age must be between%' then raise; end if;
+  end;
+
+  begin
     perform * from public.list_teacher_chat_evidence_orphan_candidates(interval '366 days', 100);
     raise exception 'Minimum age above 365 days should be rejected';
   exception when others then
     get stacked diagnostics err = message_text;
     if err not like 'Minimum age must be between%' then raise; end if;
+  end;
+
+  begin
+    perform * from public.list_teacher_chat_evidence_orphan_candidates(interval '7 days', null);
+    raise exception 'NULL result limit should be rejected';
+  exception when others then
+    get stacked diagnostics err = message_text;
+    if err not like 'Limit must be between%' then raise; end if;
   end;
 
   begin
@@ -123,12 +141,14 @@ begin
   end;
 
   select count(*) into before_count from storage.objects;
-  -- Inventory is read-only; the table contents must remain unchanged after calls.
+  select md5(coalesce(string_agg(to_jsonb(o)::text, E'\\n' order by o.id), '')) into before_snapshot from storage.objects o;
+  -- Inventory is read-only; object count and every stored field must remain unchanged.
   perform set_config('request.jwt.claim.role', 'service_role', true);
   perform * from public.list_teacher_chat_evidence_orphan_candidates(interval '7 days', 100);
   select count(*) into after_count from storage.objects;
-  if before_count <> after_count then
-    raise exception 'Inventory changed Storage object count';
+  select md5(coalesce(string_agg(to_jsonb(o)::text, E'\\n' order by o.id), '')) into after_snapshot from storage.objects o;
+  if before_count <> after_count or before_snapshot <> after_snapshot then
+    raise exception 'Inventory changed Storage objects';
   end if;
 end $$;
 
