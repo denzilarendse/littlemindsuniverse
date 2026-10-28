@@ -21,6 +21,9 @@ test('teacher upload UI requires a live teacher and an active classroom learner'
   assert.match(moduleSource, /ctx\.mode === 'live' && ctx\.role === 'teacher'/);
   assert.match(moduleSource, /classroom_members/);
   assert.match(moduleSource, /register_teacher_chat_evidence/);
+  assert.match(moduleSource, /cleanupFailed = false/);
+  assert.match(moduleSource, /if \(cleanupError\) cleanupFailed = true/);
+  assert.match(moduleSource, /administrator cleanup is required/);
   assert.match(moduleSource, /pending security scan/);
   assert.match(moduleSource, /not been sent to Milo/);
 });
