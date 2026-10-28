@@ -39,6 +39,8 @@ test("scanner uses scheduler authorization, bounded batches and claim-token fina
   assert.match(scan, /complete_teacher_chat_evidence_scan/);
   assert.match(scan, /const limit = 1;/);
   assert.match(migration, /One item per invocation[\s\S]*?limit 1/);
+  assert.match(migration, /scan_attempts >= 5[\\s\\S]*?status = 'scan_failed'/);
+  assert.match(migration, /scan_attempts_exhausted/);
   assert.match(scan, /redirect: "error"/);
   assert.match(scan, /60_000/);
   assert.match(scan, /readBoundedResponseText/);
