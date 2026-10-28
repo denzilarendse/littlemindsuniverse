@@ -85,6 +85,7 @@ begin
     from public.teacher_chat_evidence e
     where e.status = 'pending_scan'
       and e.scan_attempts < 5
+      and e.retention_delete_after > now()
       and (e.scan_claimed_at is null or e.scan_claimed_at < now() - interval '10 minutes')
       -- Do not start scanning an item while retention has claimed it for deletion.
       and (e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes')
