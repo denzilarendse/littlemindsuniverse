@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/teacher-evidence-local-storage-missing-object.yml'
       - 'tests/teacher-evidence-missing-object-error.test.ts'
+      - 'tests/teacher-evidence-local-storage-missing-object.integration.test.ts'
       - 'supabase/functions/teacher-chat-evidence-retention/**'
   push:
     branches: ['test/teacher-evidence-missing-object-error']
@@ -43,6 +44,9 @@ jobs:
 
           : "${API_URL:?Supabase local API_URL missing}"
           : "${SERVICE_ROLE_KEY:?Supabase local SERVICE_ROLE_KEY missing}"
+          echo "Verify the exact Supabase JS SDK remove() path used by the worker."
+          deno test --node-modules-dir=auto --allow-env --allow-net tests/teacher-evidence-local-storage-missing-object.integration.test.ts
+
           BUCKET="lmu-missing-object-test"
           OBJECT_PATH="fixture-only/missing-object-probe.txt"
           HEADERS=(-H "apikey: ${SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" -H "Content-Type: application/json")
