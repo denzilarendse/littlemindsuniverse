@@ -42,8 +42,8 @@ Deno.serve(async (req: Request) => {
 
   let body: { limit?: number; dryRun?: boolean } = {};
   try { body = await req.json(); } catch { /* use safe defaults */ }
-  const requestedLimit = Number(body.limit ?? 100);
-  const limit = Math.max(1, Math.min(Number.isFinite(requestedLimit) ? Math.trunc(requestedLimit) : 100, 500));
+  // Each item has a 10-minute lease; process one item per invocation until runtime tests justify batching.
+  const limit = 1;
   if (body.dryRun === true) {
     const { data: count, error } = await supabase.rpc("count_due_teacher_chat_evidence_retention_candidates");
     if (error) {
