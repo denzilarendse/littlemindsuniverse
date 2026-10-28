@@ -23,6 +23,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run worker missing-object failure-injection test
+        run: deno test --node-modules-dir=auto --allow-env --allow-net --allow-read tests/teacher-evidence-missing-object-error.test.ts
       - uses: supabase/setup-cli@v1
         with:
           version: latest
