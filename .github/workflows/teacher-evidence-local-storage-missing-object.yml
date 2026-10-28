@@ -1,0 +1,92 @@
+name: teacher-evidence-local-storage-missing-object
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/teacher-evidence-local-storage-missing-object.yml'
+      - 'tests/teacher-evidence-missing-object-error.test.ts'
+      - 'tests/teacher-evidence-local-storage-missing-object.integration.test.ts'
+      - 'supabase/functions/teacher-chat-evidence-retention/**'
+  push:
+    branches: ['test/teacher-evidence-missing-object-error']
+    paths:
+      - '.github/workflows/teacher-evidence-local-storage-missing-object.yml'
+      - 'tests/teacher-evidence-missing-object-error.test.ts'
+      - 'supabase/functions/teacher-chat-evidence-retention/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-storage-api:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run worker missing-object failure-injection test
+        run: deno test --node-modules-dir=auto --allow-env --allow-net --allow-read tests/teacher-evidence-missing-object-error.test.ts
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start disposable local Supabase stack
+        run: supabase start
+      - name: Verify deleting an already-absent object through the real local Storage API
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source <(supabase status -o env)
+          set +a
+
+          : "${API_URL:?Supabase local API_URL missing}"
+          : "${SERVICE_ROLE_KEY:?Supabase local SERVICE_ROLE_KEY missing}"
+          echo "Verify the exact Supabase JS SDK remove() path used by the worker."
+          deno test --node-modules-dir=auto --allow-env --allow-net tests/teacher-evidence-local-storage-missing-object.integration.test.ts
+
+          BUCKET="lmu-missing-object-test"
+          OBJECT_PATH="fixture-only/missing-object-probe.txt"
+          HEADERS=(-H "apikey: ${SERVICE_ROLE_KEY}" -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" -H "Content-Type: application/json")
+
+          bucket_code="$(curl -sS -o /tmp/bucket.json -w '%{http_code}' "${API_URL}/storage/v1/bucket" "${HEADERS[@]}" -X POST --data "{\"id\":\"$BUCKET\",\"name\":\"$BUCKET\",\"public\":false}")"
+          if [[ "$bucket_code" != "200" && "$bucket_code" != "201" && "$bucket_code" != "409" ]]; then
+            cat /tmp/bucket.json
+            echo "Bucket creation failed with HTTP $bucket_code"
+            exit 1
+          fi
+
+          printf 'LMU isolated storage fixture only\n' > /tmp/lmu-storage-probe.txt
+          upload_code="$(curl -sS -o /tmp/upload.json -w '%{http_code}' "${API_URL}/storage/v1/object/$BUCKET/$OBJECT_PATH" "${HEADERS[@]}" -X POST --data-binary @/tmp/lmu-storage-probe.txt)"
+          if [[ "$upload_code" != "200" && "$upload_code" != "201" ]]; then
+            cat /tmp/upload.json
+            echo "Fixture upload failed with HTTP $upload_code"
+            exit 1
+          fi
+
+          delete_body="{\"prefixes\":[\"$OBJECT_PATH\"]}"
+          first_code="$(curl -sS -o /tmp/delete-first.json -w '%{http_code}' "${API_URL}/storage/v1/object/$BUCKET" "${HEADERS[@]}" -X DELETE --data "$delete_body")"
+          if [[ "$first_code" != "200" ]]; then
+            cat /tmp/delete-first.json
+            echo "First deletion failed with HTTP $first_code"
+            exit 1
+          fi
+          second_code="$(curl -sS -o /tmp/delete-second.json -w '%{http_code}' "${API_URL}/storage/v1/object/$BUCKET" "${HEADERS[@]}" -X DELETE --data "$delete_body")"
+
+          echo "FIRST_DELETE_HTTP=$first_code"
+          echo "SECOND_DELETE_HTTP=$second_code"
+          echo "SECOND_DELETE_RESPONSE:"
+          cat /tmp/delete-second.json
+          echo
+
+          if [[ "$second_code" =~ ^2[0-9][0-9]$ ]]; then
+            echo "PASS: local Supabase Storage API treats repeated deletion of the absent object as successful."
+          else
+            echo "FAIL: local Supabase Storage API returned HTTP $second_code for an already-absent object."
+            exit 1
+          fi
+      - name: Stop disposable local Supabase stack
+        if: always()
+        run: if command -v supabase >/dev/null 2>&1; then supabase stop --no-backup; else echo "Supabase CLI was not installed; nothing to stop."; fi
