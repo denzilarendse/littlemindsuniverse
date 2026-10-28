@@ -48,6 +48,8 @@ test('camera flow has explicit permission, preview, retake, cancel and separate 
 
 test('quarantine migration is private, teacher-scoped, learner-scoped and defaults to pending scan', () => {
   assert.match(migration, /public = false/);
+  assert.match(migration, /file_size_limit[\s\S]*?20971520/);
+  assert.doesNotMatch(migration, /26214400/);
   assert.match(migration, /teacher-chat-evidence-quarantine/);
   assert.match(migration, /status text not null default 'pending_scan'/);
   assert.match(migration, /alter table public\.teacher_chat_evidence enable row level security/);
