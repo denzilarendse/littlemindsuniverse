@@ -21,6 +21,9 @@ test('teacher upload UI requires a live teacher and an active classroom learner'
   assert.match(moduleSource, /ctx\.mode === 'live' && ctx\.role === 'teacher'/);
   assert.match(moduleSource, /classroom_members/);
   assert.match(moduleSource, /register_teacher_chat_evidence/);
+  assert.match(moduleSource, /cleanupFailed = false/);
+  assert.match(moduleSource, /if \(cleanupError\) cleanupFailed = true/);
+  assert.match(moduleSource, /administrator cleanup is required/);
   assert.match(moduleSource, /pending security scan/);
   assert.match(moduleSource, /not been sent to Milo/);
 });
@@ -45,6 +48,8 @@ test('camera flow has explicit permission, preview, retake, cancel and separate 
 
 test('quarantine migration is private, teacher-scoped, learner-scoped and defaults to pending scan', () => {
   assert.match(migration, /public = false/);
+  assert.match(migration, /file_size_limit[\s\S]*?20971520/);
+  assert.doesNotMatch(migration, /26214400/);
   assert.match(migration, /teacher-chat-evidence-quarantine/);
   assert.match(migration, /status text not null default 'pending_scan'/);
   assert.match(migration, /alter table public\.teacher_chat_evidence enable row level security/);
