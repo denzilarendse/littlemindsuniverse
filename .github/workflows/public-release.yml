@@ -161,8 +161,52 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Fail before any production write if any release-critical input is missing.
+      # The frozen Connect APK is a distinct signed artifact; never substitute the LMU APK.
+      - name: Enforce production release gate before deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          if [ "${{ steps.signing.outputs.ready }}" != "true" ]; then
+            echo "::error::Release blocked: configure all four owner-controlled Android signing secrets."
+            exit 1
+          fi
+          if [ "${{ steps.signed_apk.outputs.published }}" != "true" ]; then
+            echo "::error::Release blocked: signed LMU APK verification/publication did not complete."
+            exit 1
+          fi
+          if [ "${{ steps.netlify.outputs.ready }}" != "true" ]; then
+            echo "::error::Release blocked: configure NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID."
+            exit 1
+          fi
+          if [ "$NETLIFY_SITE_ID" != "989d3b15-5ba4-42f7-8ba6-b53dc64fbd27" ]; then
+            echo "::error::Release blocked: NETLIFY_SITE_ID does not identify the approved littlemindsuniverse-app production site."
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { createHash } from 'node:crypto';
+          const apk = 'dist/downloads/LittleMinds-Connect-1.0.0.apk';
+          const checksum = 'dist/downloads/LittleMinds-Connect-1.0.0.sha256';
+          const expectedSize = 3024688;
+          const expectedHash = '65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb';
+          if (!fs.existsSync(apk) || !fs.statSync(apk).isFile()) {
+            throw new Error('Release blocked: frozen signed LittleMinds Connect APK is missing from dist/downloads.');
+          }
+          const bytes = fs.readFileSync(apk);
+          const actualHash = createHash('sha256').update(bytes).digest('hex');
+          if (bytes.length !== expectedSize) throw new Error(`Connect APK size mismatch: expected ${expectedSize}, got ${bytes.length}`);
+          if (actualHash !== expectedHash) throw new Error(`Connect APK SHA-256 mismatch: ${actualHash}`);
+          if (!fs.existsSync(checksum)) throw new Error('Release blocked: Connect SHA-256 sidecar is missing.');
+          const sidecar = fs.readFileSync(checksum, 'utf8').trim();
+          if (sidecar !== `${expectedHash}  LittleMinds-Connect-1.0.0.apk`) {
+            throw new Error('Release blocked: Connect checksum sidecar does not match the frozen artifact.');
+          }
+          console.log(`Frozen signed Connect APK verified: ${bytes.length} bytes; SHA-256 ${actualHash}`);
+          NODE
+
       - name: Deploy production web app to Netlify
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.netlify.outputs.ready == 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           npx --yes netlify-cli@27.12.1 deploy             --prod             --dir=dist             --functions=netlify/functions             --site="$NETLIFY_SITE_ID"             --auth="$NETLIFY_AUTH_TOKEN"             --json | tee netlify-deploy.json
@@ -175,8 +219,10 @@ jobs:
           test -n "$URL"
           curl --fail --silent --show-error --location "$URL/" > /tmp/lmu-index.html
           grep -qi 'LittleMinds' /tmp/lmu-index.html
-          curl --fail --silent --show-error --location "$URL/.netlify/functions/health" > /tmp/lmu-health.json
+          curl --fail --silent --show-error --location "$URL/api/health" > /tmp/lmu-health.json
           cat /tmp/lmu-health.json
+          # Verify the canonical public domain, security headers, health endpoint, and exact Connect APK.
+          npm run verify:play-production -- https://www.littlemindsuniverse.co.za
 
       - name: Upload Netlify deployment evidence
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.netlify.outputs.ready == 'true'
@@ -208,3 +254,4 @@ jobs:
               echo "- Production signing/deployment: intentionally not executed for pull_request"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
