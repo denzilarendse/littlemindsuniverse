@@ -310,6 +310,8 @@ Deno.test("Storage delete succeeds, metadata finalization fails, retry safely fi
   let claimCalls = 0;
   let finalizeCalls = 0;
   const finalizeTokens: string[] = [];
+  const claimTokens: string[] = [];
+  const deleteExistedBefore: boolean[] = [];
   const deletePaths: string[] = [];
   const rpcCalls: string[] = [];
   const client = {
@@ -318,6 +320,7 @@ Deno.test("Storage delete succeeds, metadata finalization fails, retry safely fi
       if (name === "verify_lmu_retention_secret") return { data: true, error: null };
       if (name === "claim_teacher_chat_evidence_retention_candidates") {
         claimCalls += 1;
+        claimTokens.push(String(args?.p_claim_token));
         // Model lease expiry/reclaim after the first worker crashes at metadata finalization.
         return { data: [{
           evidence_id: "retry-after-finalize-failure",
@@ -347,6 +350,7 @@ Deno.test("Storage delete succeeds, metadata finalization fails, retry safely fi
             removeCalls += 1;
             deletePaths.push(...paths);
             assertEquals(paths, [path]);
+            deleteExistedBefore.push(objectExists);
             // Model idempotent delete semantics: removing an already-absent object is successful.
             objectExists = false;
             return { error: null };
@@ -380,7 +384,9 @@ Deno.test("Storage delete succeeds, metadata finalization fails, retry safely fi
   assertEquals(objectExists, false);
   assertEquals(removeCalls, 2);
   assertEquals(deletePaths, [path, path]);
+  assertEquals(deleteExistedBefore, [true, false]);
   assertEquals(finalizeCalls, 2);
-  assertEquals(finalizeTokens, ["worker-token-1", "worker-token-2"]);
+  assertEquals(finalizeTokens, claimTokens);
+  assertEquals(new Set(claimTokens).size, 2, "each worker invocation uses a fresh claim token");
   assertEquals(claimCalls, 2);
 });
