@@ -41,6 +41,7 @@ test("scanner uses scheduler authorization, bounded batches and claim-token fina
   assert.match(migration, /One item per invocation[\s\S]*?limit 1/);
   assert.match(migration, /update public\.teacher_chat_evidence e[\s\S]*?set status = 'scan_failed'[\s\S]*?where e\.status = 'pending_scan'[\s\S]*?e\.scan_attempts >= 5/);
   assert.match(migration, /scan_attempts_exhausted/);
+  assert.match(migration, /if p_verdict is null or p_verdict not in \('clean','malicious','invalid','unknown'\)/);
   assert.match(migration, /new\.retention_delete_after := least\(coalesce\(new\.retention_delete_after/);
   assert.match(scan, /redirect: "error"/);
   assert.match(scan, /60_000/);
