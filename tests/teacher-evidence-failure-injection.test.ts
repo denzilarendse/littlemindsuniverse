@@ -68,7 +68,7 @@ function scannerHarness(options: {
           async download(path: string) {
             assertEquals(path, "teacher/class/learner/file.png");
             if (options.downloadError) return { data: null, error: { message: "injected download failure" } };
-            return { data: new Blob([options.bytes ?? PNG], { type: "image/png" }), error: null };
+            return { data: new Blob([(options.bytes ?? PNG).slice().buffer as ArrayBuffer], { type: "image/png" }), error: null };
           },
         };
       },
