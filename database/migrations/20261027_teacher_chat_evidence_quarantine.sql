@@ -6,7 +6,7 @@ values (
   'teacher-chat-evidence-quarantine',
   'teacher-chat-evidence-quarantine',
   false,
-  26214400,
+  20971520,
   array['image/jpeg','image/png','image/webp','application/pdf']::text[]
 )
 on conflict (id) do update
