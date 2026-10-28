@@ -75,6 +75,7 @@ begin
       updated_at = now()
   where e.status = 'pending_scan'
     and e.scan_attempts >= 5
+    and e.retention_delete_after > now()
     and (e.scan_claimed_at is null or e.scan_claimed_at < now() - interval '10 minutes')
     and (e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes');
 
