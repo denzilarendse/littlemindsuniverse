@@ -301,3 +301,92 @@ Deno.test("retention dry run never removes objects", async () => {
   assertEquals(body.deleted, 0);
   assertEquals(removeCalled, false);
 });
+
+
+Deno.test("Storage delete succeeds, metadata finalization fails, retry safely finalizes an already-missing object", async () => {
+  const path = "teacher/class/learner/finalize-retry.png";
+  let objectExists = true;
+  let removeCalls = 0;
+  let claimCalls = 0;
+  let finalizeCalls = 0;
+  const finalizeTokens: string[] = [];
+  const claimTokens: string[] = [];
+  const deleteExistedBefore: boolean[] = [];
+  const deletePaths: string[] = [];
+  const rpcCalls: string[] = [];
+  const client = {
+    async rpc(name: string, args?: Record<string, unknown>) {
+      rpcCalls.push(name);
+      if (name === "verify_lmu_retention_secret") return { data: true, error: null };
+      if (name === "claim_teacher_chat_evidence_retention_candidates") {
+        claimCalls += 1;
+        claimTokens.push(String(args?.p_claim_token));
+        // Model lease expiry/reclaim after the first worker crashes at metadata finalization.
+        return { data: [{
+          evidence_id: "retry-after-finalize-failure",
+          storage_path: path,
+          delete_reason: "retention_due",
+          claim_token: claimCalls === 1 ? "worker-token-1" : "worker-token-2",
+          attempt_number: claimCalls,
+        }], error: null };
+      }
+      if (name === "finalize_teacher_chat_evidence_retention") {
+        finalizeCalls += 1;
+        finalizeTokens.push(String(args?.p_claim_token));
+        if (finalizeCalls === 1) {
+          // Simulate RPC/transaction failure after Storage has already deleted the object.
+          return { data: null, error: { message: "injected metadata transaction failure" } };
+        }
+        return { data: true, error: null };
+      }
+      if (name === "release_teacher_chat_evidence_retention_claim") return { data: true, error: null };
+      return { data: null, error: { message: "unexpected RPC " + name } };
+    },
+    storage: {
+      from(bucket: string) {
+        assertEquals(bucket, "teacher-chat-evidence-quarantine");
+        return {
+          async remove(paths: string[]) {
+            removeCalls += 1;
+            deletePaths.push(...paths);
+            assertEquals(paths, [path]);
+            deleteExistedBefore.push(objectExists);
+            // Model idempotent delete semantics: removing an already-absent object is successful.
+            objectExists = false;
+            return { error: null };
+          },
+        };
+      },
+    },
+  };
+  const run = () => handleRetentionRequest(request("https://worker.invalid/"), {
+    env: envForRetention as never,
+    createClientImpl: (() => client) as never,
+  });
+
+  const first = await run();
+  const firstBody = await first.json();
+  assertEquals(first.status, 207);
+  assertEquals(firstBody.failed, 1);
+  assertEquals(firstBody.failures[0].stage, "metadata_finalize");
+  assertEquals(objectExists, false, "Storage deletion succeeded before metadata finalization failed");
+  assertEquals(finalizeCalls, 1);
+  assertEquals(rpcCalls.filter((name) => name === "release_teacher_chat_evidence_retention_claim").length, 0,
+    "failed finalization must retain the lease until expiry rather than releasing early");
+
+  // The next invocation represents a worker after lease expiry. Storage removal is repeated for
+  // the exact same path; metadata finalization then succeeds using the new claim token.
+  const second = await run();
+  const secondBody = await second.json();
+  assertEquals(second.status, 200);
+  assertEquals(secondBody.deleted, 1);
+  assertEquals(secondBody.failed, 0);
+  assertEquals(objectExists, false);
+  assertEquals(removeCalls, 2);
+  assertEquals(deletePaths, [path, path]);
+  assertEquals(deleteExistedBefore, [true, false]);
+  assertEquals(finalizeCalls, 2);
+  assertEquals(finalizeTokens, claimTokens);
+  assertEquals(new Set(claimTokens).size, 2, "each worker invocation uses a fresh claim token");
+  assertEquals(claimCalls, 2);
+});
