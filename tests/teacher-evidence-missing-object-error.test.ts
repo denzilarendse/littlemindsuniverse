@@ -24,11 +24,13 @@ Deno.test("worker fails closed when retry remove reports already-absent object a
   let finalizeCount = 0;
   let releaseCount = 0;
   const finalizeTokens: string[] = [];
+  const claimTokens: string[] = [];
   const client = {
     async rpc(name: string, args?: Record<string, unknown>) {
       if (name === "verify_lmu_retention_secret") return { data: true, error: null };
       if (name === "claim_teacher_chat_evidence_retention_candidates") {
         claimCount += 1;
+        claimTokens.push(String(args?.p_claim_token));
         return { data: [{
           evidence_id: "fixture-evidence",
           storage_path: path,
@@ -87,6 +89,7 @@ Deno.test("worker fails closed when retry remove reports already-absent object a
   assertEquals(removeCount, 2);
   assertEquals(finalizeCount, 1, "worker must not finalize metadata after an unclassified Storage error");
   assertEquals(releaseCount, 1, "worker releases claim after Storage error so retry can happen");
-  assertEquals(finalizeTokens, ["fixture-worker-1"]);
+  assertEquals(finalizeTokens, [claimTokens[0]], "finalization must use the actual claim token passed to the RPC");
+  assertEquals(new Set(claimTokens).size, 2, "each invocation receives a distinct claim token");
   assertEquals(claimCount, 2);
 });
