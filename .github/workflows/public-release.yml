@@ -219,7 +219,7 @@ jobs:
           test -n "$URL"
           curl --fail --silent --show-error --location "$URL/" > /tmp/lmu-index.html
           grep -qi 'LittleMinds' /tmp/lmu-index.html
-          curl --fail --silent --show-error --location "$URL/.netlify/functions/health" > /tmp/lmu-health.json
+          curl --fail --silent --show-error --location "$URL/api/health" > /tmp/lmu-health.json
           cat /tmp/lmu-health.json
           # Verify the canonical public domain, security headers, health endpoint, and exact Connect APK.
           npm run verify:play-production -- https://www.littlemindsuniverse.co.za
