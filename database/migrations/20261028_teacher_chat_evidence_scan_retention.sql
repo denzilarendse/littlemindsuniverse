@@ -346,7 +346,7 @@ begin
     elsif new.status = 'scan_failed' then
       new.retention_delete_after := now() + interval '1 day';
     elsif new.status in ('scan_passed','teacher_reviewed') then
-      new.retention_delete_after := new.created_at + interval '30 days';
+      new.retention_delete_after := least(coalesce(new.retention_delete_after, new.created_at + interval '30 days'), new.created_at + interval '30 days');
     end if;
   elsif new.status is distinct from old.status then
     if new.status = 'pending_scan' then
@@ -354,7 +354,7 @@ begin
     elsif new.status = 'scan_failed' then
       new.retention_delete_after := now() + interval '1 day';
     elsif new.status in ('scan_passed','teacher_reviewed') then
-      new.retention_delete_after := new.created_at + interval '30 days';
+      new.retention_delete_after := least(coalesce(new.retention_delete_after, new.created_at + interval '30 days'), new.created_at + interval '30 days');
     end if;
   end if;
   return new;
