@@ -31,3 +31,11 @@ If signing material is not present, the workflow produces only an unsigned relea
 ## Release boundaries
 
 A successful workflow does not waive LMU's child-safety, privacy, guardian-consent, teacher-control, Supabase authorization, physical-device, or store-review requirements. Google Play publication still requires owner-controlled Play Console steps and the Play app-signing certificate for Digital Asset Links.
+
+## Honest release-gate status
+
+On a push to `main`, the workflow now fails its release check if the owner-controlled Android signing secrets or Netlify deployment credentials are missing, or if signed-APK verification/publication did not complete. This prevents a successful candidate build with skipped production steps from appearing to be a completed production release.
+
+Pull-request runs remain preflight/build verification only: they intentionally do not sign or deploy production artifacts. A green pull-request run is not evidence of a signed APK, a Netlify production deployment, physical-device validation, or store readiness.
+
+The LMU public-release workflow builds the LMU Android app. LittleMinds Connect's frozen signed APK is a separate artifact with its own exact size/checksum and must be verified and packaged through the Connect release preparation workflow; the LMU APK must never be substituted for it.
