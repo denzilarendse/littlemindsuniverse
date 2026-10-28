@@ -29,4 +29,4 @@ jobs:
         with:
           deno-version: v2.x
       - name: Run isolated worker failure-injection tests
-        run: deno test --allow-env --allow-net --allow-read tests/teacher-evidence-failure-injection.test.ts
+        run: deno test --node-modules-dir=auto --allow-env --allow-net --allow-read tests/teacher-evidence-failure-injection.test.ts
