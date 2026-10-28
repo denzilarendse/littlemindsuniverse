@@ -12,7 +12,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function adminKey(): string | null {
+function adminKey(env: typeof Deno.env = Deno.env): string | null {
   const modern = env.get("SUPABASE_SECRET_KEYS");
   if (modern) {
     try {
@@ -39,7 +39,7 @@ function matchesSignature(bytes: Uint8Array, mime: string): boolean {
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes).buffer as ArrayBuffer);
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -84,7 +84,7 @@ export async function handleScanRequest(
   if (!/^[a-f0-9]{64}$/i.test(cronSecret)) return json({ ok: false, error: "unauthorized" }, 401);
 
   const url = env.get("SUPABASE_URL");
-  const key = adminKey();
+  const key = adminKey(env);
   const scannerUrl = env.get("LMU_CONTENT_SCANNER_URL")?.trim() ?? "";
   const scannerToken = env.get("LMU_CONTENT_SCANNER_TOKEN") ?? "";
   if (!url || !key || !scannerUrl || !scannerToken) {
@@ -245,4 +245,4 @@ export async function handleScanRequest(
   return json({ ok: deferred === 0, candidates: rows.length, passed, failed, deferred, outcomes }, deferred === 0 ? 200 : 207);
 }
 
-if (import.meta.main) Deno.serve(handleScanRequest);
+if (import.meta.main) Deno.serve((req: Request) => handleScanRequest(req));
