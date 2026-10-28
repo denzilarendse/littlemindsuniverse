@@ -282,6 +282,7 @@
     const evidenceId = window.crypto?.randomUUID ? window.crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => { const random = Math.random() * 16 | 0; return (char === 'x' ? random : (random & 3 | 8)).toString(16); });
     const storagePath = ctx.userId + '/' + classroomId + '/' + learnerId + '/' + evidenceId + '.' + extension;
     let uploaded = false;
+    let cleanupFailed = false;
     try {
       const { error: uploadError } = await ctx.supabase.storage.from('teacher-chat-evidence-quarantine').upload(storagePath, file, { cacheControl: '0', contentType: file.type, upsert: false });
       if (uploadError) throw uploadError;
