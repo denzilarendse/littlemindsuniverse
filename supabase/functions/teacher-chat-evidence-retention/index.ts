@@ -10,7 +10,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function adminKey(): string | null {
+function adminKey(env: typeof Deno.env = Deno.env): string | null {
   const modern = env.get("SUPABASE_SECRET_KEYS");
   if (modern) {
     try {
@@ -33,7 +33,7 @@ export async function handleRetentionRequest(
   if (!/^[a-f0-9]{64}$/i.test(cronSecret)) return json({ ok: false, error: "unauthorized" }, 401);
 
   const url = env.get("SUPABASE_URL");
-  const key = adminKey();
+  const key = adminKey(env);
   if (!url || !key) {
     console.error("[teacher-evidence-retention] Supabase admin environment unavailable");
     return json({ ok: false, error: "server_not_configured" }, 503);
@@ -122,4 +122,4 @@ export async function handleRetentionRequest(
   return json({ ok: failed === 0, candidates: rows.length, deleted, failed, failures }, failed === 0 ? 200 : 207);
 }
 
-if (import.meta.main) Deno.serve(handleRetentionRequest);
+if (import.meta.main) Deno.serve((req: Request) => handleRetentionRequest(req));
