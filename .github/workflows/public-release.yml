@@ -208,3 +208,23 @@ jobs:
               echo "- Production signing/deployment: intentionally not executed for pull_request"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # A successful build without owner-controlled signing and Netlify credentials is
+      # only a candidate build. Fail the main-branch release check instead of reporting
+      # a green release when production actions were skipped.
+      - name: Enforce production release gate on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          if [ "${{ steps.signing.outputs.ready }}" != "true" ]; then
+            echo "::error::Release blocked: configure all four owner-controlled Android signing secrets."
+            exit 1
+          fi
+          if [ "${{ steps.signed_apk.outputs.published }}" != "true" ]; then
+            echo "::error::Release blocked: signed APK verification/publication did not complete."
+            exit 1
+          fi
+          if [ "${{ steps.netlify.outputs.ready }}" != "true" ]; then
+            echo "::error::Release blocked: configure NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID."
+            exit 1
+          fi
