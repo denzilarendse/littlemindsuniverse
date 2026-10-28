@@ -5,9 +5,10 @@ on:
     paths:
       - 'database/migrations/20261028_teacher_chat_evidence_scan_retention.sql'
       - 'tests/sql/teacher-evidence-scan-retention.integration.sql'
+      - 'tests/sql/teacher-evidence-claim-recovery-concurrency.sh'
       - '.github/workflows/teacher-evidence-scan-retention-postgres-runtime.yml'
   push:
-    branches: ['test/teacher-evidence-sql-runtime']
+    branches: ['test/teacher-evidence-sql-runtime', 'test/teacher-evidence-claim-recovery']
     paths:
       - 'database/migrations/20261028_teacher_chat_evidence_scan_retention.sql'
       - 'tests/sql/teacher-evidence-scan-retention.integration.sql'
@@ -54,3 +55,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -c "CREATE ROLE service_role NOLOGIN BYPASSRLS"
       - name: Apply exact migration and run worker RPC assertions
         run: psql -v ON_ERROR_STOP=1 -f tests/sql/teacher-evidence-scan-retention.integration.sql
+      - name: Exercise concurrent claims and interrupted-worker recovery
+        run: bash tests/sql/teacher-evidence-claim-recovery-concurrency.sh
