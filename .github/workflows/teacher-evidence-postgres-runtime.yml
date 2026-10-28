@@ -1,0 +1,56 @@
+name: teacher-evidence-postgres-runtime
+
+on:
+  pull_request:
+    paths:
+      - 'database/migrations/20261029_teacher_chat_evidence_orphan_audit.sql'
+      - 'tests/sql/teacher-evidence-orphan-reconciliation.integration.sql'
+      - '.github/workflows/teacher-evidence-postgres-runtime.yml'
+  push:
+    branches: ['test/teacher-evidence-postgres-runtime']
+    paths:
+      - 'database/migrations/20261029_teacher_chat_evidence_orphan_audit.sql'
+      - 'tests/sql/teacher-evidence-orphan-reconciliation.integration.sql'
+      - '.github/workflows/teacher-evidence-postgres-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-runtime-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lmu_orphan_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lmu_orphan_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: lmu_orphan_test
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Create isolated Supabase-shaped test roles
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "CREATE ROLE anon NOLOGIN"
+          psql -v ON_ERROR_STOP=1 -c "CREATE ROLE authenticated NOLOGIN"
+          psql -v ON_ERROR_STOP=1 -c "CREATE ROLE service_role NOLOGIN BYPASSRLS"
+      - name: Execute exact migration and SQL runtime assertions
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/teacher-evidence-orphan-reconciliation.integration.sql
