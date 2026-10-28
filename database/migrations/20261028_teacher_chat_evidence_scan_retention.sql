@@ -62,6 +62,22 @@ begin
     raise exception 'Service role required.';
   end if;
   if p_claim_token is null then raise exception 'Claim token required.'; end if;
+  -- A worker can crash after claiming its fifth attempt. Fail closed after the lease expires
+  -- instead of leaving the row pending_scan until the seven-day retention deadline.
+  update public.teacher_chat_evidence e
+  set status = 'scan_failed',
+      scan_verdict = 'unknown',
+      scan_result_code = 'scan_attempts_exhausted',
+      scan_completed_at = coalesce(e.scan_completed_at, now()),
+      scan_claim_token = null,
+      scan_claimed_at = null,
+      retention_delete_after = now() + interval '1 day',
+      updated_at = now()
+  where e.status = 'pending_scan'
+    and e.scan_attempts >= 5
+    and (e.scan_claimed_at is null or e.scan_claimed_at < now() - interval '10 minutes')
+    and (e.retention_claimed_at is null or e.retention_claimed_at < now() - interval '10 minutes');
+
   return query
   with candidates as (
     select e.id
