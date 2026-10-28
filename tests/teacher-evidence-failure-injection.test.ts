@@ -57,7 +57,7 @@ function scannerHarness(options: {
       if (name === "complete_teacher_chat_evidence_scan") {
         return options.completionError
           ? { data: null, error: { message: "injected completion failure" } }
-          : { data: options.finalStatus ?? (args?.p_verdict === "clean" ? "scan_passed" : "pending_scan"), error: null };
+          : { data: options.finalStatus ?? (args?.p_verdict === "clean" ? "scan_passed" : ["malicious", "invalid"].includes(String(args?.p_verdict)) ? "scan_failed" : "pending_scan"), error: null };
       }
       return { data: null, error: { message: "unexpected RPC " + name } };
     },
