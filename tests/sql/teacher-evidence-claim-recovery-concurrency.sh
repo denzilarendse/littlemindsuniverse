@@ -33,7 +33,7 @@ grep -q "$scan_id" "$tmpdir/scan-a.out" || { echo 'FAIL: scan worker A did not c
 
 # Simulate worker A crashing: after the 10-minute lease expires, worker B must recover the row.
 psqlq -c "UPDATE public.teacher_chat_evidence SET scan_claimed_at=now()-interval '11 minutes' WHERE id='$scan_id';"
-scan_recovery="$(psqlq -c "$role_sql SELECT evidence_id || '|' || attempt_number FROM public.claim_teacher_chat_evidence_scan_candidates(1, '$scan_b');")"
+scan_recovery="$(psqlq -c "$role_sql SELECT evidence_id::text || '|' || attempt_number::text FROM public.claim_teacher_chat_evidence_scan_candidates(1, '$scan_b');")"
 [[ "$scan_recovery" == "$scan_id|2" ]] || { echo "FAIL: expired scan lease not recovered as attempt 2: $scan_recovery"; exit 1; }
 if stale_scan="$(psqlq -c "$role_sql SELECT public.complete_teacher_chat_evidence_scan('$scan_id', '$scan_a', 'clean', 'test', '1', 'stale_worker');" 2>&1)"; then
   echo 'FAIL: stale scan worker unexpectedly completed after lease recovery'; exit 1
