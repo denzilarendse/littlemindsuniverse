@@ -52,7 +52,7 @@ test("retention worker has read-only dry run and idempotent storage cleanup", ()
   assert.match(retention, /finalize_teacher_chat_evidence_retention/);
   assert.match(retention, /release_teacher_chat_evidence_retention_claim/);
   assert.match(retention, /const limit = 1;/);
-  assert.match(migration, /One item per invocation avoids lease expiry[\\s\\S]*?limit 1/);
+  assert.match(migration, /One item per invocation avoids lease expiry[\s\S]*?limit 1/);
   assert.match(retention, /supabase\.storage\.from\(BUCKET\)\.remove\(\[storagePath\]\)/);
   assert.match(retention, /teacher-chat-evidence-quarantine/);
 });
