@@ -13,6 +13,8 @@ Production deployment uses the existing root `netlify.toml`, `dist` output and `
 - `NETLIFY_AUTH_TOKEN`
 - `NETLIFY_SITE_ID`
 
+The workflow also checks that `NETLIFY_SITE_ID` equals the approved production project ID for `littlemindsuniverse-app` (`989d3b15-5ba4-42f7-8ba6-b53dc64fbd27`) before it can deploy. This prevents a valid token paired with the wrong site ID from publishing to a similarly named site.
+
 The Netlify token must remain a repository secret and must never be committed. After deployment the workflow performs a homepage smoke check and calls the Netlify health function.
 
 ## Signed public Android APK
