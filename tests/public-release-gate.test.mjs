@@ -21,6 +21,7 @@ assert.match(workflow, /LittleMinds-Connect-1\.0\.0\.apk/);
 assert.match(workflow, /expectedSize = 3024688/);
 assert.match(workflow, /65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb/);
 assert.match(workflow, /verify:play-production -- https:\/\/www\.littlemindsuniverse\.co\.za/);
+assert.match(workflow, /\$URL\/api\/health/, 'smoke test must use the configured Netlify /api/health route');
 assert.match(docs, /fails \*\*before production deployment\*\*/);
 assert.match(docs, /checksum sidecar but not the APK binary/);
 
