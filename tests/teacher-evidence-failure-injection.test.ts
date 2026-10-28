@@ -146,7 +146,7 @@ Deno.test("scanner timeout fails closed and finalizes as unknown/pending", async
   const h = scannerHarness({ scannerThrows: new DOMException("injected timeout", "AbortError") });
   const response = await h.run();
   const body = await response.json();
-  assertEquals(response.status, 200);
+  assertEquals(response.status, 207);
   assertEquals(body.passed, 0);
   assertEquals(body.deferred, 1);
   assertEquals(h.scannerCalls(), 1);
@@ -160,7 +160,7 @@ Deno.test("scanner malformed JSON response fails closed", async () => {
   const h = scannerHarness({ scannerResponse: new Response("{not-json", { status: 200 }) });
   const response = await h.run();
   const body = await response.json();
-  assertEquals(response.status, 200);
+  assertEquals(response.status, 207);
   assertEquals(body.deferred, 1);
   const completion = h.calls.find((c) => c.name === "complete_teacher_chat_evidence_scan")!;
   assertEquals(completion.args?.p_verdict, "unknown");
@@ -171,7 +171,7 @@ Deno.test("scanner oversized response fails closed without accepting verdict", a
   const h = scannerHarness({ scannerResponse: new Response("x".repeat(5000), { status: 200 }) });
   const response = await h.run();
   const body = await response.json();
-  assertEquals(response.status, 200);
+  assertEquals(response.status, 207);
   assertEquals(body.deferred, 1);
   const completion = h.calls.find((c) => c.name === "complete_teacher_chat_evidence_scan")!;
   assertEquals(completion.args?.p_verdict, "unknown");
@@ -184,7 +184,7 @@ Deno.test("scanner hash mismatch is never accepted as clean", async () => {
   }), { status: 200 }) });
   const response = await h.run();
   const body = await response.json();
-  assertEquals(response.status, 200);
+  assertEquals(response.status, 207);
   assertEquals(body.deferred, 1);
   const completion = h.calls.find((c) => c.name === "complete_teacher_chat_evidence_scan")!;
   assertEquals(completion.args?.p_verdict, "unknown");
