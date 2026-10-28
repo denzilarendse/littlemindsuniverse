@@ -224,7 +224,8 @@ begin
       )
     order by e.retention_delete_after nulls first, e.created_at
     for update skip locked
-    limit greatest(1, least(coalesce(p_limit, 100), 500))
+    -- One item per invocation avoids lease expiry while storage deletion/finalization is sequential.
+    limit 1
   ), claimed as (
     update public.teacher_chat_evidence e
     set retention_claim_token = p_claim_token,
