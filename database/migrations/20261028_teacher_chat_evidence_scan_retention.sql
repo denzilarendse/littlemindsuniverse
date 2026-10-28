@@ -127,7 +127,7 @@ begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'Service role required.';
   end if;
-  if p_verdict not in ('clean','malicious','invalid','unknown') then
+  if p_verdict is null or p_verdict not in ('clean','malicious','invalid','unknown') then
     raise exception 'Invalid scan verdict.';
   end if;
   select e.scan_attempts into v_attempts
