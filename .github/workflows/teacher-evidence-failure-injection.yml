@@ -1,0 +1,32 @@
+name: teacher-evidence-failure-injection
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/teacher-chat-evidence-scan/**'
+      - 'supabase/functions/teacher-chat-evidence-retention/**'
+      - 'tests/teacher-evidence-failure-injection.test.ts'
+      - '.github/workflows/teacher-evidence-failure-injection.yml'
+  push:
+    branches: ['test/teacher-evidence-failure-injection']
+    paths:
+      - 'supabase/functions/teacher-chat-evidence-scan/**'
+      - 'supabase/functions/teacher-chat-evidence-retention/**'
+      - 'tests/teacher-evidence-failure-injection.test.ts'
+      - '.github/workflows/teacher-evidence-failure-injection.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  worker-failure-injection:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run isolated worker failure-injection tests
+        run: deno test --node-modules-dir=auto --allow-env --allow-net --allow-read tests/teacher-evidence-failure-injection.test.ts
