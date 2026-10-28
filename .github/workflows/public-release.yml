@@ -179,6 +179,10 @@ jobs:
             echo "::error::Release blocked: configure NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID."
             exit 1
           fi
+          if [ "$NETLIFY_SITE_ID" != "989d3b15-5ba4-42f7-8ba6-b53dc64fbd27" ]; then
+            echo "::error::Release blocked: NETLIFY_SITE_ID does not identify the approved littlemindsuniverse-app production site."
+            exit 1
+          fi
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import { createHash } from 'node:crypto';
