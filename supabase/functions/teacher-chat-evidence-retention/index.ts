@@ -11,29 +11,35 @@ function json(body: unknown, status = 200) {
 }
 
 function adminKey(): string | null {
-  const modern = Deno.env.get("SUPABASE_SECRET_KEYS");
+  const modern = env.get("SUPABASE_SECRET_KEYS");
   if (modern) {
     try {
       const parsed = JSON.parse(modern) as Record<string, string>;
       if (typeof parsed.default === "string" && parsed.default.length > 0) return parsed.default;
     } catch { /* fall through to legacy server-only key */ }
   }
-  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? null;
+  return env.get("SUPABASE_SERVICE_ROLE_KEY") ?? null;
 }
 
-Deno.serve(async (req: Request) => {
+export async function handleRetentionRequest(
+  req: Request,
+  overrides: { env?: typeof Deno.env; createClientImpl?: typeof createClient; fetchImpl?: typeof fetch } = {},
+) {
+  const env = overrides.env ?? Deno.env;
+  const createClientImpl = overrides.createClientImpl ?? createClient;
+  const fetchImpl = overrides.fetchImpl ?? fetch;
   if (req.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
   const cronSecret = req.headers.get("x-lmu-cron-secret")?.trim() ?? "";
   if (!/^[a-f0-9]{64}$/i.test(cronSecret)) return json({ ok: false, error: "unauthorized" }, 401);
 
-  const url = Deno.env.get("SUPABASE_URL");
+  const url = env.get("SUPABASE_URL");
   const key = adminKey();
   if (!url || !key) {
     console.error("[teacher-evidence-retention] Supabase admin environment unavailable");
     return json({ ok: false, error: "server_not_configured" }, 503);
   }
 
-  const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const supabase = createClientImpl(url, key, { global: { fetch: fetchImpl }, auth: { persistSession: false, autoRefreshToken: false } });
   const { data: authorized, error: authError } = await supabase.rpc("verify_lmu_retention_secret", { p_secret: cronSecret });
   if (authError || authorized !== true) {
     if (authError) console.error("[teacher-evidence-retention] scheduler authorization failed");
@@ -114,4 +120,6 @@ Deno.serve(async (req: Request) => {
 
   console.log("[teacher-evidence-retention] run complete", { claimed: rows.length, deleted, failed });
   return json({ ok: failed === 0, candidates: rows.length, deleted, failed, failures }, failed === 0 ? 200 : 207);
-});
+}
+
+if (import.meta.main) Deno.serve(handleRetentionRequest);
