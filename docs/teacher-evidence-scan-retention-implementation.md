@@ -53,7 +53,7 @@ The chosen scanner must be a trusted private service with documented file-size l
 - Scan failures expire after 1 day.
 - Scan-passed or teacher-reviewed items expire no later than 30 days after creation.
 - Teacher-deleted items whose storage removal failed are retried because the metadata row remains with `status = deleted` and no `storage_deleted_at`.
-- Cleanup claims are bounded, lease-based and idempotent. Storage deletion is attempted before metadata finalization; failures release the claim with exponential backoff, while finalization failures can be retried after the lease expires.
+- Cleanup claims are lease-based and idempotent. The worker claims one item per invocation because storage deletion and metadata finalization are sequential and the lease is 10 minutes; batching is deferred until runtime evidence supports safe lease renewal or concurrency. Storage deletion is attempted before metadata finalization; failures release the claim with exponential backoff, while finalization failures can be retried after the lease expires.
 - The cleanup worker supports a read-only dry run through the service-only count RPC.
 
 These are proposed technical defaults pending product/privacy-policy approval. They must be reviewed against legal retention obligations before real student work is used.
