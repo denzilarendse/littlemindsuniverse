@@ -34,8 +34,10 @@ A successful workflow does not waive LMU's child-safety, privacy, guardian-conse
 
 ## Honest release-gate status
 
-On a push to `main`, the workflow now fails its release check if the owner-controlled Android signing secrets or Netlify deployment credentials are missing, or if signed-APK verification/publication did not complete. This prevents a successful candidate build with skipped production steps from appearing to be a completed production release.
+On a push to `main`, the workflow fails **before production deployment** if any of the owner-controlled LMU Android signing secrets or Netlify deployment credentials are missing, if signed LMU APK verification/publication did not complete, or if the exact frozen signed LittleMinds Connect APK is missing from `dist/downloads` or fails its pinned size, SHA-256, or sidecar checks.
+
+The frozen Connect artifact is **3,024,688 bytes**, SHA-256 `65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb`. It is a separate artifact from the LMU APK; the LMU APK must never be substituted. The source repository currently has the checksum sidecar but not the APK binary, so production deployment must remain blocked until the exact owner-signed artifact is recovered into the build's `downloads/` source directory and verified.
+
+After deployment, the workflow smoke-tests the generated Netlify deploy URL and runs `npm run verify:play-production -- https://www.littlemindsuniverse.co.za` against the canonical public domain. That production verifier checks the live site's health/security baseline and downloads the Connect APK to verify its HTTP headers, exact byte size, and SHA-256. A successful build alone does not establish a successful deploy or a working download.
 
 Pull-request runs remain preflight/build verification only: they intentionally do not sign or deploy production artifacts. A green pull-request run is not evidence of a signed APK, a Netlify production deployment, physical-device validation, or store readiness.
-
-The LMU public-release workflow builds the LMU Android app. LittleMinds Connect's frozen signed APK is a separate artifact with its own exact size/checksum and must be verified and packaged through the Connect release preparation workflow; the LMU APK must never be substituted for it.
