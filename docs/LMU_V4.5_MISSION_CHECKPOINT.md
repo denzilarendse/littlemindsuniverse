@@ -90,7 +90,7 @@ Current PR head: `7d089f8af9e69c634ef321d8904a2613f4776a23`.
 
 - Vercel project `littlemindsuniverse` exists; project reports `live=false`.
 - Main deployment `dpl_5QEGkWY1Xq9TY56BhEC7STcb3Ne6` is READY and records exact main SHA `91289ae8796af660c287a8f94936c94b383b9879`.
-- Earlier PR #108 preview deployment `dpl_EnW1rLtLdiagsUKYa1mSLWcjaQEt` is READY for SHA `05f42642262ccd9be052522163dfb822c29529cf`; it is stale relative to current PR head `7d089f8...`. Current-head preview must be refreshed and tested.
+- Current PR #108 Vercel preview deployment `dpl_9fRnRnefRfcXojVyMCHTUAPLYU8D` is READY and records exact current head SHA `7d089f8af9e69c634ef321d8904a2613f4776a23`. SSO/deployment protection remains enabled; protected runtime smoke testing was not performed.
 - SSO/deployment protection is enabled for non-custom-domain deployments. Runtime/browser smoke testing was not performed. The available protected-URL fetch creates or reuses a temporary share link accessible to anyone with the link; no share link was created without authorization.
 
 ### Supabase isolation — BLOCKED pending approval
