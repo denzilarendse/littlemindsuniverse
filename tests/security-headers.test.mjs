@@ -29,10 +29,12 @@ test('Vercel ships a restrictive CSP for the static app and Connect', () => {
   assert.match(csp, /object-src 'none'/);
   assert.match(csp, /frame-ancestors 'self'/);
   assert.match(csp, /script-src 'self' https:\/\/cdn\.jsdelivr\.net/);
-  assert.match(csp, /connect-src 'self' https:\/\/zcokxljcsfkrlouzragv\.supabase\.co wss:\/\/zcokxljcsfkrlouzragv\.supabase\.co/);
+  assert.match(csp, /connect-src 'self' https:\/\/zcokxljcsfkrlouzragv\.supabase\.co(?: https:\/\/klfvrawkieyqefbpzywq\.supabase\.co)? wss:\/\/zcokxljcsfkrlouzragv\.supabase\.co/);
   assert.match(csp, /form-action 'self';/);
   assert.doesNotMatch(csp, /payfast/i);
   assert.doesNotMatch(csp, /unsafe-eval|default-src \*/i);
+  assert.match(csp, /https:\/\/klfvrawkieyqefbpzywq\.supabase\.co/);
+  assert.match(csp, /wss:\/\/klfvrawkieyqefbpzywq\.supabase\.co/);
 });
 
 test('Vercel adds transport and browser-isolation hardening', () => {
