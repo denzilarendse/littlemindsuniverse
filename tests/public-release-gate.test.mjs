@@ -20,7 +20,7 @@ assert.ok(previewSmokeIndex > previewIndex, 'preview smoke tests must follow pre
 assert.ok(gateIndex > previewSmokeIndex, 'production gate must wait for preview smoke tests');
 assert.ok(deployIndex > gateIndex, 'production gate must execute before Netlify production deploy');
 assert.ok(smokeIndex > deployIndex, 'production smoke tests must execute after Netlify deploy');
-assert.match(workflow, /inputs\\.confirm_production == true/, 'production promotion must require explicit manual confirmation');
+assert.ok(workflow.includes('inputs.confirm_production == true'), 'production promotion must require explicit manual confirmation');
 assert.match(workflow, /workflow_dispatch:/);
 assert.match(workflow, /steps\.signing\.outputs\.ready/);
 assert.match(workflow, /steps\.signed_apk\.outputs\.published/);
