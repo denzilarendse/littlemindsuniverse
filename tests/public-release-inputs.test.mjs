@@ -8,6 +8,8 @@ import {
   CONNECT_APK_FILENAME,
   CONNECT_APK_SIZE,
   CONNECT_APK_SHA256,
+  CONNECT_APK_CERT_SHA256,
+  verifyConnectApkSignature,
   verifyConnectChecksumSidecar,
   verifyPublicReleaseInputs
 } from '../scripts/verify-public-release-inputs.mjs';
@@ -76,5 +78,30 @@ test('checksum sidecar accepts only the pinned frozen APK digest and filename', 
   assert.throws(
     () => verifyConnectChecksumSidecar(`0000000000000000000000000000000000000000000000000000000000000000  ${CONNECT_APK_FILENAME}`),
     /does not match the frozen artifact/
+  );
+});
+
+test('release gate verifies the frozen Connect APK signer certificate', () => {
+  const root = temporaryRoot();
+  const buildTools = path.join(root, 'build-tools', '36.0.0');
+  fs.mkdirSync(buildTools, { recursive: true });
+  const apksigner = path.join(buildTools, 'apksigner');
+  fs.writeFileSync(apksigner, '');
+  const apkPath = path.join(root, CONNECT_APK_FILENAME);
+  fs.writeFileSync(apkPath, 'synthetic-apk');
+  const expected = CONNECT_APK_CERT_SHA256;
+  const result = verifyConnectApkSignature({
+    apkPath,
+    androidHome: root,
+    execFileSyncImpl: () => `Signer #1 certificate SHA-256 digest: ${expected}`
+  });
+  assert.equal(result.certificateSha256, expected);
+  assert.throws(
+    () => verifyConnectApkSignature({
+      apkPath,
+      androidHome: root,
+      execFileSyncImpl: () => 'Signer #1 certificate SHA-256 digest: 0000000000000000000000000000000000000000000000000000000000000000'
+    }),
+    /signer certificate mismatch/
   );
 });
