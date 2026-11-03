@@ -111,6 +111,19 @@ Projects observed:
 Supabase returned a development-branch estimate of **US$0.01344/hour**. Continuous use is approximately **US$0.32256/day** or **US$9.6768 per 30 days**, before additional usage charges/taxes. A new development branch would receive a fresh database with production migrations applied and no production data copied. No branch/project has been created. Explicit approval and organization confirmation are required.
 
 
+### Production database governance spot-check — READ ONLY
+
+Read-only catalog inspection of the live production schema was performed; no learner rows or secrets were queried and no data was modified.
+
+- The production schema contains a real evidence/review path: `create_learner_evidence_item` (learner-owned submission and consent checks), `decide_learner_evidence` (verified guardian evidence permission only), `review_learner_submission_v2` (requires the authenticated user to own the learning item's assigned teacher profile and the submission to be submitted), and an AFTER INSERT/UPDATE trigger on `submission_reviews` that calls `sync_review_to_mastery`.
+- `review_learner_submission_v2` sets `independent_evidence` only when assistance level is zero and the submission actor is the learner. It blocks teacher review while guardian evidence approval is pending.
+- `sync_review_to_mastery` writes teacher-review evidence to `mastery_evidence` and calls the server-only `refresh_learner_skill_mastery`. The refresh function's EXECUTE ACL is postgres-only.
+- `submission_reviews` has RLS policies that constrain insert/update to the authenticated assigned learning-item teacher; the learner/guardian paths cannot write teacher reviews through these policies.
+- No public `approve_mastery` function exists in the live schema. The earlier uploaded starter package's `approve_mastery()` finding therefore must not be conflated with the current production database; that ZIP was not verified as canonical source.
+- The helper functions establish assignment ownership by matching `teacher_profile_id=auth.uid()`; the spot-check did not independently establish every profile-role/data-integrity invariant.
+- The review function upserts on unique submission ID and then transitions the recipient from `submitted` to `reviewed`; this appears to provide a transactional duplicate/concurrency guard, but concurrent execution, retries, rejection, audit history and adaptive recommendation outcomes have NOT been tested.
+- This is schema/function inspection only. It does not prove runtime RLS behaviour, tenant isolation or the complete mastery pipeline. Those tests remain BLOCKED pending an approved isolated database.
+
 ### Production Supabase advisor snapshot — READ ONLY
 
 Read-only advisor checks were run against production at 2026-11-03 00:39 UTC. No SQL writes or schema changes were made.
