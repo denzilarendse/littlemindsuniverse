@@ -53,17 +53,11 @@ permissions:
 jobs:
   verify-package-deploy:
     runs-on: ubuntu-24.04
-    env:
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-      LMU_ANDROID_KEYSTORE_BASE64: ${{ secrets.LMU_ANDROID_KEYSTORE_BASE64 }}
-      LMU_ANDROID_STORE_PASSWORD: ${{ secrets.LMU_ANDROID_STORE_PASSWORD }}
-      LMU_ANDROID_KEY_ALIAS: ${{ secrets.LMU_ANDROID_KEY_ALIAS }}
-      LMU_ANDROID_KEY_PASSWORD: ${{ secrets.LMU_ANDROID_KEY_PASSWORD }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Node 22
         uses: actions/setup-node@v7
@@ -92,6 +86,12 @@ jobs:
 
       - name: Detect owner release-signing material
         id: signing
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse'
+        env:
+          LMU_ANDROID_KEYSTORE_BASE64: ${{ secrets.LMU_ANDROID_KEYSTORE_BASE64 }}
+          LMU_ANDROID_STORE_PASSWORD: ${{ secrets.LMU_ANDROID_STORE_PASSWORD }}
+          LMU_ANDROID_KEY_ALIAS: ${{ secrets.LMU_ANDROID_KEY_ALIAS }}
+          LMU_ANDROID_KEY_PASSWORD: ${{ secrets.LMU_ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           if [ -n "$LMU_ANDROID_KEYSTORE_BASE64" ] &&
@@ -104,7 +104,12 @@ jobs:
           fi
 
       - name: Prepare owner-controlled Android signing
-        if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
+        if: github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
+        env:
+          LMU_ANDROID_KEYSTORE_BASE64: ${{ secrets.LMU_ANDROID_KEYSTORE_BASE64 }}
+          LMU_ANDROID_STORE_PASSWORD: ${{ secrets.LMU_ANDROID_STORE_PASSWORD }}
+          LMU_ANDROID_KEY_ALIAS: ${{ secrets.LMU_ANDROID_KEY_ALIAS }}
+          LMU_ANDROID_KEY_PASSWORD: ${{ secrets.LMU_ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           umask 077
@@ -124,7 +129,7 @@ jobs:
 
       - name: Verify and publish signed APK into web bundle
         id: signed_apk
-        if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
+        if: github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
         shell: bash
         run: |
           APK="android/app/build/outputs/apk/release/app-release.apk"
@@ -165,6 +170,10 @@ jobs:
 
       - name: Detect Netlify deployment credentials
         id: netlify
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         shell: bash
         run: |
           if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
@@ -175,8 +184,14 @@ jobs:
 
       - name: Require Netlify credentials for a main-branch preview
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         shell: bash
         run: |
+          if [ "$GITHUB_ACTOR" != "denzilarendse" ]; then
+            echo "::error::Only the repository owner may access release deployment credentials."
+            exit 1
+          fi
           if [ "${{ steps.netlify.outputs.ready }}" != "true" ]; then
             echo "::error::Preview blocked: configure NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID."
             exit 1
@@ -188,10 +203,13 @@ jobs:
 
       - name: Deploy release candidate preview to Netlify
         id: netlify_preview
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         shell: bash
         run: |
-          npx --yes netlify-cli@27.12.1 deploy --dir=dist --functions=netlify/functions --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --json | tee netlify-preview.json
+          npx --yes netlify-cli@27.12.1 deploy --dir=dist --functions=netlify/functions --site="$NETLIFY_SITE_ID" --json | tee netlify-preview.json
 
       - name: Smoke-test SHA-bound Netlify preview
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
@@ -208,7 +226,14 @@ jobs:
       # Production is never promoted on a push. A workflow_dispatch run with the
       # explicit boolean confirmation is the owner-controlled release action.
       - name: Enforce production release gate before deploy
-        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_production == true
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && inputs.confirm_production == true
+        env:
+          LMU_ANDROID_KEYSTORE_BASE64: ${{ secrets.LMU_ANDROID_KEYSTORE_BASE64 }}
+          LMU_ANDROID_STORE_PASSWORD: ${{ secrets.LMU_ANDROID_STORE_PASSWORD }}
+          LMU_ANDROID_KEY_ALIAS: ${{ secrets.LMU_ANDROID_KEY_ALIAS }}
+          LMU_ANDROID_KEY_PASSWORD: ${{ secrets.LMU_ANDROID_KEY_PASSWORD }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         shell: bash
         run: |
           if [ "${{ steps.signing.outputs.ready }}" != "true" ]; then
@@ -226,13 +251,16 @@ jobs:
           node scripts/verify-public-release-inputs.mjs
 
       - name: Deploy production web app to Netlify
-        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_production == true
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && inputs.confirm_production == true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         shell: bash
         run: |
           npx --yes netlify-cli@27.12.1 deploy --prod --dir=dist --functions=netlify/functions --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --json | tee netlify-deploy.json
 
       - name: Smoke-test Netlify production deploy
-        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_production == true
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && inputs.confirm_production == true
         shell: bash
         run: |
           URL="$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('netlify-deploy.json','utf8'));console.log(j.url||j.deploy_url||j.ssl_url||'')")"
@@ -245,7 +273,7 @@ jobs:
           npm run verify:play-production -- https://www.littlemindsuniverse.co.za
 
       - name: Upload Netlify preview evidence
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse'
         uses: actions/upload-artifact@v7
         with:
           name: netlify-preview-deploy-evidence
@@ -256,7 +284,7 @@ jobs:
           retention-days: 90
 
       - name: Upload Netlify production deploy evidence
-        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_production == true
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && inputs.confirm_production == true
         uses: actions/upload-artifact@v7
         with:
           name: netlify-production-deploy-evidence
