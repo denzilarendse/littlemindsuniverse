@@ -34,6 +34,7 @@ assert.doesNotMatch(workflow.slice(previewIndex, gateIndex), /--prod/, 'preview 
 assert.match(workflow, /node scripts\/verify-public-release-inputs\.mjs/);
 assert.match(workflow, /node scripts\/write-build-provenance\.mjs dist/);
 assert.match(workflow, /node scripts\/verify-deployed-provenance\.mjs/);
+assert.equal((workflow.match(/j\\.deploy_ssl_url\\|\\|j\\.deploy_url\\|\\|j\\.ssl_url\\|\\|j\\.url/g) || []).length, 2, 'both preview and production smoke tests must use the exact deploy URL');
 assert.match(workflow, /verify:play-production -- https:\/\/www\.littlemindsuniverse\.co\.za/);
 assert.match(workflow, /\$URL\/api\/health/, 'smoke test must use the configured Netlify /api/health route');
 
