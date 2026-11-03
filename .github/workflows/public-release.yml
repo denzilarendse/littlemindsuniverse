@@ -185,27 +185,7 @@ jobs:
             echo "::error::Release blocked: NETLIFY_SITE_ID does not identify the approved littlemindsuniverse-app production site."
             exit 1
           fi
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          import { createHash } from 'node:crypto';
-          const apk = 'dist/downloads/LittleMinds-Connect-1.0.0.apk';
-          const checksum = 'dist/downloads/LittleMinds-Connect-1.0.0.sha256';
-          const expectedSize = 3024688;
-          const expectedHash = '65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb';
-          if (!fs.existsSync(apk) || !fs.statSync(apk).isFile()) {
-            throw new Error('Release blocked: frozen signed LittleMinds Connect APK is missing from dist/downloads.');
-          }
-          const bytes = fs.readFileSync(apk);
-          const actualHash = createHash('sha256').update(bytes).digest('hex');
-          if (bytes.length !== expectedSize) throw new Error(`Connect APK size mismatch: expected ${expectedSize}, got ${bytes.length}`);
-          if (actualHash !== expectedHash) throw new Error(`Connect APK SHA-256 mismatch: ${actualHash}`);
-          if (!fs.existsSync(checksum)) throw new Error('Release blocked: Connect SHA-256 sidecar is missing.');
-          const sidecar = fs.readFileSync(checksum, 'utf8').trim();
-          if (sidecar !== `${expectedHash}  LittleMinds-Connect-1.0.0.apk`) {
-            throw new Error('Release blocked: Connect checksum sidecar does not match the frozen artifact.');
-          }
-          console.log(`Frozen signed Connect APK verified: ${bytes.length} bytes; SHA-256 ${actualHash}`);
-          NODE
+          node scripts/verify-public-release-inputs.mjs
 
       - name: Deploy production web app to Netlify
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
