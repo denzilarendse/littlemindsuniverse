@@ -21,7 +21,7 @@
 - Title: Prevent false-green public release checks when production steps are skipped.
 - State: OPEN, DRAFT; not merged.
 - Branch: `fix/public-release-gate-requires-secrets`
-- Current head at last verification: `05f42642262ccd9be052522163dfb822c29529cf`
+- Current head at last verification: `7d089f8af9e69c634ef321d8904a2613f4776a23`
 - Base: `main` at `91289ae8796af660c287a8f94936c94b383b9879`; branch was reconciled with current main through a two-parent merge commit `7197fe7a7e9b5838e25f9ff31dd14158cf0ac1d3`.
 - DRAVEN changes on this branch:
   - added `capacitor.connect.config.json` to both PR and main-push path filters;
@@ -36,17 +36,21 @@
   - updated release documentation and regression tests.
 - The PR remains DRAFT and must not be merged without explicit user authorization.
 
-### CI evidence at last poll
+### CI evidence — current PR head
 
-Current PR head: `05f42642262ccd9be052522163dfb822c29529cf`. Earlier validated PR head `6a31d47f26646d00bf7fbbbba5c60b51bbe162a0` is the same Android source and includes the release pipeline before the latest certificate-gate additions.
+Current PR head: `7d089f8af9e69c634ef321d8904a2613f4776a23`.
 
-- `verify`: PASS on `6a31d47...`. GitHub Actions log records **315 tests, 315 passed, 0 failed**, including the fail-closed release-input tests and provenance tests. Web package smoke tests and build passed.
-- `verify-package-deploy`: PASS on `6a31d47...`. Locked dependency installation, runtime dependency audit, web build, Android sync and Android release APK/AAB build passed. Because this was a `pull_request` event, owner signing detection, Netlify preview, production gate, production deploy and production smoke steps were correctly SKIPPED. This is preflight evidence, not a production release test.
-- `verify-android`: PASS on `6a31d47...`. Android lint, unit/instrumentation compile and API 36 release artifact generation passed. Uploaded LMU and Connect artifacts are explicitly unsigned.
-- `verify-emulator`: PASS on `6a31d47...`. Four Android instrumentation tests ran; the LMU debug APK installed and `za.co.littlemindsuniverse/.MainActivity` launched successfully (`Status: ok`, app PID observed). This was an emulator test of the LMU app, not a physical-device test and not a Connect app test.
-- Vercel Preview Comments: PASS.
-- Latest PR CI after adding the Connect signer-certificate gate: `verify-package-deploy` PASS at run `41553520028`. Node test output: **316 tests, 316 passed, 0 failed**. Runtime dependency audit, web build, Android sync and Android release APK/AAB build passed. Owner signing, Netlify preview, production gate and production deployment were skipped by design for the pull_request event.
-- PR checks do not execute the main-branch Netlify preview or manual production-release path. Those paths remain NOT TESTED until a safe main-branch run is authorized and configured.
+- `public-release` run `41554371304`: **PASS**. Locked install, runtime dependency audit, `npm run check`, Android release APK/AAB build and release-gate tests completed. Node test output: **316 tests, 316 passed, 0 failed**. PR event intentionally skips owner signing, Netlify preview and production deployment.
+- Previous `public-release` run `41553474711` failed 1 of 316 tests due to a brittle static assertion matching the entire Netlify URL expression. The assertion was corrected to count the two `deploy_ssl_url` uses; latest current-head run passes.
+- `release-verification` run `41554371278`: **PASS**.
+- `android-verification` run `41554371194`: **PASS**. Source verification, runtime dependency audit, Android sync, standalone Connect payload preparation, native identity/SDK/child-safety checks, lint, unit/instrumentation compile, API 36 release builds and artifact uploads completed.
+- Android artifacts (all unsigned; expire 2026-12-03):
+  - `littlemindsuniverse-android-api36-unsigned`, ID `13194310385`, ZIP SHA-256 `a2c6c97f82291cbdf0860c939a01766f8f081f06e65fa94469d91684a15667a3`.
+  - `littlemindsuniverse-pilot-debug-apk`, ID `13194060834`, ZIP SHA-256 `d6c86034c034f1d98076f2b1aca0576aeda17d1edca89f3386781758d003cf92`.
+  - `littleminds-connect-android-api36-unsigned-apk`, ID `13193920988`, ZIP SHA-256 `f1bc595af9ac5425152c03d642f567dc9c7658b56377e00c123f8ff2a7fa89b1`.
+  - `littleminds-connect-android-api36-unsigned`, ID `13193755981`, ZIP SHA-256 `20eedbe3e74a50bc28ca9ab5655c5657a9a34e2007406d08b3a92c8586fc4b09`.
+- These artifacts are unsigned build candidates, not the frozen owner-signed direct-download APK.
+- PR run does not execute the main-branch Netlify preview or manual production path. Those paths remain NOT TESTED.
 
 ## Phase 2 findings
 
@@ -64,7 +68,7 @@ Current PR head: `05f42642262ccd9be052522163dfb822c29529cf`. Earlier validated P
 - This is direct evidence of a false-green release workflow.
 - PR #108 now contains a preview-first, manually confirmed, owner-only production sequence and testable fail-closed gates. The main-push/manual-dispatch execution path has not yet run; do not claim it is verified.
 - Latest main run `41550386330` at SHA `91289ae8796af660c287a8f94936c94b383b9879` was release-verification only. It passed tests/build/artifact hygiene but did not run public-release.
-- The PR branch's updated public-release CI run succeeded for PR preflight; deployment and production steps were skipped by design.
+- The current PR branch public-release CI run `41554371304` succeeded for preflight (316/316 tests); deployment and production steps were skipped by design. A previous static-test failure was fixed and the current-head run passed.
 
 ### Branch protection — FAIL / critical
 
@@ -79,14 +83,14 @@ Current PR head: `05f42642262ccd9be052522163dfb822c29529cf`. Earlier validated P
 - Current published deploy: `6ac32e778f64ae1e8cf84c65`, state READY, branch `main`, created 2026-10-05.
 - Netlify deploy metadata has `commit_ref=null`, `commit_url=null`, and `commit_message=null`; source-SHA parity cannot be established for the current production deploy.
 - Netlify metadata confirms health route `/api/health`; main workflow still smoke-tests the old `/.netlify/functions/health` route.
-- Public site/health endpoint could not be reached from this execution environment (web fetch failed; container DNS unavailable). Runtime smoke testing is NOT TESTED.
+- Fresh Netlify metadata reinspection confirms the same production deploy is still READY, created 2026-10-05, `deploy_source=cli`, `branch=main`, but `commit_ref=null`, `commit_url=null`, `commit_message=null`. Source-SHA parity remains unprovable. Runtime smoke testing remains NOT TESTED.
 - PR #108 now writes a source-SHA/artifact-hash manifest into the deploy bundle and verifies the manifest from the actual Netlify deploy URL. This code is implemented and unit-tested, but no Netlify preview has been created by this session.
 
 ### Vercel — deployment metadata PASS; runtime smoke NOT TESTED
 
 - Vercel project `littlemindsuniverse` exists; project reports `live=false`.
 - Main deployment `dpl_5QEGkWY1Xq9TY56BhEC7STcb3Ne6` is READY and records exact main SHA `91289ae8796af660c287a8f94936c94b383b9879`.
-- PR #108 preview deployment `dpl_EnW1rLtLdiagsUKYa1mSLWcjaQEt` is READY and records exact current PR head SHA `05f42642262ccd9be052522163dfb822c29529cf`.
+- Earlier PR #108 preview deployment `dpl_EnW1rLtLdiagsUKYa1mSLWcjaQEt` is READY for SHA `05f42642262ccd9be052522163dfb822c29529cf`; it is stale relative to current PR head `7d089f8...`. Current-head preview must be refreshed and tested.
 - SSO/deployment protection is enabled for non-custom-domain deployments. Runtime/browser smoke testing was not performed. The available protected-URL fetch creates or reuses a temporary share link accessible to anyone with the link; no share link was created without authorization.
 
 ### Supabase isolation — BLOCKED pending approval
@@ -102,9 +106,27 @@ Projects observed:
 - Legacy project `ghgkeqjtztmrtqmrqsfs`: INACTIVE; not approved as test.
 - `LittleMindsUniverse Adults Staging` `rjtwpwlzwjejiuxmmycw`: INACTIVE; not approved as test.
 - `CareerLaunch SA` `rqyvfbuvdhbtwakkqnok`: INACTIVE; not approved as test.
-- Production exposes a non-persistent `main` branch with `with_data=false`; it has not been approved as the test environment.
+- A fresh `list_branches` call returned only the default `main` branch (branch inventory length 1); no distinct isolated development branch exists. Its `with_data=false` property does not by itself make the default branch an approved test environment.
 
 Supabase returned a development-branch estimate of **US$0.01344/hour**. Continuous use is approximately **US$0.32256/day** or **US$9.6768 per 30 days**, before additional usage charges/taxes. A new development branch would receive a fresh database with production migrations applied and no production data copied. No branch/project has been created. Explicit approval and organization confirmation are required.
+
+
+### Production Supabase advisor snapshot — READ ONLY
+
+Read-only advisor checks were run against production at 2026-11-03 00:39 UTC. No SQL writes or schema changes were made.
+
+Security advisor:
+- 14 tables have RLS enabled but no policies (INFO; review whether service-only access is intentional).
+- 94 authenticated-executable SECURITY DEFINER functions (WARN; each grant and function boundary requires review, not blanket revocation).
+- 1 `pg_net` extension in `public` (WARN).
+- 1 Auth leaked-password protection setting disabled (WARN).
+
+Performance advisor:
+- 18 unindexed foreign keys (INFO).
+- 59 unused indexes (INFO; do not drop based solely on this advisor).
+- 4 tables with multiple permissive policies (WARN).
+
+These are advisory findings, not confirmed exploitable vulnerabilities. They require migration/source review and isolated integration testing before any remediation. Production remains read-only.
 
 ### Signed LM Connect artifact — BLOCKED
 
