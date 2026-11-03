@@ -1,12 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
 export const APPROVED_NETLIFY_SITE_ID = '989d3b15-5ba4-42f7-8ba6-b53dc64fbd27';
 export const CONNECT_APK_FILENAME = 'LittleMinds-Connect-1.0.0.apk';
 export const CONNECT_APK_SIZE = 3024688;
 export const CONNECT_APK_SHA256 = '65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb';
+export const CONNECT_APK_CERT_SHA256 = 'e9bb1e0782aa8b19550e742fe2f59c49a0345afdd65447ce23734c64344525d5';
 export const CONNECT_CHECKSUM_FILENAME = 'LittleMinds-Connect-1.0.0.sha256';
 
 const REQUIRED_SECRETS = [
@@ -26,7 +28,35 @@ export function verifyConnectChecksumSidecar(text) {
   return true;
 }
 
-export function verifyPublicReleaseInputs({ env = process.env, root = process.cwd(), fsApi = fs } = {}) {
+export function verifyConnectApkSignature({
+  apkPath,
+  androidHome = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT,
+  fsApi = fs,
+  execFileSyncImpl = execFileSync
+} = {}) {
+  if (!androidHome) throw new Error('Release blocked: Android SDK path is unavailable for APK signature verification.');
+  const buildToolsDir = path.join(androidHome, 'build-tools');
+  if (!fsApi.existsSync(buildToolsDir) || !fsApi.statSync(buildToolsDir).isDirectory()) {
+    throw new Error('Release blocked: Android SDK build-tools are unavailable.');
+  }
+  const versions = fsApi.readdirSync(buildToolsDir)
+    .filter(name => /^\\d+\\.\\d+\\.\\d+$/.test(name))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  const latest = versions.at(-1);
+  if (!latest) throw new Error('Release blocked: no Android build-tools version is installed.');
+  const apksigner = path.join(buildToolsDir, latest, process.platform === 'win32' ? 'apksigner.bat' : 'apksigner');
+  if (!fsApi.existsSync(apksigner)) throw new Error('Release blocked: apksigner executable is missing.');
+  const output = execFileSyncImpl(apksigner, ['verify', '--verbose', '--print-certs', apkPath], { encoding: 'utf8' });
+  const match = String(output).match(/certificate SHA-256 digest:\\s*([a-f0-9:]+)/i);
+  if (!match) throw new Error('Release blocked: apksigner did not report a signer certificate SHA-256.');
+  const actual = match[1].replaceAll(':', '').toLowerCase();
+  if (actual !== CONNECT_APK_CERT_SHA256) {
+    throw new Error(`Release blocked: Connect APK signer certificate mismatch: ${actual}`);
+  }
+  return { certificateSha256: actual, apksigner };
+}
+
+export function verifyPublicReleaseInputs({ env = process.env, root = process.cwd(), fsApi = fs, execFileSyncImpl = execFileSync } = {}) {
   const missing = REQUIRED_SECRETS.filter(name => !String(env[name] || '').trim());
   if (missing.length) {
     throw new Error(`Release blocked: missing owner-controlled release secrets: ${missing.join(', ')}`);
@@ -54,7 +84,8 @@ export function verifyPublicReleaseInputs({ env = process.env, root = process.cw
     throw new Error('Release blocked: Connect SHA-256 sidecar is missing.');
   }
   verifyConnectChecksumSidecar(fsApi.readFileSync(checksumPath, 'utf8'));
-  return { siteId: APPROVED_NETLIFY_SITE_ID, size: bytes.length, sha256: actualHash };
+  const signature = verifyConnectApkSignature({ apkPath, androidHome: env.ANDROID_HOME || env.ANDROID_SDK_ROOT, fsApi, execFileSyncImpl });
+  return { siteId: APPROVED_NETLIFY_SITE_ID, size: bytes.length, sha256: actualHash, certificateSha256: signature.certificateSha256 };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
