@@ -17,6 +17,7 @@ on:
       - 'sw.js'
       - 'netlify.toml'
       - 'capacitor.config.json'
+      - 'capacitor.connect.config.json'
       - 'package.json'
       - 'package-lock.json'
   push:
@@ -35,6 +36,7 @@ on:
       - 'sw.js'
       - 'netlify.toml'
       - 'capacitor.config.json'
+      - 'capacitor.connect.config.json'
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
