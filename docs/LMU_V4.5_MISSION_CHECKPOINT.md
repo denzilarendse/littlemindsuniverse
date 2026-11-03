@@ -43,7 +43,7 @@ For PR head `6a31d47f26646d00bf7fbbbba5c60b51bbe162a0`:
 - `verify-package-deploy`: PASS. Locked dependency installation, runtime dependency audit, web build, Android sync and Android release APK/AAB build passed. Because this was a pull_request event, owner signing detection, Netlify preview, production gate, production deploy and production smoke steps were correctly SKIPPED. This is preflight evidence, not a production release test.
 - `verify-android`: IN PROGRESS at last poll. Android lint/unit/instrumentation compile step passed; API 36 release bundle build was still running.
 - Vercel Preview Comments: PASS.
-- Latest PR CI after adding signer-certificate verification: `verify-package-deploy` QUEUED at run `41553520028`; it has not yet completed.
+- Latest PR CI after adding signer-certificate verification: `verify-package-deploy` IN PROGRESS at run `41553520028`; web build, dependency audit and Android sync passed; Android release build was still running.
 - Previous verified PR head `6a31d47...`: `verify` PASS (315/315 tests); `verify-package-deploy` PASS; `verify-android` PASS. Its `verify-emulator` job remains IN PROGRESS at the last poll.
 - PR checks do not execute the main-branch preview or manual production-release path. Those paths remain NOT TESTED until a safe main-branch run is authorized and configured.
 
