@@ -50,6 +50,12 @@ on:
 permissions:
   contents: read
 
+# Prevent overlapping preview/production runs for the same ref. Never cancel
+# an in-flight release after its deployment side effects have started.
+concurrency:
+  group: lmu-public-release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   verify-package-deploy:
     runs-on: ubuntu-24.04
