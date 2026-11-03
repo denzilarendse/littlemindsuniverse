@@ -28,7 +28,7 @@ assert.match(workflow, /workflow_dispatch:/);
 assert.match(workflow, /persist-credentials: false/);
 assert.match(workflow, /github.actor == 'denzilarendse'/, 'release deployment must be owner-controlled');
 assert.doesNotMatch(workflow, /--auth=/, 'Netlify credentials must be supplied through the environment, not process arguments');
-assert.doesNotMatch(workflow.slice(0, workflow.indexOf('    steps:')), /secrets\\./, 'release secrets must not be exposed at job scope');
+assert.doesNotMatch(workflow.slice(0, workflow.indexOf('    steps:')), /secrets\./, 'release secrets must not be exposed at job scope');
 assert.match(workflow.slice(deployIndex, smokeIndex), /github.event_name == 'workflow_dispatch'/);
 assert.doesNotMatch(workflow.slice(previewIndex, gateIndex), /--prod/, 'preview deploy must never use --prod');
 assert.match(workflow, /node scripts\/verify-public-release-inputs\.mjs/);
