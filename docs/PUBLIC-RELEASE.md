@@ -31,3 +31,17 @@ If signing material is not present, the workflow produces only an unsigned relea
 ## Release boundaries
 
 A successful workflow does not waive LMU's child-safety, privacy, guardian-consent, teacher-control, Supabase authorization, physical-device, or store-review requirements. Google Play publication still requires owner-controlled Play Console steps and the Play app-signing certificate for Digital Asset Links.
+
+
+## Canonical production hostname (mandatory)
+
+The only approved public production hostname is **https://www.littlemindsuniverse.co.za**.
+
+- The primary Netlify production site must remain `littlemindsuniverse-app` (site ID `989d3b15-5ba4-42f7-8ba6-b53dc64fbd27`).
+- Public links, canonical metadata and production smoke tests must use the www hostname.
+- If the apex domain is configured, it must redirect to the www hostname over HTTPS.
+- Netlify-generated site URLs and Deploy Preview/branch URLs are for deployment operations and testing only; do not advertise them as the public production site.
+- Before production promotion, verify the site ID, primary custom domain, TLS, apex redirect (if configured), canonical response and exact source SHA provenance. If any required check is unverified, hold production promotion.
+- Do not modify DNS or custom-domain assignments without explicit owner authorization.
+
+The repository policy does not itself change provider-side domain assignments. Netlify domain configuration must be inspected and verified separately.
