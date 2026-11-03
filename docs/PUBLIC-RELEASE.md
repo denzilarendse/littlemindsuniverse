@@ -48,7 +48,7 @@ The keystore is written only to the ephemeral GitHub runner. The workflow verifi
 
 ## Frozen signed LM Connect APK
 
-The production gate requires `dist/downloads/LittleMinds-Connect-1.0.0.apk` with exact size **3,024,688 bytes** and SHA-256 `65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb`, plus the matching checksum sidecar. The repository currently contains the sidecar but not the APK binary; recover the exact owner-signed artifact before attempting production promotion. An unsigned candidate or the LMU APK is not a substitute.
+The production gate requires `dist/downloads/LittleMinds-Connect-1.0.0.apk` with exact size **3,024,688 bytes**, SHA-256 `65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb`, matching checksum sidecar, and a valid APK signature whose signer certificate SHA-256 is `e9bb1e0782aa8b19550e742fe2f59c49a0345afdd65447ce23734c64344525d5` (normalized form of the fingerprint displayed on `download-connect.html`). The workflow uses Android `apksigner` to verify the signature and certificate. The repository currently contains the sidecar but not the APK binary; recover the exact owner-signed artifact before attempting production promotion. An unsigned candidate or the LMU APK is not a substitute.
 
 ## Release boundaries
 
