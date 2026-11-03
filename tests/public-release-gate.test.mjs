@@ -26,6 +26,7 @@ assert.ok(smokeIndex > deployIndex, 'production smoke tests must execute after N
 assert.ok(workflow.includes('inputs.confirm_production == true'), 'production promotion must require explicit manual confirmation');
 assert.match(workflow, /workflow_dispatch:/);
 assert.match(workflow, /persist-credentials: false/);
+assert.ok(workflow.includes('concurrency:\n  group: lmu-public-release-${{ github.ref }}\n  cancel-in-progress: false'), 'release runs for the same ref must not overlap or cancel an active promotion');
 assert.match(workflow, /github.actor == 'denzilarendse'/, 'release deployment must be owner-controlled');
 assert.doesNotMatch(workflow, /--auth=/, 'Netlify credentials must be supplied through the environment, not process arguments');
 assert.doesNotMatch(workflow.slice(0, workflow.indexOf('    steps:')), /secrets\./, 'release secrets must not be exposed at job scope');
