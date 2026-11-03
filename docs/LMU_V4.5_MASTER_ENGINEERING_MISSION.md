@@ -859,3 +859,25 @@ Your objective is not to make the project appear finished.
 Your objective is to make it genuinely complete, trustworthy, secure, tested and production-ready.
 
 DRAVEN — TAKE CONTROL OF THE ENGINEERING MISSION.
+
+
+CANONICAL NETLIFY PRODUCTION DOMAIN — MANDATORY RELEASE INVARIANT
+
+The only approved public production hostname is:
+https://www.littlemindsuniverse.co.za
+
+The primary Netlify production site is:
+littlemindsuniverse-app
+Site ID: 989d3b15-5ba4-42f7-8ba6-b53dc64fbd27
+
+Rules:
+- All public production links, release notes, canonical metadata and production smoke tests must use https://www.littlemindsuniverse.co.za.
+- The Netlify primary custom domain must remain www.littlemindsuniverse.co.za.
+- The apex hostname, if configured, must redirect permanently to the www hostname over HTTPS.
+- Netlify-generated *.netlify.app URLs and deploy-preview/branch URLs are deployment/testing endpoints only; they must never be advertised as the public production website.
+- A preview URL must never be represented as production.
+- Before each production release, verify the Netlify site ID, primary custom domain, HTTPS/TLS, apex-to-www redirect (if apex is configured), canonical URL response, and deployment-to-source-SHA provenance.
+- If the provider's primary domain or redirect state cannot be verified, fail closed: hold production promotion and report BLOCKED. Do not change DNS or custom-domain assignments without explicit owner authorization.
+- Production deployment must not be initiated solely to test domain configuration. Use read-only provider inspection and preview verification first.
+
+This policy does not itself change Netlify domain assignments or DNS. Those provider-side settings require separate verification and, where a change is needed, explicit owner authorization.

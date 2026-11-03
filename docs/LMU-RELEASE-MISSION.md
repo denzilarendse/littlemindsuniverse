@@ -66,3 +66,14 @@ Owner/account action may be required for final domain/DNS evidence, production-g
 - Canonical branch: `main`
 - Current evidence record: `docs/RELEASE-EVIDENCE-20260926.md`
 - Every release decision must name the exact source SHA it evaluates.
+
+
+## Canonical Netlify production hostname
+
+The only approved public production hostname is `https://www.littlemindsuniverse.co.za`. The canonical Netlify production site is `littlemindsuniverse-app` (site ID `989d3b15-5ba4-42f7-8ba6-b53dc64fbd27`).
+
+All public links and production smoke tests must use the www hostname. If the apex hostname is configured, it must redirect permanently to www over HTTPS. Netlify-generated URLs and preview/branch deploy URLs are testing/operational endpoints only and must not be advertised as the public production site.
+
+Before an authorized production promotion, verify the site ID, primary domain, TLS, apex redirect (if configured), canonical URL response and exact source-SHA provenance. Hold promotion if any check is unverified. DNS and Netlify domain assignments must not be changed without explicit owner authorization.
+
+This repository rule does not itself mutate provider-side domain configuration.
