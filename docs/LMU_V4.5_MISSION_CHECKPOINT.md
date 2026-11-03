@@ -209,3 +209,42 @@ The uploaded `tenders sa.pdf` is a 19-page foundational blueprint dated 2026-10-
 - Phase 1: previously approved; not repeated.
 - Phase 2: **BLOCKED / IN PROGRESS** — isolated DB, main workflow remediation, branch protection, signed artifact and deployment provenance gates remain unresolved.
 - Production release: **RELEASE HOLD**.
+
+
+## Current-session verification addendum — 2026-11-03 01:20 UTC
+
+### Provider state revalidated
+- Canonical `main` remains `91289ae8796af660c287a8f94936c94b383b9879`.
+- GitHub branch object explicitly reports `main.protected=false`, protection disabled and required status checks empty. Direct protection endpoint read remains 403 through the integration.
+- PR #108 remains OPEN and DRAFT, unmerged, with no submitted review records. Current head: `3d5ee3ea6eee95aa2dce1fc11fb2e2bf9ef83274`.
+- PR current-head Vercel deployment `dpl_Edcqr3Nr4zW3mb8DarRw3AvYmdpr` is READY and maps to exact SHA `3d5ee3ea6eee95aa2dce1fc11fb2e2bf9ef83274`. Protected runtime smoke remains NOT TESTED; no share link was created.
+- Netlify production deploy `6ac32e778f64ae1e8cf84c65` remains READY but has `commit_ref=null`, `commit_url=null`, `commit_message=null`. Netlify deploy creation tools are not available through the current connector; no preview was created.
+- Supabase organization remains `LittleMinds Universe (Pty)Ltd` (`dkkwrleslatgzlsigahz`), Free tier.
+
+### Existing isolated test project discovered
+- A separate Supabase project `LMU-V45-TESTING`, ref `klfvrawkieyqefbpzywq`, exists and is `ACTIVE_HEALTHY`; created 2026-11-02.
+- Read-only inventory shows zero public tables, zero migration records and zero development branches.
+- This is distinct from production `zcokxljcsfkrlouzragv` and Forge `ekswytyvfwgrpzfzxtgf`; it is an empty candidate for isolated synthetic testing.
+- Its approval status for test writes was not established. No schema/data writes or migrations were performed. Obtain explicit owner authorization before using it for synthetic integration tests. No additional project or branch was created in this session.
+
+### Current-head CI and Android instrumentation repair
+- PR head commit `3d5ee3ea6eee95aa2dce1fc11fb2e2bf9ef83274` changes `android/app/src/androidTest/java/za/co/littlemindsuniverse/AppLaunchInstrumentedTest.java` to avoid Espresso's emulator-window-focus dependency. Assertions still verify that the Capacitor WebView exists, is attached and visible, including after orientation changes.
+- `public-release` run `41558292619`: PASS. It is a PR-event preflight; owner signing, Netlify preview, provenance smoke and production deployment were correctly skipped.
+- `release-verification` run `41558292665`: PASS.
+- `android-verification` run `41558292615`: PASS. Both `verify-android` and `verify-emulator` jobs completed successfully. Emulator instrumentation started four tests; the job completed successfully and the explicit activity launch returned `Status: ok`.
+- Previous run `41554371194` had a passing build/artifact job but failed its emulator job with two `RootViewWithoutFocusException` failures. The test-only repair above was applied and the current-head rerun passed.
+- The new current-head Vercel deployment is READY; protected runtime smoke was not attempted.
+
+### Phase 2 remains BLOCKED / IN PROGRESS
+1. Main branch protection and required checks are not enabled.
+2. PR #108 remains draft and unreviewed; merge authorization has not been given.
+3. Main still contains the old public-release workflow; remediation is only on PR branch.
+4. Exact frozen owner-signed LM Connect APK binary remains absent; unsigned artifacts are not substitutes.
+5. Netlify preview/source-SHA smoke has not been executed; production deploy has no SHA provenance.
+6. Existing `LMU-V45-TESTING` project is not yet authorized for synthetic writes.
+7. Vercel protected runtime smoke remains not tested.
+8. Original 65-page Master Plan remains unavailable; later phase sequence must not be invented.
+
+### Safety confirmation
+- No production Supabase writes/migrations, Forge writes, production deployment/promotion, DNS changes, security-setting changes, secret reads/changes, PR merge, or signed-key access occurred.
+- PR #108 remains DRAFT and unmerged.
