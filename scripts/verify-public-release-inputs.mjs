@@ -40,14 +40,14 @@ export function verifyConnectApkSignature({
     throw new Error('Release blocked: Android SDK build-tools are unavailable.');
   }
   const versions = fsApi.readdirSync(buildToolsDir)
-    .filter(name => /^\\d+\\.\\d+\\.\\d+$/.test(name))
+    .filter(name => /^[0-9]+[.][0-9]+[.][0-9]+$/.test(name))
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   const latest = versions.at(-1);
   if (!latest) throw new Error('Release blocked: no Android build-tools version is installed.');
   const apksigner = path.join(buildToolsDir, latest, process.platform === 'win32' ? 'apksigner.bat' : 'apksigner');
   if (!fsApi.existsSync(apksigner)) throw new Error('Release blocked: apksigner executable is missing.');
   const output = execFileSyncImpl(apksigner, ['verify', '--verbose', '--print-certs', apkPath], { encoding: 'utf8' });
-  const match = String(output).match(/certificate SHA-256 digest:\\s*([a-f0-9:]+)/i);
+  const match = String(output).match(/certificate SHA-256 digest:[ ]*([a-f0-9:]+)/i);
   if (!match) throw new Error('Release blocked: apksigner did not report a signer certificate SHA-256.');
   const actual = match[1].replaceAll(':', '').toLowerCase();
   if (actual !== CONNECT_APK_CERT_SHA256) {
