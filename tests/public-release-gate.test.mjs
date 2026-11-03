@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const workflow = fs.readFileSync(path.join(root, '.github/workflows/public-release.yml'), 'utf8');
 const docs = fs.readFileSync(path.join(root, 'docs/PUBLIC-RELEASE.md'), 'utf8');
+const gate = fs.readFileSync(path.join(root, 'scripts/verify-public-release-inputs.mjs'), 'utf8');
 
 const gateIndex = workflow.indexOf('Enforce production release gate before deploy');
 const deployIndex = workflow.indexOf('Deploy production web app to Netlify');
@@ -20,6 +21,11 @@ assert.match(workflow, /989d3b15-5ba4-42f7-8ba6-b53dc64fbd27/, 'production deplo
 assert.match(workflow, /LittleMinds-Connect-1\.0\.0\.apk/);
 assert.match(workflow, /expectedSize = 3024688/);
 assert.match(workflow, /65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb/);
+assert.match(workflow, /node scripts\/verify-public-release-inputs\.mjs/);
+assert.match(gate, /LMU_ANDROID_KEYSTORE_BASE64/);
+assert.match(gate, /NETLIFY_SITE_ID/);
+assert.match(gate, /CONNECT_APK_SIZE = 3024688/);
+assert.match(gate, /CONNECT_APK_SHA256 = '65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb'/);
 assert.match(workflow, /verify:play-production -- https:\/\/www\.littlemindsuniverse\.co\.za/);
 assert.match(workflow, /\$URL\/api\/health/, 'smoke test must use the configured Netlify /api/health route');
 assert.equal((workflow.match(/capacitor\.connect\.config\.json/g) || []).length, 2, 'both PR and main-push path filters must include the Connect Capacitor config');
