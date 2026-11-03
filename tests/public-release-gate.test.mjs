@@ -43,6 +43,8 @@ assert.match(gate, /NETLIFY_SITE_ID/);
 assert.match(gate, /CONNECT_APK_FILENAME = 'LittleMinds-Connect-1\.0\.0\.apk'/);
 assert.match(gate, /CONNECT_APK_SIZE = 3024688/);
 assert.match(gate, /CONNECT_APK_SHA256 = '65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb'/);
+assert.match(gate, /CONNECT_APK_CERT_SHA256 = 'e9bb1e0782aa8b19550e742fe2f59c49a0345afdd65447ce23734c64344525d5'/);
+assert.match(gate, /verifyConnectApkSignature/);
 assert.match(provenanceWriter, /GITHUB_SHA/);
 assert.match(provenanceWriter, /sha256/);
 assert.match(provenanceVerifier, /Deployed build provenance SHA does not match/);
