@@ -1,6 +1,6 @@
 # Public web and Android release pipeline
 
-The public-release workflow separates preview verification from production promotion.
+The public-release workflow separates preview verification from production promotion. Runs for the same Git ref are serialized; an active release is not canceled by a newer run.
 
 ## Build and preview
 
