@@ -10,6 +10,19 @@ Status: prepared. Do not mark signing or Play gates green until the owner create
 - Minimum SDK: 24
 - Target / compile SDK: 36
 
+## Separate direct-download APK and Google Play AAB paths
+
+The website's direct-download page (`download-connect.html`) defines a separate frozen APK artifact:
+
+- Filename: `LittleMinds-Connect-1.0.0.apk`
+- Size: 3,024,688 bytes
+- SHA-256: `65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb`
+- Signer certificate SHA-256 displayed by the page: `E9:BB:1E:07:82:AA:8B:19:55:0E:74:2F:E2:F5:9C:49:A0:34:5A:FD:D6:54:47:CE:23:73:4C:64:34:45:25:D5`
+
+The direct-download release gate verifies the exact APK size, digest, checksum sidecar and APK signer certificate with Android `apksigner`. The APK binary is currently absent from the repository; the checksum sidecar alone is not a release artifact.
+
+This direct-download APK is **not** the same artifact as the Play-distributed AAB described below. Do not assume the direct-download APK signer fingerprint, the local AAB upload-certificate fingerprint and the Google Play app-signing certificate fingerprint are interchangeable. Record and verify each identity separately. The exact direct-download APK's signer identity must be confirmed against the binary itself before release.
+
 ## Security boundary
 
 - Never commit a `.jks`, `.keystore`, `key.properties`, password, recovery code, Play credential or signing certificate private key.
