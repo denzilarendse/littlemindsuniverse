@@ -248,3 +248,55 @@ The uploaded `tenders sa.pdf` is a 19-page foundational blueprint dated 2026-10-
 ### Safety confirmation
 - No production Supabase writes/migrations, Forge writes, production deployment/promotion, DNS changes, security-setting changes, secret reads/changes, PR merge, or signed-key access occurred.
 - PR #108 remains DRAFT and unmerged.
+
+
+## Current-session Phase 2 release-pipeline addendum — 2026-11-03 01:43 UTC
+
+### Canonical state
+- Main remains `91289ae8796af660c287a8f94936c94b383b9879`.
+- PR #108 remains OPEN/DRAFT/unmerged; current head `512534164952aee122be77b12af89caca38b9231`.
+- Review submissions: 0.
+- `main.protected=false`; required checks are off; repository rulesets API returns `[]`.
+- Current Vercel deployment `dpl_AAUwEVUKCbqKG55K3bAr5zpgkCdL` is READY for exact PR SHA `512534164952aee122be77b12af89caca38b9231`. SSO-protected runtime smoke is NOT TESTED.
+
+### Main-vs-PR workflow security comparison
+The canonical `main` workflow was re-read and still has the old implementation:
+- release secrets are job-level environment variables (broader than the exact signing/deploy steps);
+- checkout uses default persisted credentials;
+- smoke test targets `/.netlify/functions/health`, while Netlify deploy metadata and adapter configuration identify `/api/health`;
+- `capacitor.connect.config.json` is missing from both path filters;
+- owner signing and production deploy are conditional, allowing a green preflight despite skipped release operations.
+
+The PR branch removes job-level secrets, sets `persist-credentials: false`, scopes secrets to required steps, corrects `/api/health`, adds the Connect Capacitor path filter, verifies frozen Connect APK identity, writes SHA/file-hash provenance, performs preview-first smoke tests, and requires explicit owner workflow dispatch for production promotion.
+
+### Additional hardening implemented on PR branch
+- Added top-level GitHub Actions concurrency group `lmu-public-release-${{ github.ref }}` with `cancel-in-progress: false`; release actions for the same ref cannot overlap or cancel an in-flight promotion.
+- Added a static regression assertion and documented this behaviour.
+- Changes were committed through:
+  - `e23498489b0cb30ab82ff1b3fa29f1a016bf4855` — workflow serialization;
+  - `1ca67ba7f2dd92f65d0b05267f86a956e44a0cbd` — regression assertion;
+  - `512534164952aee122be77b12af89caca38b9231` — release documentation.
+- No changes were made to `main`.
+
+### Current-head verification
+- Public release PR preflight `41561126245`: **PASS**. It executed build/tests but correctly skipped signing, provenance, Netlify preview, preview smoke, production gate, production deploy, production smoke and evidence upload because the event was `pull_request`. It is not a release.
+- Public-release job log: 105 JavaScript files syntax checked; 316 tests passed, 0 failed; production package smoke passed; 26 static production files built; Android sync passed.
+- Release verification `41561126107`: **PASS**.
+- Android verification `41561126118`: **PASS**, including Android build and API 36 emulator jobs.
+- Earlier intermediate preflight run `41561119868` was cancelled after a subsequent commit superseded it; final current-head run above completed successfully.
+
+### Infrastructure and approval status
+- Netlify production deploy `6ac32e778f64ae1e8cf84c65` remains READY but has null `commit_ref`, `commit_url`, and `commit_message`. No Netlify preview was created; connector has no deploy-creation action. Main-branch workflow must create and verify the first SHA-bound Netlify preview after approved merge.
+- Supabase organization `LittleMinds Universe (Pty)Ltd` (`dkkwrleslatgzlsigahz`) is Free tier.
+- Existing `LMU-V45-TESTING` (`klfvrawkieyqefbpzywq`) is ACTIVE_HEALTHY and distinct from production. Read-only inventory confirms zero public tables, zero migration records and zero dev branches. Supabase-managed system schemas may still contain system tables. This project has not been authorized for synthetic writes; no writes/migrations were performed.
+- Production Supabase `zcokxljcsfkrlouzragv` remains read-only; Forge remains inspection-only.
+- Frozen owner-signed LM Connect APK remains absent. The pinned release gate expects 3,024,688 bytes, SHA-256 `65c8ae9335304601fe2098684e08dfe9bfcca7cebdb11fbc9de093d9e73412cb`, and signer certificate SHA-256 `e9bb1e0782aa8b19550e742fe2f59c49a0345afdd65447ce23734c64344525d5`. Unsigned candidates do not satisfy it.
+- Owner-controlled GitHub Actions secret names required (values must remain private): `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`, `LMU_ANDROID_KEYSTORE_BASE64`, `LMU_ANDROID_STORE_PASSWORD`, `LMU_ANDROID_KEY_ALIAS`, `LMU_ANDROID_KEY_PASSWORD`. Secret presence has not been verified; no secret values were read.
+- Physical-device acceptance remains NOT TESTED.
+- Original 65-page Master Plan is still absent from the current repository and available project files. Do not invent Phase 3+ requirements.
+
+### Phase 2 result
+**IN PROGRESS / BLOCKED.** PR preflight and current-head CI pass, but main still has the old workflow. Required owner actions remain: enable branch ruleset, recover exact signed Connect APK, configure secrets, authorize synthetic test writes, perform physical-device acceptance, review and explicitly authorize merge, then verify the main-branch Netlify preview and SHA provenance. Production remains RELEASE HOLD; do not run production dispatch with `confirm_production=true` without separate explicit authorization.
+
+### Safety
+No production Supabase writes/migrations, Forge writes, PR merge, Netlify deploy/promotion, Vercel share-link creation, DNS changes, security-setting changes, secret reads/changes, or signing-key access occurred.
