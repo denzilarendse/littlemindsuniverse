@@ -1,6 +1,6 @@
 const noStore = { "Cache-Control": "no-store, max-age=0", "Vary": "Host" };
 
-export default function handler(req, res) {
+export default function handler(_req, res) {
   res.setHeader("Cache-Control", noStore["Cache-Control"]);
   res.setHeader("Vary", noStore.Vary);
 
