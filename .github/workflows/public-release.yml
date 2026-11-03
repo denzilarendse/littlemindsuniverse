@@ -143,7 +143,7 @@ jobs:
           echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Upload signed Android release artifacts
-        if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
+        if: github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
         uses: actions/upload-artifact@v7
         with:
           name: littlemindsuniverse-signed-public-release
@@ -257,7 +257,7 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         shell: bash
         run: |
-          npx --yes netlify-cli@27.12.1 deploy --prod --dir=dist --functions=netlify/functions --site="$NETLIFY_SITE_ID" --auth="$NETLIFY_AUTH_TOKEN" --json | tee netlify-deploy.json
+          npx --yes netlify-cli@27.12.1 deploy --prod --dir=dist --functions=netlify/functions --site="$NETLIFY_SITE_ID" --json | tee netlify-deploy.json
 
       - name: Smoke-test Netlify production deploy
         if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'denzilarendse' && inputs.confirm_production == true
@@ -305,8 +305,12 @@ jobs:
             echo "- Netlify preview credentials available: ${{ steps.netlify.outputs.ready }}"
             if [ "${{ github.event_name }}" = "pull_request" ]; then
               echo "- Preview/production deployment: not run for pull_request"
+            elif [ "$GITHUB_REF" != "refs/heads/main" ]; then
+              echo "- Preview/production deployment: NOT run; workflow was not dispatched from canonical main"
+            elif [ "$GITHUB_ACTOR" != "denzilarendse" ]; then
+              echo "- Preview/production deployment: NOT run; owner authorization is required"
             elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.confirm_production }}" = "true" ]; then
-              echo "- Production promotion: explicitly requested by workflow_dispatch input"
+              echo "- Production promotion: explicitly requested by repository owner"
               echo "- Production smoke and provenance verification: required before success"
             else
               echo "- Netlify preview: deployed and smoke-tested"
