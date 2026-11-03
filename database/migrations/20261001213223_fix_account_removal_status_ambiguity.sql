@@ -1,8 +1,3 @@
--- Stage 8C live privacy probe exposed a PL/pgSQL ambiguity in request_account_removal.
--- The function RETURNS TABLE(..., status text), so an unqualified status in the
--- partial ON CONFLICT predicate could bind ambiguously instead of to privacy_requests.status.
--- Qualify the conflict predicate and RETURNING row through the INSERT target alias.
-
 create or replace function public.request_account_removal(p_source text default 'in_app'::text)
 returns table(request_id uuid, created_at timestamptz, status text)
 language plpgsql
