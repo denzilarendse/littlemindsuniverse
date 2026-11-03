@@ -754,5 +754,6 @@ async function sendMessage(){
     toast('Message sent securely');
   }catch(error){console.error('Secure message send failed',error);toast('Message was not sent. Please try again.')}finally{if(button?.isConnected){button.disabled=false;button.textContent='Send message'}}
 }
+window.LMU_TEACHER_EVIDENCE_CONTEXT=()=>({mode:state.mode,role:state.role,userId:state.session?.user?.id||null,supabase:state.supabase,classrooms:(state.classrooms||[]).filter(c=>c?.id&&c?.teacher_profile_id===state.session?.user?.id).map(c=>({id:c.id,name:c.name||'Classroom'}))});
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(error=>console.warn('Service worker registration failed',error)));demoReset();initSupabase();
 })();
