@@ -21,7 +21,7 @@
 - Title: Prevent false-green public release checks when production steps are skipped.
 - State: OPEN, DRAFT; not merged.
 - Branch: `fix/public-release-gate-requires-secrets`
-- Current head at last verification: `6a31d47f26646d00bf7fbbbba5c60b51bbe162a0`
+- Current head at last verification: `05f42642262ccd9be052522163dfb822c29529cf`
 - Base: `main` at `91289ae8796af660c287a8f94936c94b383b9879`; branch was reconciled with current main through a two-parent merge commit `7197fe7a7e9b5838e25f9ff31dd14158cf0ac1d3`.
 - DRAVEN changes on this branch:
   - added `capacitor.connect.config.json` to both PR and main-push path filters;
@@ -43,6 +43,8 @@ For PR head `6a31d47f26646d00bf7fbbbba5c60b51bbe162a0`:
 - `verify-package-deploy`: PASS. Locked dependency installation, runtime dependency audit, web build, Android sync and Android release APK/AAB build passed. Because this was a pull_request event, owner signing detection, Netlify preview, production gate, production deploy and production smoke steps were correctly SKIPPED. This is preflight evidence, not a production release test.
 - `verify-android`: IN PROGRESS at last poll. Android lint/unit/instrumentation compile step passed; API 36 release bundle build was still running.
 - Vercel Preview Comments: PASS.
+- Latest PR CI after adding signer-certificate verification: `verify-package-deploy` QUEUED at run `41553520028`; it has not yet completed.
+- Previous verified PR head `6a31d47...`: `verify` PASS (315/315 tests); `verify-package-deploy` PASS; `verify-android` PASS. Its `verify-emulator` job remains IN PROGRESS at the last poll.
 - PR checks do not execute the main-branch preview or manual production-release path. Those paths remain NOT TESTED until a safe main-branch run is authorized and configured.
 
 ## Phase 2 findings
@@ -127,6 +129,10 @@ The accompanying initial QA report classifies the package RELEASE HOLD. Material
 - `learners_self_update` does not constrain `guardian_user_id`, creating possible guardian reassignment/access risk if UPDATE privileges permit it;
 - no actual SQL/RLS/concurrency tests, browser/mobile tests, Netlify tests or live endpoint tests were run.
 The package is a separate generated starter/preview and is not verified as canonical GitHub application source. Do not deploy it or migrate its SQL to production.
+
+## Additional source document inspected
+
+The uploaded `tenders sa.pdf` is a 19-page foundational blueprint dated 2026-10-26, not the original 65-page LMU Master Plan. It defines Tenders SA source requirements for a later module milestone: official-source tender discovery with last-checked timestamps and amendments; tender analysis tied to original pages/sections; business readiness statuses; realistic cost/pricing estimates with assumptions; draft documents that never invent business facts; user-reviewed submissions; deadline reminders; secure tenant-separated document storage and POPIA safeguards; and a limited MVP rather than claiming full national coverage. It also prohibits tender-win guarantees and unlawful procurement assistance. This document has been inspected but no Tenders SA implementation was started or reordered ahead of Phase 2.
 
 ## Safety and approvals
 
