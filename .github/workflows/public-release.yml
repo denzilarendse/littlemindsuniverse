@@ -124,7 +124,7 @@ jobs:
 
       - name: Verify and publish signed APK into web bundle
         id: signed_apk
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
+        if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
         shell: bash
         run: |
           APK="android/app/build/outputs/apk/release/app-release.apk"
@@ -138,7 +138,7 @@ jobs:
           echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Upload signed Android release artifacts
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true'
+        if: github.ref == 'refs/heads/main' && steps.signing.outputs.ready == 'true' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_production == true))
         uses: actions/upload-artifact@v7
         with:
           name: littlemindsuniverse-signed-public-release
