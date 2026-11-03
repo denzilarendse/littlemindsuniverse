@@ -23,13 +23,13 @@ test('password recovery keeps generic anti-enumeration messaging',()=>{
 });
 
 test('auth-state listener defers Supabase queries until after the auth callback returns',()=>{
-  assert.match(app,/onAuthStateChange\\(\\(event,session\\)=>queueAuthStateChange\\(event,session\\)\\)/);
-  assert.doesNotMatch(app,/onAuthStateChange\\(async/);
+  assert.ok(app.includes('onAuthStateChange((event,session)=>queueAuthStateChange(event,session))'));
+  assert.ok(!app.includes('onAuthStateChange(async'));
   const start=app.indexOf('function queueAuthStateChange(');
   const end=app.indexOf('async function initSupabase()',start);
   assert.ok(start>=0&&end>start,'auth-state scheduler must be defined before Supabase initialization');
   const scheduler=app.slice(start,end);
-  assert.match(scheduler,/setTimeout\\(/);
-  assert.match(scheduler,/await loadLive\\(\\)/);
-  assert.match(scheduler,/transition!==state\\.authTransition/);
+  assert.ok(scheduler.includes('setTimeout('));
+  assert.ok(scheduler.includes('await loadLive()'));
+  assert.ok(scheduler.includes('transition!==state.authTransition'));
 });
