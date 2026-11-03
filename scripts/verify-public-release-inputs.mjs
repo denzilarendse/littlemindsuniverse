@@ -91,7 +91,7 @@ export function verifyPublicReleaseInputs({ env = process.env, root = process.cw
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   try {
     const result = verifyPublicReleaseInputs();
-    console.log(`Frozen signed Connect APK verified: ${result.size} bytes; SHA-256 ${result.sha256}`);
+    console.log(`Frozen signed Connect APK verified: ${result.size} bytes; SHA-256 ${result.sha256}; signer certificate SHA-256 ${result.certificateSha256}`);
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;
