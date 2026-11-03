@@ -38,14 +38,15 @@
 
 ### CI evidence at last poll
 
-For PR head `6a31d47f26646d00bf7fbbbba5c60b51bbe162a0`:
-- `verify`: PASS. GitHub Actions log records **315 tests, 315 passed, 0 failed**, including the new fail-closed release-input tests and provenance tests. Web package smoke tests and build also passed.
-- `verify-package-deploy`: PASS. Locked dependency installation, runtime dependency audit, web build, Android sync and Android release APK/AAB build passed. Because this was a pull_request event, owner signing detection, Netlify preview, production gate, production deploy and production smoke steps were correctly SKIPPED. This is preflight evidence, not a production release test.
-- `verify-android`: IN PROGRESS at last poll. Android lint/unit/instrumentation compile step passed; API 36 release bundle build was still running.
+Current PR head: `05f42642262ccd9be052522163dfb822c29529cf`. Earlier validated PR head `6a31d47f26646d00bf7fbbbba5c60b51bbe162a0` is the same Android source and includes the release pipeline before the latest certificate-gate additions.
+
+- `verify`: PASS on `6a31d47...`. GitHub Actions log records **315 tests, 315 passed, 0 failed**, including the fail-closed release-input tests and provenance tests. Web package smoke tests and build passed.
+- `verify-package-deploy`: PASS on `6a31d47...`. Locked dependency installation, runtime dependency audit, web build, Android sync and Android release APK/AAB build passed. Because this was a `pull_request` event, owner signing detection, Netlify preview, production gate, production deploy and production smoke steps were correctly SKIPPED. This is preflight evidence, not a production release test.
+- `verify-android`: PASS on `6a31d47...`. Android lint, unit/instrumentation compile and API 36 release artifact generation passed. Uploaded LMU and Connect artifacts are explicitly unsigned.
+- `verify-emulator`: PASS on `6a31d47...`. Four Android instrumentation tests ran; the LMU debug APK installed and `za.co.littlemindsuniverse/.MainActivity` launched successfully (`Status: ok`, app PID observed). This was an emulator test of the LMU app, not a physical-device test and not a Connect app test.
 - Vercel Preview Comments: PASS.
-- Latest PR CI after adding signer-certificate verification: `verify-package-deploy` IN PROGRESS at run `41553520028`; web build, dependency audit and Android sync passed; Android release build was still running.
-- Previous verified PR head `6a31d47...`: `verify` PASS (315/315 tests); `verify-package-deploy` PASS; `verify-android` PASS. Its `verify-emulator` job remains IN PROGRESS at the last poll.
-- PR checks do not execute the main-branch preview or manual production-release path. Those paths remain NOT TESTED until a safe main-branch run is authorized and configured.
+- Latest PR CI after adding the Connect signer-certificate gate: `verify-package-deploy` IN PROGRESS at run `41553520028`; web build, dependency audit and Android sync passed, Android release build was still running at last poll.
+- PR checks do not execute the main-branch Netlify preview or manual production-release path. Those paths remain NOT TESTED until a safe main-branch run is authorized and configured.
 
 ## Phase 2 findings
 
@@ -159,7 +160,7 @@ The uploaded `tenders sa.pdf` is a 19-page foundational blueprint dated 2026-10-
 
 ## Next execution
 
-1. Poll `verify-android` run `41553021614` and record final result.
+1. Poll `verify-package-deploy` run `41553520028` and record final result.
 2. Inspect final PR #108 checks/logs and reconcile any failures.
 3. Review the updated workflow carefully; main-push preview and owner-confirmed production-dispatch paths remain NOT TESTED.
 4. Continue Phase 2 source-level release work on the non-production PR branch. Do not merge PR #108.
