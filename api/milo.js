@@ -3,6 +3,7 @@ import { authenticateRequest, userRpc, adminGet, adminRpc } from './_lib/supabas
 import { selectEngine, routeEngineRequest, InvalidEngineError, TeacherApprovalRequiredError } from './_lib/milo-engine-router.js';
 import { ENGINE_DEFINITIONS } from './_lib/milo-engines.js';
 import { orchestrateEngineRequest, buildUnifiedContext } from './_lib/milo-orchestrator.js';
+import { callGroqWithRetry } from './_lib/milo-provider.js';
 
 const ROLE_RULES = {
   learner: `You are Learner Milo, a safe educational tutor for ages 2-18. Teach rather than complete work. Ask for the learner's attempt when appropriate, diagnose misconceptions, give age-appropriate hints and explanations, and use a different example before returning to the learner's task. Never claim teacher approval.`,
@@ -129,13 +130,17 @@ export async function createMiloReply(req) {
 
   const system = `${ROLE_RULES[role]}\nLearner age: ${safeAge}.\nCurriculum: ${String(effectiveCurriculum).slice(0, 100)}.\nSubject: ${String(effectiveSubject).slice(0, 100)}.\n${levelRules[level]}\n\n${stageGuidance}\n\n${engineGuidance}\n\n${assessmentGuidance}\n\nDo not use multiple-choice-first teaching.\nPrefer authentic reasoning, writing, projects, oral/visual evidence, coding, reflection and practical tasks.\nFor learner responses, avoid Markdown tables, headings, horizontal rules and LaTeX unless they are essential. Prefer clean conversational text that renders well in the LittleMinds interface.\nAcknowledge a genuine learner attempt instead of asking them to attempt work they have already attempted.\nAsk at most one useful follow-up question when returning control to the learner.\nDo not request unnecessary personal data.`;
 
-  const up = await fetch(`${baseUrl}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: message.trim() }], max_tokens: engineDef.code === 'EARLY_LEARNING' ? 300 : 700, temperature: 0.35 }) });
-  const raw = await up.text();
-  let data = {};
-  try { data = JSON.parse(raw); } catch { const jsonPart = raw.replace(/\r/g, '').split('\ndata:')[0].trim(); try { data = JSON.parse(jsonPart); } catch { console.error('Milo upstream parse error', raw.slice(0, 300)); } }
   const eventContext = { profileId: user.id, learnerId: trusted.learnerId, learningItemId: trusted.learningItemId, role, assessment: trusted.assessment, level, model };
-  if (!up.ok) { await recordMiloEvent({ ...eventContext, outcome: 'provider_error' }).catch(() => null); console.error('Milo upstream error', up.status, data?.error?.message || 'Unknown upstream error'); throw new HttpError(502, 'Milo could not complete that request'); }
-  const reply = data.choices?.[0]?.message?.content?.trim();
+  let groqResult;
+  try {
+    groqResult = await callGroqWithRetry({ baseUrl, key, model, messages: [{ role: 'system', content: system }, { role: 'user', content: message.trim() }], max_tokens: engineDef.code === 'EARLY_LEARNING' ? 300 : 700, temperature: 0.35, maxRetries: 2 });
+  } catch (err) {
+    await recordMiloEvent({ ...eventContext, outcome: 'provider_error' }).catch(()=>null);
+    console.error('Milo provider failed after retries', err.message?.slice(0,300));
+    throw new HttpError(502, 'Milo could not complete that request');
+  }
+  const reply = groqResult.reply;
+  const data = groqResult.data;
   if (!reply) { await recordMiloEvent({ ...eventContext, outcome: 'provider_error' }).catch(() => null); throw new HttpError(502, 'Milo returned an empty response'); }
   await recordMiloEvent({ ...eventContext, outcome: `answered_engine_${orchestration.engineCode}` });
   return { reply, meta: { role, helpLevel: level, assessment: trusted.assessment, learningItemId: trusted.learningItemId, provider: 'groq', model, engineCode: orchestration.engineCode, engineName: engineDef.name, evidenceType: engineDef.evidenceType, requiresTeacherReview: orchestration.requiresTeacherReview, evidenceBoundary: orchestration.context.evidenceBoundary } };
