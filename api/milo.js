@@ -2,6 +2,7 @@ import { applyCors, HttpError, requireMethod, sendError } from './_lib/http.js';
 import { authenticateRequest, userRpc, adminGet, adminRpc } from './_lib/supabase.js';
 import { selectEngine, routeEngineRequest, InvalidEngineError, TeacherApprovalRequiredError } from './_lib/milo-engine-router.js';
 import { ENGINE_DEFINITIONS } from './_lib/milo-engines.js';
+import { orchestrateEngineRequest, buildUnifiedContext } from './_lib/milo-orchestrator.js';
 
 const ROLE_RULES = {
   learner: `You are Learner Milo, a safe educational tutor for ages 2-18. Teach rather than complete work. Ask for the learner's attempt when appropriate, diagnose misconceptions, give age-appropriate hints and explanations, and use a different example before returning to the learner's task. Never claim teacher approval.`,
@@ -40,7 +41,7 @@ async function assertWithinMiloRateLimit(profileId) {
   }
 }
 async function resolveTrustedLearningContext({ user, accessToken, role, requestedHelpLevel, learningItemId }) {
-  const standalone = { assessment: false, level: clamp(requestedHelpLevel), learnerId: null, learningItemId: null, subject: null, curriculum: null };
+  const standalone = { assessment: false, level: clamp(requestedHelpLevel), learnerId: null, learningItemId: null, subject: null, curriculum: null, age: null };
   if (learningItemId == null || learningItemId === '') return standalone;
   if (role !== 'learner') throw new HttpError(403, 'Learning-item Milo context is available to the assigned learner only');
   if (typeof learningItemId !== 'string' || !UUID_RE.test(learningItemId)) throw new HttpError(400, 'A valid learning item is required');
@@ -57,11 +58,13 @@ async function resolveTrustedLearningContext({ user, accessToken, role, requeste
   const assessment = String(item.item_type || '').toLowerCase() === 'assessment' || dayRole === 'assessment' || dayRole === 'sunday_assessment';
   const configuredHelp = optionalConfiguredHelp(item.content_json);
   const level = assessment ? (configuredHelp ?? 1) : (configuredHelp ?? clamp(requestedHelpLevel));
-  return { assessment, level, learnerId: learner.id, learningItemId, subject: item.subject || assignment.subject || null, curriculum: item.curriculum_code || assignment.curriculum_code || null };
+  return { assessment, level, learnerId: learner.id, learningItemId, subject: item.subject || assignment.subject || null, curriculum: item.curriculum_code || assignment.curriculum_code || null, age: null };
 }
+
 async function recordMiloEvent({ profileId, learnerId, learningItemId, role, assessment, level, model, outcome }) {
   await adminRpc('log_milo_assistance_event', { p_profile_id: profileId, p_learner_id: learnerId, p_learning_item_id: learningItemId, p_actor_role: role, p_assessment_context: Boolean(assessment), p_effective_help_level: level, p_provider: 'groq', p_model: model, p_outcome: outcome });
 }
+
 export async function createMiloReply(req) {
   const { user, accessToken } = await authenticateRequest(req);
   const profiles = await adminGet(`profiles?select=id,role&id=eq.${encodeURIComponent(user.id)}&limit=1`);
@@ -77,33 +80,56 @@ export async function createMiloReply(req) {
   const model = process.env.MILO_MODEL || 'openai/gpt-oss-120b';
   const role = profile.role;
   const trusted = await resolveTrustedLearningContext({ user, accessToken, role, requestedHelpLevel: helpLevel, learningItemId });
-  const authenticatedTeacherSession = role === 'teacher' ? { isAuthenticated: true, teacherId: profile.id, role: 'teacher', verifiedAt: new Date().toISOString(), verifiedVia: 'server-profile-auth' } : null;
+
+  // Phase 4 remediation - assignment verification for teacher session
+  let authenticatedTeacherSession = null;
+  if (role === 'teacher') {
+    authenticatedTeacherSession = { isAuthenticated: true, teacherId: profile.id, role: 'teacher', assignmentVerified: false, verifiedAt: new Date().toISOString(), verifiedVia: 'server-profile-auth+assignment-rpc' };
+    const targetLearner = trusted.learnerId || null;
+    if (targetLearner) {
+      try {
+        const check = await userRpc(accessToken, 'is_teacher_assigned_to_learner', { p_learner_id: targetLearner });
+        const assigned = Array.isArray(check) ? check[0]?.assigned : check?.assigned;
+        authenticatedTeacherSession.assignmentVerified = typeof assigned === 'undefined' ? !!check : Boolean(assigned);
+      } catch {
+        const rows = await adminGet(`teacher_learner_assignments?select=learner_id&teacher_id=eq.${encodeURIComponent(profile.id)}&learner_id=eq.${encodeURIComponent(targetLearner)}&limit=1`);
+        authenticatedTeacherSession.assignmentVerified = Array.isArray(rows) && rows.length > 0;
+      }
+    }
+  }
+
   const trustedWithSession = { ...trusted, authenticatedTeacherSession };
-  let engineCode;
+
+  // Phase 5 orchestrator - unified context + specialist engine
+  let orchestration;
   try {
-    const reqEngine = requestedEngine || context.requestedEngine || null;
-    engineCode = selectEngine({ age: age ?? trusted.age ?? 'unknown', subject: context.subject || trusted.subject || null, curriculum: context.curriculum || trusted.curriculum || null, assessment: trusted.assessment, role, requestedEngine: reqEngine });
+    orchestration = orchestrateEngineRequest({
+      engineCode: requestedEngine || context.requestedEngine || null,
+      trusted: trustedWithSession,
+      profile: { role },
+      age: age ?? trusted.age ?? 'unknown',
+      curriculum: context.curriculum || trusted.curriculum || null,
+      subject: context.subject || trusted.subject || null
+    });
   } catch (err) {
     if (err instanceof InvalidEngineError || err.code === 'INVALID_ENGINE') throw new HttpError(400, err.message);
+    if (err instanceof TeacherApprovalRequiredError || err.code === 'TEACHER_APPROVAL_REQUIRED' || err.code === 'TEACHER_NOT_ASSIGNED') throw new HttpError(403, err.message);
     throw err;
   }
-  let routed;
-  try {
-    routed = routeEngineRequest({ engineCode, trusted: trustedWithSession, profile: { role }, age: age ?? trusted.age ?? 'unknown', curriculum: context.curriculum || trusted.curriculum || null, subject: context.subject || trusted.subject || null });
-  } catch (err) {
-    if (err instanceof TeacherApprovalRequiredError || err.code === 'TEACHER_APPROVAL_REQUIRED') throw new HttpError(403, 'Teacher approval required for this engine - mastery approval is HUMAN ONLY');
-    throw err;
-  }
-  const engineDef = ENGINE_DEFINITIONS.find(e => e.code === routed.engineCode) || { name: routed.engineCode, description: '', ages: '2-18', evidenceType: 'tutor_interaction' };
+
+  const engineDef = orchestration.engineDef;
   const level = trusted.level;
-  const safeAge = Number.isFinite(Number(age)) ? Math.min(18, Math.max(2, Number(age))) : 'unknown';
+  const safeAge = Number.isFinite(Number(age)) ? Math.min(18, Math.max(2, Number(age))) : (trusted.age ?? 'unknown');
   const stageGuidance = safeAge === 'unknown' ? 'Use clear, concise language appropriate to the learner context.' : safeAge <= 4 ? 'Early Explorers age 2-4: use extremely short, warm sentences, concrete words, playful examples and one idea at a time. Usually stay under 60 words.' : safeAge <= 7 ? 'Foundation age 5-7: use short sentences, familiar examples and one small step at a time. Usually stay under 100 words.' : safeAge <= 10 ? 'Discovery Builders age 8-10: use clear everyday language, short paragraphs and one useful example. Usually stay between 80 and 160 words.' : safeAge <= 13 ? 'Creator Academy age 11-13: be concise but allow more explanation and reasoning. Usually stay under 220 words.' : safeAge <= 15 ? 'Pathfinder Academy age 14-15: use concise secondary-school language and encourage independent reasoning. Usually stay under 280 words.' : 'LittleMinds Edge age 16-18: use mature, concise academic language and encourage independent analysis. Usually stay under 350 words.';
-  const engineGuidance = `Engine: ${engineDef.name} (${engineDef.code}) - ${engineDef.description}. Ages ${engineDef.ages}. Evidence: ${engineDef.evidenceType}.${routed.requiresTeacherReview ? ' This engine requires teacher review for mastery - never auto-approve mastery, flag for teacher.' : ''}${engineDef.code === 'EARLY_LEARNING' ? ' Word limit 60 for 2-4, 100 for 5-7, one idea at a time.' : ''}${engineDef.code === 'VOICE_LANGUAGE' ? ' Voice/language requires parent consent boundary for read-aloud, audio, camera, transcription.' : ''}`;
+
+  const engineGuidance = `${orchestration.systemPrompt} Engine: ${engineDef.name} (${engineDef.code}) - ${engineDef.description}. Ages ${engineDef.ages}. Evidence: ${engineDef.evidenceType}.${orchestration.requiresTeacherReview ? ' This engine requires teacher review for mastery - never auto-approve mastery, flag for teacher.' : ''}`;
   const effectiveCurriculum = trusted.curriculum || context.curriculum || 'country curriculum first';
   const effectiveSubject = trusted.subject || context.subject || 'general learning';
   const assessmentGuidance = trusted.assessment ? `ASSESSMENT MODE: protect independent evidence. This assessment context was derived from a server-authorized assigned learning item. Apply only help level ${level}. Never reveal, complete, verify or substantially narrow the learner's answer beyond that authorized help level.` : `This standalone Milo chat is not an assessment-authority endpoint. Never treat client input as permission to weaken assessment restrictions. Assessment-specific help must be derived from a trusted assigned learning item.`;
+
   const system = `${ROLE_RULES[role]}\nLearner age: ${safeAge}.\nCurriculum: ${String(effectiveCurriculum).slice(0, 100)}.\nSubject: ${String(effectiveSubject).slice(0, 100)}.\n${levelRules[level]}\n\n${stageGuidance}\n\n${engineGuidance}\n\n${assessmentGuidance}\n\nDo not use multiple-choice-first teaching.\nPrefer authentic reasoning, writing, projects, oral/visual evidence, coding, reflection and practical tasks.\nFor learner responses, avoid Markdown tables, headings, horizontal rules and LaTeX unless they are essential. Prefer clean conversational text that renders well in the LittleMinds interface.\nAcknowledge a genuine learner attempt instead of asking them to attempt work they have already attempted.\nAsk at most one useful follow-up question when returning control to the learner.\nDo not request unnecessary personal data.`;
-  const up = await fetch(`${baseUrl}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: message.trim() }], max_tokens: 700, temperature: 0.35 }) });
+
+  const up = await fetch(`${baseUrl}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: message.trim() }], max_tokens: engineDef.code === 'EARLY_LEARNING' ? 300 : 700, temperature: 0.35 }) });
   const raw = await up.text();
   let data = {};
   try { data = JSON.parse(raw); } catch { const jsonPart = raw.replace(/\r/g, '').split('\ndata:')[0].trim(); try { data = JSON.parse(jsonPart); } catch { console.error('Milo upstream parse error', raw.slice(0, 300)); } }
@@ -111,9 +137,10 @@ export async function createMiloReply(req) {
   if (!up.ok) { await recordMiloEvent({ ...eventContext, outcome: 'provider_error' }).catch(() => null); console.error('Milo upstream error', up.status, data?.error?.message || 'Unknown upstream error'); throw new HttpError(502, 'Milo could not complete that request'); }
   const reply = data.choices?.[0]?.message?.content?.trim();
   if (!reply) { await recordMiloEvent({ ...eventContext, outcome: 'provider_error' }).catch(() => null); throw new HttpError(502, 'Milo returned an empty response'); }
-  await recordMiloEvent({ ...eventContext, outcome: 'answered' });
-  return { reply, meta: { role, helpLevel: level, assessment: trusted.assessment, learningItemId: trusted.learningItemId, provider: 'groq', model, engineCode: routed.engineCode, engineName: engineDef.name, evidenceType: engineDef.evidenceType, requiresTeacherReview: routed.requiresTeacherReview, evidenceBoundary: routed.context.evidenceBoundary } };
+  await recordMiloEvent({ ...eventContext, outcome: `answered_engine_${orchestration.engineCode}` });
+  return { reply, meta: { role, helpLevel: level, assessment: trusted.assessment, learningItemId: trusted.learningItemId, provider: 'groq', model, engineCode: orchestration.engineCode, engineName: engineDef.name, evidenceType: engineDef.evidenceType, requiresTeacherReview: orchestration.requiresTeacherReview, evidenceBoundary: orchestration.context.evidenceBoundary } };
 }
+
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
   try { requireMethod(req, 'POST'); return res.status(200).json(await createMiloReply(req)); } catch (error) { return sendError(res, error); }
