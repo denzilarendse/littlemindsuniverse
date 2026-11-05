@@ -50,7 +50,7 @@ The branch workflow scopes secrets to individual steps, uses persist-credentials
 These are source-level remediation findings, not proof of a successful live preview or production release. CI was not rerun in this turn.
 
 ### Frozen Connect APK blocker
-docs/PUBLIC-RELEASE.md on the remediation branch explicitly states the pinned 3,024,688-byte signed APK binary is absent from the repository; only its checksum sidecar is said to exist. The exact binary, SHA-256, sidecar and signer certificate must all match. The production gate is expected to fail closed until the owner-signed binary is recovered. Do not substitute an unsigned build or another APK.
+docs/PUBLIC-RELEASE.md on the remediation branch explicitly states the pinned 3,024,688-byte signed APK binary is absent and claims its checksum sidecar exists. A direct GitHub contents lookup at the documented dist/downloads/LittleMinds-Connect-1.0.0.apk.sha256 path also returned 404, so the sidecar itself is not independently verified at that path. The exact binary, SHA-256, sidecar and signer certificate must all be present and match. The production gate is expected to fail closed until the owner-signed binary is recovered. Do not substitute an unsigned build or another APK.
 
 ## Netlify Deploy Preview provenance correction
 The previously inspected deployment 6adb2cd1938624fdaeb89c81 is an agent-run Deploy Preview from 2026-10-23 (agent-6adb2c46b423e1cc4). Its deployment metadata explicitly reports no functions deployed. It is not the current published production deploy and is not evidence about a newer user-observed Milo Preview.
