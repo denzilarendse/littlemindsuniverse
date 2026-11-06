@@ -23,9 +23,16 @@
   publish = "dist"
 
 [context.deploy-preview]
-  # Preview isolation: static-only until test Supabase project configured
   command = "npm run build"
+  functions = "netlify/disabled-functions"
+  publish = "dist"
 
 [context.deploy-preview.environment]
+  SUPABASE_URL = ""
+  SUPABASE_PUBLISHABLE_KEY = ""
+  SUPABASE_ANON_KEY = ""
   SUPABASE_SECRET_KEY = ""
   SUPABASE_SERVICE_ROLE_KEY = ""
+  GROQ_API_KEY = ""
+  PAYFAST_MERCHANT_ID = ""
+  PAYFAST_MERCHANT_KEY = ""
