@@ -1,6 +1,17 @@
 import { HttpError, getBearerToken } from './http.js';
 
+function assertPreviewIsolation() {
+  const context = String(process.env.CONTEXT || '').toLowerCase();
+  const url = String(process.env.SUPABASE_URL || '');
+  const isProdProject = url.includes('zcokxljcsfkrlouzragv');
+  const isPreview = context === 'deploy-preview' || context === 'branch-deploy';
+  if (isPreview && isProdProject) {
+    throw new Error('Preview isolation: deploy-preview cannot use production Supabase zcokxljcsfkrlouzragv - use test project or static-only preview');
+  }
+}
+
 function config() {
+  assertPreviewIsolation();
   const url = String(process.env.SUPABASE_URL || '').replace(/\/$/, '');
   const publishableKey = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '');
   const secretKey = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '');
@@ -47,6 +58,7 @@ export async function userRpc(accessToken, functionName, body = {}) {
 }
 
 function adminHeaders(extra = {}) {
+  assertPreviewIsolation();
   const { secretKey } = config();
   if (!secretKey) throw new HttpError(503, 'SUPABASE_SECRET_KEY is not configured');
   const headers = { apikey: secretKey, ...extra };

@@ -21,3 +21,11 @@
 [dev]
   functions = "api"
   publish = "dist"
+
+[context.deploy-preview]
+  # Preview isolation: static-only until test Supabase project configured
+  command = "npm run build"
+
+[context.deploy-preview.environment]
+  SUPABASE_SECRET_KEY = ""
+  SUPABASE_SERVICE_ROLE_KEY = ""
