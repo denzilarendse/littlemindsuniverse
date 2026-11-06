@@ -1,14 +1,21 @@
 [build]
   functions = "api"
   publish = "dist"
+
 [functions]
   directory = "api"
   node_bundler = "esbuild"
+
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
+    Cross-Origin-Opener-Policy = "same-origin"
+    X-Permitted-Cross-Domain-Policies = "none"
+    Strict-Transport-Security = "max-age=15552000"
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; font-src 'self' data: https:; connect-src 'self' https://zcokxljcsfkrlouzragv.supabase.co wss://zcokxljcsfkrlouzragv.supabase.co https://api.groq.com; manifest-src 'self'; worker-src 'self' blob:"
+
 [dev]
   functions = "api"
   publish = "dist"
