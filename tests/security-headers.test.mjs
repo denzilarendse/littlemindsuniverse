@@ -53,6 +53,27 @@ test('Netlify repository configuration mirrors the same security policy', () => 
   assert.doesNotMatch(netlify, /unsafe-eval|default-src \*/i);
 });
 
+test('Netlify CSP exactly mirrors Vercel and _headers canonical policy', () => {
+  const vercelCsp = vercel.headers[0].headers.find(h=>h.key==='Content-Security-Policy').value;
+  const netlifyMatch = netlify.match(/Content-Security-Policy\s*=\s*"([^"]+)"/);
+  assert.ok(netlifyMatch, 'Netlify CSP must exist');
+  const netlifyCsp = netlifyMatch[1];
+  const headersMatch = artifactHeaders.match(/Content-Security-Policy:\s*([^\n]+)/);
+  assert.ok(headersMatch, '_headers CSP must exist');
+  const headersCsp = headersMatch[1].trim();
+  // Exact equality - not just fragments
+  assert.equal(netlifyCsp, vercelCsp, 'Netlify CSP must exactly equal Vercel CSP - exact parity required');
+  assert.equal(headersCsp, vercelCsp, '_headers CSP must exactly equal Vercel CSP');
+  // Ensure no Groq in browser CSP (server function only)
+  assert.doesNotMatch(netlifyCsp, /groq/i, 'Groq must not be in browser CSP - server-only');
+  assert.doesNotMatch(vercelCsp, /groq/i, 'Groq must not be in browser CSP');
+  // Ensure restrictive img/font/media
+  assert.match(netlifyCsp, /img-src 'self' data: blob: https:\/\/zcokxljcsfkrlouzragv\.supabase\.co/);
+  assert.match(netlifyCsp, /font-src 'self' data:;/);
+  assert.match(netlifyCsp, /media-src 'self' blob: https:\/\/zcokxljcsfkrlouzragv\.supabase\.co/);
+  assert.match(netlifyCsp, /upgrade-insecure-requests/);
+});
+
 test('manual Netlify deploy artifact carries the same browser security boundary', () => {
   assert.match(artifactHeaders, /^\/\*/m);
   for (const fragment of requiredNetlifyFragments) {
