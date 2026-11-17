@@ -23,7 +23,7 @@ test('fixture exercises learner self, verified and unverified guardian, and teac
   assert.match(fixture, /verified guardian boundary failed/i);
   assert.match(fixture, /unverified guardian was allowed/i);
   assert.match(fixture, /active classroom teacher boundary failed/i);
-  assert.match(fixture, /unrelated teacher was allowed/i);
+  assert.match(fixture, /unrelated teacher was allowed/i);\n  assert.match(fixture, /l\\.user_id = auth\\.uid\\(\\)/i);\n  assert.match(fixture, /gl\\.verified = true/i);\n  assert.match(fixture, /c\\.teacher_profile_id = auth\\.uid\\(\\)/i);
 });
 
 test('fixture checks anon and direct-write denial', () => {
