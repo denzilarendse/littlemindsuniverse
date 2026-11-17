@@ -58,7 +58,7 @@ The frozen Phase 1 chat specification proposed React + TypeScript + Vite. The ca
 - Added Parent Hub, Teacher Studio and Admin Console demo surfaces/routes.
 - Integrated new routes into the existing shared shell with role/age navigation checks.
 - Ensured demo data is not loaded into live mode and live room writes are disabled.
-- Added regression tests for room rendering, access boundaries, demo/live separation, Community Garden safety affordances and shared demo-progress restoration after role reset.
+- Added regression tests for room rendering, access boundaries, demo/live separation, Community Garden safety affordances, shared demo-progress restoration after role reset and an interactive Maths Race completion writing to shared demo mastery.
 - Added new module to PWA offline core allowlist and advanced cache generation.
 - Added implementation checkpoint document.
 
@@ -66,7 +66,7 @@ The frozen Phase 1 chat specification proposed React + TypeScript + Vite. The ca
 
 - Branch: production/lmu-blueprint-room-shell-20261117
 - Draft PR: #112 — LMU blueprint rooms MVP — shared shell integration.
-- Latest pre-ledger implementation commit: a6d3906d6c723bf18545af9e551c670e321dd594
+- Latest implementation commit before ledger update: 1e4e24abd57ce92ed2fb6fbb78d7b24d1ccea9d6
 - Canonical Supabase project: zcokxljcsfkrlouzragv; status observed ACTIVE_HEALTHY.
 - Existing public data tables inspected with RLS enabled.
 - Existing project release baseline was already documented as RELEASE HOLD for hosted authenticated E2E, owner signing, physical-device and related gates.
@@ -74,8 +74,8 @@ The frozen Phase 1 chat specification proposed React + TypeScript + Vite. The ca
 ## Test results
 
 - Baseline before this slice: npm run check passed 305 tests.
-- After room integration and progress-reset fix: npm run check passed 312 tests.
-- JavaScript syntax scan: 101 files passed.
+- After room integration, progress-reset fix and interactive Maths Race test: npm run check passed 313 tests.
+- JavaScript syntax scan: 117 files passed.
 - Smoke suite: PASS.
 - Static production build: 27 files emitted.
 - Capacitor sync: PASS; new room asset copied to both dist and Android web assets.
