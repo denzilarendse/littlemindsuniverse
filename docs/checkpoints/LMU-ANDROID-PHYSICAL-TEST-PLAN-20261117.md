@@ -8,18 +8,18 @@
 
 - Repository: `denzilarendse/littlemindsuniverse`
 - Branch: `production/lmu-blueprint-room-shell-20261117`
-- Commit: `c5a2ed67977e76376ffe32814d1f06e1eec97280`
-- Android workflow: [run 44147682085](https://github.com/denzilarendse/littlemindsuniverse/actions/runs/44147682085)
-- Artifact: `littlemindsuniverse-pilot-debug-apk` (ID `14357631883`)
-- Artifact SHA-256: `574d422987ca60978a71595441c2ddf971736fe5a3ec4166c812fac7f836614a`
+- Latest instrumentation-test commit: `037dbe7efc4481b66a8e4c3a8afb42e96f64b4fb`
+- Android workflow: [run 44152121586](https://github.com/denzilarendse/littlemindsuniverse/actions/runs/44152121586)
+- Latest APK artifact: `littlemindsuniverse-pilot-debug-apk` (ID `14359541834`)
+- Artifact ZIP digest: `7db57f26a3733a9a6fadbed7eedf24d37a5203aaeae10e67724a72881327b093`
 - Extracted APK: `app-debug.apk`, 4,238,778 bytes
-- APK SHA-256: `e5198c10a1d17835147dae554dda47089b810a4fcd6d87b3a5d409d467e14503`
+- Latest extracted APK SHA-256: `72db16968cc54dec148101e0d0c99b7001ec852e4d59d7cd4bea39a39b3e49e2`
 - Application ID: `za.co.littlemindsuniverse`
 - Minimum Android SDK: 24 (Android 7.0)
 - Target / compile SDK: 36
 - Capacitor: 8.5.2
 
-The artifact ZIP and extracted APK were downloaded from the successful workflow. The APK archive integrity check passed. CI's API 36 emulator job also passed. Neither result substitutes for physical-device acceptance.
+The artifact ZIP and extracted APK were downloaded from the Android build job. The APK archive integrity check passed. The Android build job passed; the separate API 36 emulator job is still running at the latest checkpoint. Neither result substitutes for physical-device acceptance.
 
 ## Device prerequisites
 
