@@ -289,3 +289,20 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 3. Obtain the owner-controlled schema-only export and complete manifest; review before restoring only into the isolated Free PG17 test project.
 4. After baseline restore/parity, apply room migrations in test and rerun PostgreSQL 17 security verification.
 5. Keep production signing, deployment, live migrations and merge behind their approval gates.
+
+
+## Android emulator regression triage — 2026-11-17
+
+- Re-scanned the current branch ledger, Android CI run `44149876712`, job results and decoded emulator job logs; rechecked the uploaded APK bytes locally and rechecked isolated test-project metadata/table inventory.
+- Android build job `verify-android` succeeded and generated fresh APK/AAB artifacts from commit `7ce015848e9c761a09896df60db92452c645eb7b`. The separate emulator job failed 2 of 4 instrumentation tests with `RootViewWithoutFocusException` during Espresso view matching. The same class of intermittent focus failure was observed in an earlier run and had previously passed on retry. This is a real CI failure; do not describe this run as all-green.
+- Root-cause evidence points to Espresso waiting for window focus in the hosted emulator, not a compile/package failure. The tests were asserting view visibility through Espresso's focus-dependent root picker. Replaced those assertions with direct ActivityScenario inspection of the actual Capacitor WebView, checking it exists, is attached, visible and laid out. The orientation test now waits for instrumentation idle after each orientation change. This removes dependence on Espresso root-window focus while preserving the functional assertions.
+- Test change commit: `037dbe7efc4481b66a8e4c3a8afb42e96f64b4fb`. CI for this commit has not yet been returned/observed; the test fix is attempted, not verified.
+- Existing APK at `/mnt/data/lmu-current-apk/app-debug.apk` was rehashed locally: 4,238,778 bytes, SHA-256 `e5198c10a1d17835147dae554dda47089b810a4fcd6d87b3a5d409d467e14503`; APK archive contains AndroidManifest.xml and classes.dex. This file is the earlier pilot artifact, not a build of the new instrumentation-test commit.
+- The failed emulator workflow still successfully built/uploaded a fresh pilot APK artifact ID `14358921005` (artifact ZIP digest `30e25bf4ada6d7d289d7e0e0b4d602f6b0accab39527403c27ffee204c9125f1`) and unsigned AAB artifact ID `14358965923`. Artifact generation is not evidence of emulator acceptance.
+- Isolated Supabase test project remains ACTIVE_HEALTHY, PostgreSQL 17.11. Read-only table inventory remains empty. No schema restore or migration occurred.
+- No production deployment, signing, merge or database changes occurred.
+
+### Next phase brief
+1. Observe CI for commit `037dbe7efc4481b66a8e4c3a8afb42e96f64b4fb`. If the revised emulator tests pass, retain the change; if not, inspect the next failure log and correct only the root cause.
+2. Do not distribute the new artifact as fully verified until emulator verification passes. The existing pilot APK can be used for manual device checks, but physical-device testing remains outstanding.
+3. Continue backend baseline recovery only with an owner-supplied schema-only export and sanitised manifest; keep the test target empty until then.
