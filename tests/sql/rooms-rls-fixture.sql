@@ -260,8 +260,21 @@ begin
 end $$;
 reset role;
 
+-- Only authenticated callers may execute the public RPC; anon cannot.
+do $
+begin
+  if has_function_privilege('anon',
+      'public.record_room_activity(uuid,text,uuid,text,jsonb,integer)', 'EXECUTE') then
+    raise exception 'anon unexpectedly has room activity RPC execute';
+  end if;
+  if not has_function_privilege('authenticated',
+      'public.record_room_activity(uuid,text,uuid,text,jsonb,integer)', 'EXECUTE') then
+    raise exception 'authenticated is missing room activity RPC execute';
+  end if;
+end $;
+
 -- Anonymous has no table SELECT grants.
-do $$
+do $
 begin
   if has_table_privilege('anon','public.room_content_items','SELECT')
      or has_table_privilege('anon','public.room_activity_events','SELECT') then
