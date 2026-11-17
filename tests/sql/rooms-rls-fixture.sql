@@ -4,6 +4,16 @@
 -- This is NOT a canonical LMU bootstrap and must NEVER be pointed at production.
 begin;
 
+do $
+begin
+  if current_database() <> 'lmu_rooms_test' then
+    raise exception 'refusing to run: database must be named lmu_rooms_test';
+  end if;
+  if inet_server_addr() is not null and inet_server_addr() not in ('127.0.0.1'::inet, '::1'::inet) then
+    raise exception 'refusing to run: server address is not loopback';
+  end if;
+end $;
+
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
