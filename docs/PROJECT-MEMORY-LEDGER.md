@@ -58,7 +58,7 @@ The frozen Phase 1 chat specification proposed React + TypeScript + Vite. The ca
 - Added Parent Hub, Teacher Studio and Admin Console demo surfaces/routes.
 - Integrated new routes into the existing shared shell with role/age navigation checks.
 - Ensured demo data is not loaded into live mode and live room writes are disabled.
-- Added regression tests for room rendering, access boundaries, demo/live separation and Community Garden safety affordances.
+- Added regression tests for room rendering, access boundaries, demo/live separation, Community Garden safety affordances and shared demo-progress restoration after role reset.
 - Added new module to PWA offline core allowlist and advanced cache generation.
 - Added implementation checkpoint document.
 
@@ -74,11 +74,12 @@ The frozen Phase 1 chat specification proposed React + TypeScript + Vite. The ca
 ## Test results
 
 - Baseline before this slice: npm run check passed 305 tests.
-- After room integration: npm run check passed 311 tests.
+- After room integration and progress-reset fix: npm run check passed 312 tests.
 - JavaScript syntax scan: 101 files passed.
 - Smoke suite: PASS.
 - Static production build: 27 files emitted.
 - Capacitor sync: PASS; new room asset copied to both dist and Android web assets.
+- Production dependency audit: PASS — 0 vulnerabilities with npm audit --omit=dev. Full install reports 6 moderate development-dependency advisories.
 - Android debug APK: NOT BUILT. Gradle stopped because the sandbox has no JAVA_HOME and no java executable.
 - Browser interaction E2E on hosted preview: NOT RUN.
 - Live RLS/API integration for new rooms: NOT IMPLEMENTED OR TESTED.
