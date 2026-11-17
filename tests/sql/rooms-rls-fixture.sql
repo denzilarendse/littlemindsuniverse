@@ -64,8 +64,8 @@ create table public.classroom_members (
   status text not null
 );
 
--- Mirrors the existing LMU learner-self / verified-guardian / active-classroom
--- relationship contract, scoped to the minimal fixture tables above.
+-- Mirrors the current production helper from
+-- database/migrations/20260920_teacher_learner_read_access.sql.
 create or replace function public.can_access_learner(p_learner_id uuid)
 returns boolean
 language sql stable security definer
@@ -74,7 +74,8 @@ as $$
   select
     exists (
       select 1 from public.learners l
-      where l.id = p_learner_id and l.user_id = auth.uid() and l.active = true
+      where l.id = p_learner_id
+        and l.user_id = auth.uid()
     )
     or exists (
       select 1 from public.guardian_learner_links gl
@@ -86,12 +87,10 @@ as $$
       select 1
       from public.classroom_members cm
       join public.classrooms c on c.id = cm.classroom_id
-      join public.learners l on l.id = cm.learner_id
       where cm.learner_id = p_learner_id
         and cm.status = 'active'
         and c.teacher_profile_id = auth.uid()
         and c.active = true
-        and l.active = true
     );
 $$;
 
