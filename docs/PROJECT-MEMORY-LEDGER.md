@@ -165,3 +165,25 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - No Supabase production migration, live data write, paid branch, production deployment, PR merge or app integration was performed.
 - Open design consideration before client integration: confirm the project's PostgREST exposed-schema configuration and keep the RPC's execute privileges limited to authenticated; current function is in public to be callable via standard Supabase RPC. Consider a private-schema internal helper if project API configuration supports a wrapper without widening exposure.
 - Next: verify remaining CI jobs; obtain a sanitized full LMU schema baseline; run migration chain and Supabase-specific compatibility/advisor checks; only then implement feature-flagged client adapter. Live migration and deployment remain separate approval gates.
+
+
+## Full LMU database compatibility and migration-chain audit — 2026-11-17
+
+- Read-only inspection of Supabase project `zcokxljcsfkrlouzragv`: ACTIVE_HEALTHY, PostgreSQL 17.6.1.166. No SQL DDL, data writes, migration application, branch creation, or deployment was performed.
+- Live migration ledger: 97 applied migrations, latest `20261014133549 phase1j_security_hardening`.
+- Canonical PR head tree `50cec4776baa28eb864c43026026d8565781089d` contains 47 SQL files under `database/migrations`, including the two new 20261117 room migrations. After normalizing date prefixes/suffixes, only 38 migration names match the live ledger; 59 live migration entries have no corresponding source file in this branch tree, and 9 repository migration files do not map to a live ledger name. Therefore the repository does NOT currently contain a reproducible complete migration chain. This is a BLOCKER for claiming full-chain compatibility or running a trustworthy zero-to-current replay.
+- Current live public schema snapshot: 62 public base tables, 663 columns, 137 public functions, 69 RLS policies. RLS is enabled on all 62 public base tables; 14 of those tables have no policies (default deny for ordinary roles, but likely operationally inaccessible until intended policies are supplied). No public base table without RLS was found.
+- Existing shared prerequisites for the room migrations are present and structurally compatible by catalog inspection: `public.profiles`, `public.learners`, `public.can_access_learner(uuid)`; learner fields `user_id`, `active`, `learning_language`, `home_language`, `stage_code`; profile fields `role`, `preferred_language`; `app_role` includes `learner`. The canonical helper exists and supports learner-self, verified guardian and active classroom teacher reads.
+- Room tables `room_content_items` / `room_activity_events` and RPC `record_room_activity` are absent from live Supabase, as expected because neither room migration has been applied. New migration references were inspected against live catalog metadata, but not executed against a full LMU schema.
+- PostgreSQL is 17.6.1 in hosted Supabase; existing disposable room fixture CI uses PostgreSQL 16. This is a version-parity difference to retain in test planning.
+- PostgREST exposed-schema configuration could not be established from available read-only SQL settings or connector metadata; do not assume `public` exposure configuration. Confirm in Supabase Data API settings before client RPC integration.
+- Security advisor snapshot (2026-11-17): 14 RLS-enabled public tables without policies; 94 SECURITY DEFINER functions executable by authenticated; leaked-password protection disabled. These are pre-existing findings. No blanket grants, policy changes or function revocations were made.
+- Compatibility conclusion: EXISTING ROOM MIGRATION PREREQUISITES — PARTIALLY VERIFIED; FULL LMU MIGRATION-CHAIN VERIFICATION — BLOCKED. A complete, sanitized migration archive (all 97 applied migrations) or an authoritative schema-only dump plus migration provenance is required. Then replay in free local/disposable PostgreSQL 17, execute room migrations, compare resulting catalog with a sanitized live schema baseline, and run role-matrix tests. No paid branch or hosted mutation is needed for this next stage.
+- Approval boundary unchanged: no live migration, production data change, merge or production deployment is authorized by this audit.
+
+### Next phase brief
+1. Recover the 59 unmatched applied migration source files or obtain a trusted sanitized full schema-only baseline with migration provenance.
+2. Establish a free PostgreSQL 17 test runner (local machine or ephemeral CI) and replay the canonical migration sequence.
+3. Run room migrations after the baseline, inspect catalog/grants/RLS/functions and compare to live schema metadata.
+4. Confirm PostgREST exposed schemas and assess whether the SECURITY DEFINER RPC should use a private internal helper plus narrow exposed wrapper.
+5. Only after those checks, implement feature-flagged PlayWorld/StoryVerse client reads/writes. Keep live DB and production release approval-gated.
