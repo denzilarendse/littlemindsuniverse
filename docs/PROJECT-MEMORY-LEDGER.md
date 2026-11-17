@@ -1,10 +1,10 @@
 # LittleMindsUniverse — Project Memory Ledger
 
-**Ledger version:** 1.0  
-**Last scan:** 2026-11-17, evening cycle (local time UTC+02:00)  
+**Ledger version:** 1.1  
+**Last scan:** 2026-11-17, current session (UTC+02:00)  
 **Canonical repository:** denzilarendse/littlemindsuniverse  
 **Working branch:** production/lmu-blueprint-room-shell-20261117  
-**Status:** RELEASE HOLD — blueprint MVP slice implemented; live room backend and end-to-end verification remain outstanding.
+**Status:** RELEASE HOLD — interactive room demo MVP and backend contract are checkpointed; live room integration, child identity/consent hardening, Android artifact and release verification remain outstanding.
 
 ## Objective
 
@@ -12,117 +12,90 @@ Deliver one LittleMindsUniverse web application and Android Capacitor wrapper wi
 
 ## Source scan and already-complete work
 
-Scanned:
-- Current project conversation and the prior LMU source-recovery/handover context available in this project.
-- Current project instructions and the frozen LMU blueprint.
-- Canonical GitHub repository, root files, app runtime, PWA service worker, Android wrapper, docs, test suite and migrations.
-- Live Supabase project metadata, public tables/RLS status, key learner/guardian/classroom table structures and relevant authorization helper definitions.
-- Existing Vercel project association.
+Scanned current project conversation and accessible LMU handover context; project instructions; canonical GitHub PR/branch and ledger; Supabase project, table definitions, helper functions, policies and security advisors; current workflow run summaries; existing Vercel association.
 
-Already present in canonical source and not rebuilt:
+Already present and not rebuilt:
 - Shared application shell and role-aware navigation.
-- Supabase Auth integration and learner/guardian/teacher/admin profile model.
-- Academy learning tasks, learner evidence submission and teacher review.
-- Milo server-backed tutoring and learning session records.
-- Shared mastery/progress and teacher classroom workflows.
-- Parent reporting and guardian evidence controls.
-- LittleMinds Connect relationship-authorized parent/teacher messaging.
-- Accessibility baseline, PWA service worker and Capacitor Android wrapper.
-- Existing security/RLS migration history and regression tests.
+- Supabase Auth and learner/guardian/teacher/admin profiles.
+- Academy tasks, evidence submission and teacher review.
+- Milo server-backed tutoring and session records.
+- Shared mastery/progress and classroom workflows.
+- Parent reporting, guardian evidence consent/receipts and guardian feature controls.
+- LittleMinds Connect messaging, accessibility, PWA and Capacitor wrapper.
+- Existing security/RLS migrations.
 
-## Architecture conflict and decision
+## Architecture decision
 
-The frozen Phase 1 chat specification proposed React + TypeScript + Vite. The canonical repository is an established static JavaScript application with a working Supabase/Capacitor integration and a substantial passing regression suite. Replacing it with a new React application would discard or duplicate verified work and contradict the no-rework instruction.
+The frozen Phase 1 spec proposed React + TypeScript + Vite. Canonical source is a working static-JavaScript app with Supabase/Capacitor integration and passing tests. Preserve the existing architecture to avoid destructive rework; architecture mismatch remains open for product decision.
 
-**Decision:** Preserve the canonical repository architecture for this production slice. No framework migration was attempted. This conflict remains documented for future architecture review; it must not be silently treated as resolved.
+## Completed implementation
 
-## Decisions
+- Blueprint room demo surfaces and shell navigation for PlayWorld, StoryVerse, Career Galaxy, Adult Academy, Creator Studio, Community Garden, Parent Hub, Teacher Studio and Admin Console.
+- Role/age gates, demo/live separation, shared demo mastery, PWA precache and 8 new regression tests.
+- Draft PR #112 remains open, draft and unmerged.
+- Added `docs/ROOMS-BACKEND-CONTRACT-20261117.md` defining the live data model, role authorization, consent reuse, child PIN requirements, acceptance tests and rollout sequence.
+- Added `docs/drafts/rooms-backend-schema.draft.sql`. It is explicitly a design sketch wrapped in a transaction ending with ROLLBACK; it is not a deployable migration and must not be applied as production DDL.
+- The schema design reuses existing guardian consent and feature-control tables rather than introducing a parallel consent ledger.
 
-1. Use denzilarendse/littlemindsuniverse as canonical source because it is the repository linked to the existing Vercel LMU project and contains the live Supabase integration, Android wrapper and release evidence.
-2. Preserve existing core modules rather than rebuild them.
-3. Add missing blueprint room surfaces as a separate module loaded by the existing shell.
-4. New room writes are demo-only. Live-mode write controls remain disabled until server-side APIs and RLS are implemented and tested.
-5. Community Garden posts remain pending human moderation; the new UI exposes no direct-message composer.
-6. PWA cache generation advanced to v15 and explicitly precaches the new room module.
-7. Work is isolated on a feature branch and draft PR. Main branch and production deployment were not changed.
-8. No live Supabase migration was applied.
+## Current evidence
 
-## Completed work in this slice
+- PR: https://github.com/denzilarendse/littlemindsuniverse/pull/112
+- Latest branch commit after this session's design artifacts: ebfbbdb9f32667d6e24c6f9b329201790da39b63
+- Supabase project: zcokxljcsfkrlouzragv; ACTIVE_HEALTHY; PostgreSQL 17.6.
+- Existing tables inspected read-only: profiles, learners, guardian_learner_links, guardian_evidence_consents, guardian_evidence_consent_events, guardian_consent_receipts, guardian_feature_controls, learning_items, learning_item_recipients, learner_skill_mastery and mastery_evidence.
+- Existing authorization helper `can_access_learner(uuid)` covers learner self, verified guardian and active classroom teacher. Existing guardian consent RPC checks verified primary guardian capability and writes versioned receipts.
+- Supabase security advisor snapshot: 14 RLS-enabled tables without policies; 94 SECURITY DEFINER functions executable by authenticated; leaked-password protection disabled; pg_net in public schema. These are pre-existing findings and were not modified. Do not blanket-revoke functions; assess each dependent flow.
+- Current PR metadata: open, draft, unmerged; mergeable reported false after latest docs commits. Recheck branch/merge status before any merge consideration.
+- CI/workflow summary: earlier 2 release/public checks completed successfully; Android verification was still in progress at the last observed workflow snapshot. New docs-only commits have no workflow run returned yet.
+- A Vercel preview deployment was building at last observation. This is a preview, not a production release.
 
-- Added PlayWorld sample games: Maths Race, Spelling Quest and Science Lab Puzzles.
-- Added StoryVerse reading samples and comprehension checks.
-- Added Career Galaxy interest exploration and three-year pathway draft.
-- Added Adult Academy sample courses, skills checks and demo certificate records.
-- Added Creator Studio story/project drafts and class-only teacher approval queue.
-- Added Community Garden clubs, guardian opt-in demo control, PII/link blocking, pending human review, emoji reactions and reporting.
-- Added Parent Hub, Teacher Studio and Admin Console demo surfaces/routes.
-- Integrated new routes into the existing shared shell with role/age navigation checks.
-- Ensured demo data is not loaded into live mode and live room writes are disabled.
-- Added regression tests for room rendering, access boundaries, demo/live separation, Community Garden safety affordances, shared demo-progress restoration after role reset and an interactive Maths Race completion writing to shared demo mastery.
-- Added new module to PWA offline core allowlist and advanced cache generation.
-- Added implementation checkpoint document.
+## Test results (last code verification)
 
-## Evidence
-
-- Branch: production/lmu-blueprint-room-shell-20261117
-- Draft PR: #112 — LMU blueprint rooms MVP — shared shell integration.
-- Latest implementation commit before ledger update: 1e4e24abd57ce92ed2fb6fbb78d7b24d1ccea9d6
-- Canonical Supabase project: zcokxljcsfkrlouzragv; status observed ACTIVE_HEALTHY.
-- Existing public data tables inspected with RLS enabled.
-- Existing project release baseline was already documented as RELEASE HOLD for hosted authenticated E2E, owner signing, physical-device and related gates.
-
-## Test results
-
-- Baseline before this slice: npm run check passed 305 tests.
-- After room integration, progress-reset fix and interactive Maths Race test: npm run check passed 313 tests.
-- JavaScript syntax scan: 117 files passed.
-- Smoke suite: PASS.
-- Static production build: 27 files emitted.
-- Capacitor sync: PASS; new room asset copied to both dist and Android web assets.
-- Production dependency audit: PASS — 0 vulnerabilities with npm audit --omit=dev. Full install reports 6 moderate development-dependency advisories.
-- Android debug APK: NOT BUILT. Gradle stopped because the sandbox has no JAVA_HOME and no java executable.
-- Browser interaction E2E on hosted preview: NOT RUN.
+- `npm run check`: PASS — 313 tests, syntax scan 117 JS files, smoke tests and static build.
+- `npm run android:sync`: PASS.
+- `npm audit --omit=dev`: PASS — zero production dependency vulnerabilities; full install audit has 6 moderate dev dependency advisories.
+- Android APK: NOT BUILT — previous sandbox lacked Java/JAVA_HOME.
+- Hosted authenticated browser E2E: NOT RUN.
 - Live RLS/API integration for new rooms: NOT IMPLEMENTED OR TESTED.
-- Production deployment: NOT PERFORMED.
+- Current schema contract and SQL sketch are documentation-only; no SQL test or migration executed.
 
 ## Outstanding work
 
-1. Implement live content catalogue and server-backed activity records for PlayWorld and StoryVerse.
-2. Implement live career pathways, adult enrolment/skills checks/certificates and Creator Studio publishing workflows.
-3. Implement Community Garden server moderation queue, human-review actions, guardian opt-in and age restrictions.
-4. Implement guardian screen-time/quiet-hour controls with cross-device enforcement.
-5. Complete guardian consent lifecycle and child PIN authentication; verify that child identity is not exposed in Milo memory.
-6. Add multilingual reading content and Milo narration; verify salary and qualification data sources before showing career claims.
-7. Complete live Parent Hub, Teacher Studio and Admin Console flows.
-8. Build Android APK/AAB in an environment with JDK 21 and Android SDK; run physical-device tests.
-9. Run hosted authenticated E2E, RLS negative tests, backup/restore and rollback checks.
-10. Resolve or formally accept the frozen React specification versus existing static-JS source conflict.
+1. Create a disposable/local Supabase test environment and implement migration plus positive/negative role-matrix tests.
+2. Define and implement the validated append-only room activity RPC and catalogue publication/moderation model.
+3. Implement server-backed room reads/writes and integrate with existing mastery/review pipeline.
+4. Implement Community Garden reporting, human moderation, guardian opt-in and age gates on the server.
+5. Implement cross-device guardian time limits and quiet hours.
+6. Resolve adult learner identity/age verification; current role model does not establish Adult Academy eligibility.
+7. Design and implement child profile unlock/PIN only after security model approval; never store plaintext PIN or create a duplicate child identity.
+8. Verify Milo memory/data minimization and multilingual content/narration; verify South African career qualification/salary data before making claims.
+9. Complete live Parent Hub, Teacher Studio and Admin Console operations.
+10. Resolve React-vs-static-JS architecture conflict.
+11. Build/sign Android APK/AAB in JDK 21 + Android SDK environment and test on physical devices.
+12. Run hosted authenticated E2E, RLS negative tests, backup/restore and rollback checks.
+13. Resolve pre-existing Supabase advisor findings through separate scoped work.
 
-## Risks
+## Risks and blockers
 
-- The new room pages are a demo MVP, not live-backed product features.
-- Demo-only localStorage is not a substitute for shared server-side progress.
-- The existing app's current user/consent model differs from the blueprint's child PIN-first onboarding requirement.
-- Live moderation, career salary data, multilingual content and child privacy need additional specialist verification.
-- Android wrapper sync passed, but no APK was built in this sandbox.
+- New room pages are still demo-only, not live-backed.
+- Child safety cannot rely on UI-only age checks, client PII regexes or localStorage.
+- Current user/consent model differs from blueprint's child PIN-first onboarding; must preserve guardian-first authority and legal review.
+- 14 existing RLS tables without policies and 94 authenticated-callable SECURITY DEFINER functions warrant a separate security remediation programme.
+- POPIA/legal review is needed for consent language, retention, age thresholds and cross-border processing.
+- Android build environment/signing and hosted E2E are unavailable/unverified.
 - Production release remains on hold.
 
 ## Approvals and deployment
 
-- No live database migration was applied.
-- No production deployment or main-branch merge was performed.
-- Approval remains mandatory before applying live database migrations or deploying/promoting to production.
-- Draft PR #112 is open and unmerged.
+- No live migration applied and no production data changed.
+- No production deployment or main-branch merge performed.
+- Explicit approval remains mandatory before live DB migrations and production deployment.
+- PR #112 remains draft/unmerged.
 
 ## Recovery instructions
 
-- Continue from branch production/lmu-blueprint-room-shell-20261117.
-- Re-run npm ci --ignore-scripts && npm run check.
-- Android sync/build commands: npm run android:sync, npm run android:apk, npm run android:bundle.
-- Never commit keystores, android/key.properties, passwords or service-role secrets.
-- Do not reset, delete or modify the live Supabase project as a shortcut.
-- Do not merge the draft PR until the current diff and CI evidence are reviewed.
+Continue on `production/lmu-blueprint-room-shell-20261117`. Re-run `npm ci --ignore-scripts && npm run check`. Android commands: `npm run android:sync`, `npm run android:apk`, `npm run android:bundle`. Never commit keystores, passwords or service-role secrets. Do not reset/delete/modify live Supabase as a shortcut.
 
 ## Next phase brief
 
-Continue with the server-side contract for the new rooms. Inspect existing consent and authorization helpers, define a minimal shared content/activity schema and transactional RPCs, add RLS regression tests, and keep the migration unapplied until a recovery point and explicit live-migration approval exist. In parallel, implement the blueprint's child PIN/guardian consent flow using the established Auth model without weakening existing security.
+Implement the backend contract in a local or disposable Supabase branch, starting with content catalogue and append-only activity, then community moderation. Write SQL role-matrix tests before enabling Data API grants. Keep live migration and production deployment approval-gated. Separately triage existing advisor findings without blanket policy/function changes.
