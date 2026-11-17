@@ -190,7 +190,7 @@ begin
   exception when insufficient_privilege then
     null;
   end;
-end $;
+end $$;
 reset role;
 
 -- Unverified guardian: sees no learner event.
@@ -220,7 +220,7 @@ begin
   exception when insufficient_privilege then
     null;
   end;
-end $;
+end $$;
 reset role;
 
 -- Unrelated teacher: sees no learner event.
@@ -257,7 +257,7 @@ begin
   exception when invalid_parameter_value then
     null;
   end;
-end $;
+end $$;
 reset role;
 
 -- Anonymous has no table SELECT grants.
