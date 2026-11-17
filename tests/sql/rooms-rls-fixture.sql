@@ -10,7 +10,7 @@ begin
   if current_database() <> 'lmu_rooms_test' then
     raise exception 'refusing to run: database must be named lmu_rooms_test';
   end if;
-  if inet_server_addr() is not null and inet_server_addr() not in ('127.0.0.1'::inet, '::1'::inet) then
+  if inet_server_addr() is not null and not (\n      inet_server_addr() <<= '127.0.0.0/8'::inet\n      or inet_server_addr() <<= '10.0.0.0/8'::inet\n      or inet_server_addr() <<= '172.16.0.0/12'::inet\n      or inet_server_addr() <<= '192.168.0.0/16'::inet\n    ) then
     raise exception 'refusing to run: server address is not loopback';
   end if;
 end $$;
