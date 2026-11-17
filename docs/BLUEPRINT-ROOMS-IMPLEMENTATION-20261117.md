@@ -30,7 +30,7 @@ The new room module updates the shared demo mastery collection after PlayWorld, 
 
 - npm ci --ignore-scripts: completed.
 - Baseline before this change: npm run check passed 305 tests.
-- After this change: npm run check passed 311 tests, syntax check passed 101 JavaScript files, smoke tests passed and the static build emitted 27 production files.
+- After this change: npm run check passed 312 tests, syntax check passed 101 JavaScript files, smoke tests passed and the static build emitted 27 production files.
 - PWA tests now require the new room module in the precache allowlist and cache generation lmu-production-v15.
 
 ## Known limitations / release hold
