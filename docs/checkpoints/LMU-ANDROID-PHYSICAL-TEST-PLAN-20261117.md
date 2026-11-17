@@ -19,7 +19,7 @@
 - Target / compile SDK: 36
 - Capacitor: 8.5.2
 
-The artifact ZIP and extracted APK were downloaded from the Android build job. The APK archive integrity check passed. The Android build job passed; the separate API 36 emulator job is still running at the latest checkpoint. Neither result substitutes for physical-device acceptance.
+The artifact ZIP and extracted APK were downloaded from the Android build job. The APK archive integrity check passed. Android build and API 36 emulator verification both completed successfully (workflow run 44152121586; later branch workflow 44152670183 also passed). The emulator executed all four instrumentation tests, installed the APK, and completed a cold launch with Status: ok. Neither result substitutes for physical-device acceptance.
 
 ## Device prerequisites
 
