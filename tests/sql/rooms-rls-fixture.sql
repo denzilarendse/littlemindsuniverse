@@ -5,7 +5,7 @@
 -- This is NOT a canonical LMU bootstrap and must NEVER be pointed at production.
 begin;
 
-do $$$
+do $$
 begin
   if current_database() <> 'lmu_rooms_test' then
     raise exception 'refusing to run: database must be named lmu_rooms_test';
@@ -20,7 +20,7 @@ begin
   end if;
 end $$;
 
-do $$$
+do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
     create role anon nologin;
@@ -146,7 +146,7 @@ insert into public.room_activity_events(
 -- Learner self: sees only their own event; published catalogue only.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
-do $$$
+do $$
 begin
   if (select count(*) from public.room_activity_events) <> 1 then
     raise exception 'learner self boundary failed';
@@ -196,7 +196,7 @@ reset role;
 -- Unverified guardian: sees no learner event.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',false);
-do $$$ begin
+do $$ begin
   if (select count(*) from public.room_activity_events) <> 0 then
     raise exception 'unverified guardian was allowed to read learner event';
   end if;
@@ -226,7 +226,7 @@ reset role;
 -- Unrelated teacher: sees no learner event.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000006',false);
-do $$$ begin
+do $$ begin
   if (select count(*) from public.room_activity_events) <> 0 then
     raise exception 'unrelated teacher was allowed to read learner event';
   end if;
@@ -261,7 +261,7 @@ end $;
 reset role;
 
 -- Anonymous has no table SELECT grants.
-do $$$
+do $$
 begin
   if has_table_privilege('anon','public.room_content_items','SELECT')
      or has_table_privilege('anon','public.room_activity_events','SELECT') then
