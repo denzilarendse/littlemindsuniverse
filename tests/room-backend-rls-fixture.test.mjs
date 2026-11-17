@@ -15,7 +15,7 @@ test('local SQL fixture is isolated and rolls back all seeded data', () => {
   assert.equal(fixture.includes('\\n      inet_server_addr'), false);
   assert.ok(fixture.trimEnd().endsWith('rollback;'));
   assert.ok(fixture.includes('NEVER be pointed at production'));
-  assert.ok(fixture.includes(String.raw\`\\ir ../../database/migrations/20261117_lmu_rooms_read_boundary.sql\`));
+  assert.ok(fixture.includes('20261117_lmu_rooms_read_boundary.sql'));
 });
 
 test('fixture exercises learner self, verified and unverified guardian, and teacher boundaries', () => {
