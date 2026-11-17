@@ -1,0 +1,50 @@
+name: LMU local room database verification
+
+on:
+  pull_request:
+    paths:
+      - 'database/migrations/20261117_lmu_rooms_read_boundary.sql'
+      - 'tests/sql/rooms-rls-fixture.sql'
+      - 'tests/room-backend-*.test.mjs'
+      - '.github/workflows/rooms-database-verification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  room-database:
+    name: Disposable PostgreSQL RLS fixture
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Create disposable local database
+        run: createdb lmu_rooms_test
+      - name: Run room backend static contract tests
+        run: node --test tests/room-backend-contract.test.mjs tests/room-backend-rls-fixture.test.mjs
+      - name: Execute SQL migration and RLS role matrix
+        run: psql -X -v ON_ERROR_STOP=1 -d lmu_rooms_test -f tests/sql/rooms-rls-fixture.sql
