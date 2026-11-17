@@ -99,3 +99,15 @@ Continue on `production/lmu-blueprint-room-shell-20261117`. Re-run `npm ci --ign
 ## Next phase brief
 
 Implement the backend contract in a local or disposable Supabase branch, starting with content catalogue and append-only activity, then community moderation. Write SQL role-matrix tests before enabling Data API grants. Keep live migration and production deployment approval-gated. Separately triage existing advisor findings without blanket policy/function changes.
+
+## Free local backend checkpoint — 2026-11-17
+
+- User decision: pause paid Supabase branch work and continue using free/local tooling only.
+- No Supabase cloud branch was intentionally created, no live migration was applied, and no production data was changed in this checkpoint.
+- Added `database/migrations/20261117_lmu_rooms_read_boundary.sql`: additive PlayWorld/StoryVerse catalogue + activity schema, RLS read policies, published-only catalogue visibility, activity visibility through existing `can_access_learner(uuid)`, explicit authenticated SELECT grants, and no client write grants/policies.
+- Added `tests/room-backend-contract.test.mjs`: five static contract tests for additive scope, publication audit, relationship-scoped reads, read-only grants and payload bounds.
+- Added `docs/LOCAL-BACKEND-DEV-20261117.md`: free/local workflow and migration-chain constraints.
+- Verification actually performed: isolated Node.js 22 run of the five new static contract tests — 5 passed, 0 failed. The test and migration were mirrored into a temporary local directory for execution; repository clone was unavailable because this runtime cannot resolve github.com.
+- Not run: full `npm run check`, SQL parser/database execution, RLS role-matrix tests, Supabase CLI, Docker/Podman. Environment has Node.js 22 and Java 21; `psql`, Supabase CLI, Docker and Podman are absent.
+- Important limitation: existing database migrations are documented as deltas, not a zero-to-one bootstrap. A sanitized baseline/local fixture is required before a full local PostgreSQL run.
+- No UI client adapter or write RPC was added; live room activity remains disabled. Demo behavior remains unchanged.
