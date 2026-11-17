@@ -218,3 +218,12 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - The GitHub-hosted disposable PostgreSQL 17 service initialized successfully; database creation passed; room backend static contract tests passed; SQL migration and RLS role-matrix fixture passed; cleanup completed.
 - This verifies the existing room fixture on PostgreSQL 17, not a replay of the full LMU production schema baseline. Full-chain replay remains BLOCKED pending owner-controlled schema export.
 - Supabase Free test project remains `COMING_UP`; it is not yet queryable. No migration was applied to it.
+
+
+### Free PostgreSQL 17 test project readiness — 2026-11-17 19:28 SAST
+- Rechecked isolated Supabase project `LMU-V45-TESTING` (`klfvrawkieyqefbpzywq`): status is now `ACTIVE_HEALTHY`, PostgreSQL 17.11.
+- Read-only inventory succeeded. Database is clean/empty for application scope: 0 public/private application base tables, 0 application routines, 0 policies, and no recorded migrations.
+- Installed extensions currently visible in the clean target include `pgcrypto`, `pg_stat_statements`, `uuid-ossp`, `plpgsql`, and `supabase_vault`; do not assume this matches production's extension set. The baseline restore must account for extension dependencies and target-provider-managed extensions.
+- No schema changes were made. No room migrations were applied because the LMU baseline prerequisites (profiles, learners, roles, and access helper) are not yet present.
+- Test target is now ready for a reviewed baseline restore. The outstanding blocker is still the owner-controlled schema-only export from production; no production DB connection string is exposed through the connected tooling, and secrets must not be pasted into chat.
+- Next: obtain the reviewed `database/baselines/lmu-production-schema.sql` artifact, inspect and split into safe ordered chunks if required, restore only to this empty isolated PG17 target, then apply room migrations and run the full compatibility matrix.
