@@ -4,7 +4,7 @@
 **Last scan:** 2026-11-17, current session (UTC+02:00)  
 **Canonical repository:** denzilarendse/littlemindsuniverse  
 **Working branch:** production/lmu-blueprint-room-shell-20261117  
-**Status:** RELEASE HOLD — interactive room demo MVP and backend contract are checkpointed; live room integration, child identity/consent hardening, Android artifact and release verification remain outstanding.
+**Status:** RELEASE HOLD — Android CI/emulator verification and pilot debug APK are complete; physical-device acceptance, production signing, full LMU schema baseline replay and live room integration remain outstanding.
 
 ## Objective
 
@@ -54,7 +54,7 @@ The frozen Phase 1 spec proposed React + TypeScript + Vite. Canonical source is 
 - `npm run check`: PASS — 313 tests, syntax scan 117 JS files, smoke tests and static build.
 - `npm run android:sync`: PASS.
 - `npm audit --omit=dev`: PASS — zero production dependency vulnerabilities; full install audit has 6 moderate dev dependency advisories.
-- Android APK: NOT BUILT — previous sandbox lacked Java/JAVA_HOME.
+- Android pilot debug APK: BUILT and extracted from current PR-head artifact; CI API 36 emulator passed. Physical-device validation and production signing remain outstanding.
 - Hosted authenticated browser E2E: NOT RUN.
 - Live RLS/API integration for new rooms: NOT IMPLEMENTED OR TESTED.
 - Current schema contract and SQL sketch are documentation-only; no SQL test or migration executed.
@@ -244,3 +244,48 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - Physical-device testing remains outstanding; emulator PASS is not a substitute. The existing APK is available for owner-controlled installation on a physical Android device.
 - Authoritative production schema-only export and sanitized manifest remain absent. The isolated Free PostgreSQL 17 project remains empty. Do not apply room migrations until the reviewed baseline is restored and parity verified.
 - Next: continue low-risk Android/application readiness and prepare physical-device validation. Keep live room persistence disabled until baseline/schema/security gates pass.
+
+
+## Android readiness and backend baseline checkpoint — 2026-11-17 20:34 SAST
+
+### Scan
+- Scanned project handover and master orchestrator instructions; current branch ledger/checkpoints; PR #112 changed-file set; Android app Gradle config, manifest, Capacitor config and Android CI workflow; baseline export script and baseline README; Supabase project inventory and isolated test-project table inventory.
+- Existing verified implementation and CI work were skipped; no APK rebuild, app rewrite, migration replay or production action was performed.
+
+### Android evidence
+- Current PR head: `c5a2ed67977e76376ffe32814d1f06e1eec97280`.
+- Android workflow run `44147682085`: `verify-android` PASS and API 36 `verify-emulator` PASS.
+- Latest pilot artifact: `littlemindsuniverse-pilot-debug-apk`, artifact ID `14357631883`, expires 2026-12-17.
+- Downloaded artifact ZIP and extracted APK. ZIP SHA-256: `574d422987ca60978a71595441c2ddf971736fe5a3ec4166c812fac7f836614a`. APK size: 4,238,778 bytes. APK SHA-256: `e5198c10a1d17835147dae554dda47089b810a4fcd6d87b3a5d409d467e14503`. ZIP integrity check passed.
+- APK: installable debug/pilot build, application ID `za.co.littlemindsuniverse`, minimum SDK 24, target/compile SDK 36. It is not production-signed or Play Store ready.
+- Inspected Android manifest: backup disabled, cleartext traffic disabled, declared permissions are INTERNET and RECORD_AUDIO. Microphone permission must be tested for least-surprise behavior; no unrelated permissions should be requested.
+- Added `docs/checkpoints/LMU-ANDROID-PHYSICAL-TEST-PLAN-20261117.md` with installation steps, 24 physical-device test cases, privacy/security checks and acceptance criteria.
+- Physical-device testing has NOT been performed; emulator evidence does not substitute for it.
+
+### Backend baseline recovery
+- Production project `zcokxljcsfkrlouzragv`: ACTIVE_HEALTHY, PostgreSQL 17.6.1.166 (metadata inventory only).
+- Isolated Free test project `klfvrawkieyqefbpzywq`: ACTIVE_HEALTHY, PostgreSQL 17.11.0.011.
+- Read-only inventory of test project's public/private schemas returned zero tables. No restore, migration, or schema write was performed.
+- Authoritative schema-only dump and completed manifest remain absent. Added `database/baselines/MANIFEST.template.md` and refreshed `docs/LOCAL-BACKEND-DEV-20261117.md` with verified project states and exact safe recovery gate.
+- Do not restore a guessed schema or apply room migrations to the empty test project. Obtain owner-controlled sanitized dump first; no credentials should be pasted into chat.
+
+### Changes and commits
+- Added physical-device test plan.
+- Added schema baseline manifest template.
+- Refreshed free/local backend checkpoint.
+- Latest docs-only commits observed: `21c0949e8baf55f0065b18db424aab5ab51fe4e2`, `0d6cd28d9277b810b50c1f4977e2890aad9ad8e1`, `6a327ccffd7d03f5e2c344b5e275ad94f75f41e5`. All are on the existing development branch; no merge was performed.
+
+### Verification
+- Artifact ZIP integrity: PASS.
+- Extracted APK SHA-256 computed: PASS.
+- Android CI and emulator: PASS (existing workflow run).
+- Physical-device tests: NOT RUN.
+- Full production schema baseline replay: BLOCKED pending owner export.
+- No production deployment, signing, PR merge, hosted DB migration or data mutation.
+
+### Next phase brief
+1. Use the downloaded APK on a physical Android device and complete the documented test matrix with synthetic test data.
+2. Triage any crash, ANR, layout, authentication, permission or navigation failures and add regression tests before creating a new build.
+3. Obtain the owner-controlled schema-only export and complete manifest; review before restoring only into the isolated Free PG17 test project.
+4. After baseline restore/parity, apply room migrations in test and rerun PostgreSQL 17 security verification.
+5. Keep production signing, deployment, live migrations and merge behind their approval gates.
