@@ -66,3 +66,19 @@ test('shell loads the rooms module before app initialization and routes all room
   for(const id of ['playworld','storyverse','career','adult','creator','community','parent','teacher','admin'])assert.ok(app.includes(id+':()=>window.LMU_ROOMS.render'));
   assert.match(app,/window\.LMU_ROOMS\?\.wire\(state\)/);
 });
+
+
+test('demo progress survives a profile-role reset without leaking into live mode',()=>{
+  const {rooms,values}=createRooms();
+  const state={mode:'demo',role:'learner',stage:'discovery',learner:{},mastery:[]};
+  values.set('lmu-blueprint-room-demo-v1',JSON.stringify({gameResults:[{subject:'Mathematics',label:'Maths Race',score:3}]}));
+  rooms.applyProgress(state);
+  assert.ok(state.mastery.some(x=>x.subject==='Mathematics'));
+  state.mastery=[];
+  rooms.refreshProgress(state);
+  assert.ok(state.mastery.some(x=>x.subject==='Mathematics'));
+  rooms.render('playworld',{...state,mode:'live'});
+  state.mastery=[];
+  rooms.refreshProgress({...state,mode:'live'});
+  assert.equal(state.mastery.length,0);
+});
