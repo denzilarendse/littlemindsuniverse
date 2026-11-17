@@ -26,7 +26,7 @@ test('fixture exercises learner self, verified and unverified guardian, and teac
   assert.match(fixture, /unrelated teacher was allowed/i);
   assert.match(fixture, /l\.user_id = auth\\.uid\\(\\)/i);
   assert.match(fixture, /gl\.verified = true/i);
-  assert.match(fixture, /c\\.teacher_profile_id = auth\\.uid\\(\\)/i);
+  assert.ok(fixture.includes('c.teacher_profile_id = auth.uid()'));
 });
 
 test('fixture checks anon and direct-write denial', () => {
