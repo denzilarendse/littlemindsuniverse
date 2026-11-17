@@ -2,8 +2,6 @@
 -- Authenticated learner-self writes only; no guardian/teacher impersonation.
 -- The actor and event timestamp are always derived by PostgreSQL.
 
-begin;
-
 create index if not exists room_activity_actor_created_idx
   on public.room_activity_events (actor_profile_id, created_at desc);
 
@@ -166,4 +164,3 @@ grant execute on function public.record_room_activity(uuid, text, uuid, text, js
 comment on function public.record_room_activity(uuid, text, uuid, text, jsonb, integer)
   is 'Append one validated PlayWorld/StoryVerse learner-self activity event; actor and timestamp are server-derived.';
 
-commit;
