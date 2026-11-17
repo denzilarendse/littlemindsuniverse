@@ -336,3 +336,48 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 2. If emulator PASS, make latest pilot APK available for physical-device installation and await real-device test evidence; if fail, diagnose and repair test/app root cause.
 3. Continue product QA on the current branch, but do not represent the product as fully complete: backend baseline, live room integration, legal/security review, physical-device acceptance and production signing remain release blockers.
 4. Obtain the owner-controlled sanitized schema-only dump and manifest; restore only into isolated PG17 test environment after review.
+
+
+## Android emulator acceptance and functional/backend gate checkpoint — 2026-11-17 21:38 SAST
+
+### Scan and source-of-truth refresh
+- Re-scanned the current project conversation/handover, master orchestrator constraints, branch production/lmu-blueprint-room-shell-20261117, PR #112, project ledger, Android physical-device plan, latest GitHub Actions runs and isolated Supabase test project.
+- Current branch head at scan: `ba12044cdff7a4eca3d5a2f5b46e69d647392fd2`. PR #112 remains OPEN, DRAFT and UNMERGED. No merge, production deployment, signing operation, or hosted DB mutation occurred.
+- Previously verified code and test work was retained; no app rewrite or migration replay was attempted.
+
+### Android emulator verification — COMPLETE
+- Android workflow run `44152121586` completed successfully. `verify-android` and `verify-emulator` both have conclusion SUCCESS.
+- Decoded emulator job log confirms `:app:connectedDebugAndroidTest` started and finished all 4 instrumentation tests on API 36 emulator (emulator-5554, API 36). Gradle reported `BUILD SUCCESSFUL`; APK install returned `Success`; cold launch returned `Status: ok`, `LaunchState: COLD`, Activity `za.co.littlemindsuniverse/.MainActivity`, and the app process was present.
+- The earlier Espresso `RootViewWithoutFocusException` regression is resolved by the test change in commit `037dbe7efc4481b66a8e4c3a8afb42e96f64b4fb`; the revised test now inspects the Capacitor WebView through ActivityScenario.
+- A later branch workflow run `44152670183` also completed with both Android build and API 36 emulator jobs SUCCESS on the docs-updated branch state.
+- Pilot APK artifact from run `44152121586`: artifact ID `14359541834`, ZIP digest `7db57f26a3733a9a6fadbed7eedf24d37a5203aaeae10e67724a72881327b093`; extracted APK size 4,238,778 bytes; SHA-256 `72db16968cc54dec148101e0d0c99b7001ec852e4d59d7cd4bea39a39b3e49e2`. It remains a debug/pilot build, not a production-signed release.
+- Emulator evidence does not replace the 24-case physical-device validation. No physical Android device was available in the connected execution environment; P01–P24 remain NOT RUN pending owner-side device testing.
+
+### Functional acceptance — CI VERIFIED
+- Latest release verification run `44152670182`: job `verify` SUCCESS. Its log reports 326 Node tests passed, 0 failed, production build created 27 static files, and deployable-artifact checks passed. Dependency audit, lint, tests and build all completed successfully.
+- Latest Android verification run `44152670183`: `verify-android` SUCCESS and `verify-emulator` SUCCESS.
+- Latest room database verification run `44152670187`: disposable PostgreSQL fixture job SUCCESS. Job log shows the synthetic SQL role matrix executed and transaction ended with `ROLLBACK`; no persistent test data remained.
+- These checks establish repository/CI and synthetic fixture acceptance, not hosted authenticated E2E, physical-device acceptance, or full LMU backend compatibility.
+
+### Backend acceptance — BLOCKED AT AUTHORITATIVE BASELINE
+- Rechecked isolated free Supabase project `klfvrawkieyqefbpzywq`: `ACTIVE_HEALTHY`, PostgreSQL `17.11.0.011`. Read-only inventory of `public` and `private` schemas returned zero tables; migration ledger returned zero migrations.
+- Rechecked `database/baselines/`: it contains only `README.md` and `MANIFEST.template.md`; no schema-only SQL baseline or completed manifest exists.
+- Therefore the full 97-entry production migration history cannot safely be replayed or schema parity asserted. Do NOT apply the two room migrations to this empty target and do NOT reconstruct missing migration sources by guesswork.
+- Existing CI fixture used disposable PostgreSQL 17.12 (ephemeral CI service), ran synthetic room schema/role-matrix checks and rolled back. It is not a restored copy of production schema and does not prove compatibility with the complete LMU schema.
+- Next backend acceptance sequence remains: owner-controlled sanitized schema-only export + manifest; inspect for secrets/data/managed-schema dependencies; restore only to isolated free PG17 target; compare schema/object/RLS/grant parity; replay the room migrations; test RPC/auth.uid()/PostgREST exposure and negative roles; only then enable a feature-flagged live room adapter.
+- No database credentials or secrets should be pasted into chat. Export must be performed by the project owner in a secure local environment using the existing script.
+
+### Remaining acceptance gates and risk classification
+- HIGH: physical-device install and 24-case pilot validation remain unperformed.
+- BLOCKER: authoritative schema-only baseline and full migration-chain replay absent; live PlayWorld/StoryVerse persistence remains disabled.
+- HIGH: hosted authenticated end-to-end testing and live Supabase RLS/API integration not performed.
+- HIGH: signing credentials, signed AAB/APK, Play Integrity/release checks and production release approval remain outstanding.
+- HIGH: moderation/reporting lifecycle, consent integration and remaining Parent Hub/Teacher Studio/Admin Console live operations need backend completion and legal/security review.
+- PR #112 remains draft/unmerged; no production deployment was made.
+
+### Next phase brief
+1. Continue with source-level functional acceptance review and targeted CI additions only where a concrete uncovered requirement is found; current 326-test suite and Android emulator suite are green.
+2. Owner to perform the documented schema-only export and provide the reviewed, sanitized SQL + manifest as a repository artifact or upload. Until then, retain the empty isolated PG17 project and demo-only room behavior.
+3. Complete physical-device P01–P24 using the current APK and synthetic test accounts; record redacted outcomes in the test plan.
+4. After baseline restore/parity, execute room migrations and full authorization/PostgREST checks against the restored isolated target.
+5. Keep signing, production deployment, production migrations and PR merge approval-gated.
