@@ -1,10 +1,11 @@
 -- Isolated, disposable RLS fixture for the LMU room migration.
 -- Run ONLY against a local PostgreSQL database:
---   psql -X -v ON_ERROR_STOP=1 -f tests/sql/rooms-rls-fixture.sql
+--   createdb lmu_rooms_test
+--   psql -X -v ON_ERROR_STOP=1 -d lmu_rooms_test -f tests/sql/rooms-rls-fixture.sql
 -- This is NOT a canonical LMU bootstrap and must NEVER be pointed at production.
 begin;
 
-do $
+do $$
 begin
   if current_database() <> 'lmu_rooms_test' then
     raise exception 'refusing to run: database must be named lmu_rooms_test';
@@ -12,9 +13,9 @@ begin
   if inet_server_addr() is not null and inet_server_addr() not in ('127.0.0.1'::inet, '::1'::inet) then
     raise exception 'refusing to run: server address is not loopback';
   end if;
-end $;
+end $$;
 
-do $
+do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
     create role anon nologin;
@@ -133,7 +134,7 @@ insert into public.room_activity_events(
 -- Learner self: sees only their own event; published catalogue only.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
-do $$
+do $$$
 begin
   if (select count(*) from public.room_activity_events) <> 1 then
     raise exception 'learner self boundary failed';
@@ -150,7 +151,7 @@ reset role;
 -- Verified guardian: sees linked learner event.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
-do $$ begin
+do $$$ begin
   if (select count(*) from public.room_activity_events) <> 1 then
     raise exception 'verified guardian boundary failed';
   end if;
@@ -160,7 +161,7 @@ reset role;
 -- Unverified guardian: sees no learner event.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',false);
-do $$ begin
+do $$$ begin
   if (select count(*) from public.room_activity_events) <> 0 then
     raise exception 'unverified guardian was allowed to read learner event';
   end if;
@@ -170,7 +171,7 @@ reset role;
 -- Active classroom teacher: sees learner in active classroom.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000005',false);
-do $$ begin
+do $$$ begin
   if (select count(*) from public.room_activity_events) <> 1 then
     raise exception 'active classroom teacher boundary failed';
   end if;
@@ -180,7 +181,7 @@ reset role;
 -- Unrelated teacher: sees no learner event.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000006',false);
-do $$ begin
+do $$$ begin
   if (select count(*) from public.room_activity_events) <> 0 then
     raise exception 'unrelated teacher was allowed to read learner event';
   end if;
@@ -188,7 +189,7 @@ end $$;
 reset role;
 
 -- Anonymous has no table SELECT grants.
-do $$
+do $$$
 begin
   if has_table_privilege('anon','public.room_content_items','SELECT')
      or has_table_privilege('anon','public.room_activity_events','SELECT') then
