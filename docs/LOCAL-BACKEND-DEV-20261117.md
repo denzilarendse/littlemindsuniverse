@@ -30,7 +30,7 @@ npm run check
 node --test tests/room-backend-contract.test.mjs
 ```
 
-For database-level validation, use a local PostgreSQL/Supabase stack only after Docker/Podman, PostgreSQL and the Supabase CLI are installed. This execution environment currently has Node.js 22 and Java 21, but does not have `psql`, the Supabase CLI, Docker or Podman. Consequently, only the Node contract tests can be executed here; SQL syntax and RLS behavior have not been database-tested.
+For database-level validation, use a local PostgreSQL/Supabase stack only after Docker/Podman, PostgreSQL and the Supabase CLI are installed. This execution environment currently has Node.js 22 and Java 21, but does not have `psql`, the Supabase CLI, Docker or Podman. Consequently, only Node static contract tests can be executed here; SQL syntax and RLS behavior have not been database-tested. A disposable, transaction-wrapped role-matrix fixture is provided at `tests/sql/rooms-rls-fixture.sql`. Run it only against a local PostgreSQL instance with `psql -X -v ON_ERROR_STOP=1 -f tests/sql/rooms-rls-fixture.sql`. It seeds synthetic identities, mirrors the existing learner relationship helper's contract, exercises learner self / verified guardian / unverified guardian / active teacher / unrelated teacher / anon / direct-write boundaries, and rolls back all fixture data.
 
 ## Important migration-chain limitation
 
@@ -38,8 +38,8 @@ The repository's `database/migrations` directory is a delta-migration package, n
 
 ## Next engineering slice
 
-1. Establish a reproducible local schema baseline without learner data or secrets.
-2. Run all migrations against local PostgreSQL and fix SQL errors.
-3. Add database-level RLS tests for learner self, verified guardian, unverified guardian, active teacher, unrelated teacher and anon.
+1. Run the scoped disposable room RLS fixture on local PostgreSQL and fix SQL errors.
+2. Obtain a verified sanitized full LMU schema baseline (no learner data or secrets); the scoped fixture is not a full application baseline.
+3. Run the full migration chain against a local copy and add broader database-level tests for learner self, verified guardian, unverified guardian, active teacher, unrelated teacher and anon.
 4. Add a server-validated append-only activity RPC and tests.
 5. Only then add a feature-flagged client read adapter. Keep demo mode unchanged.
