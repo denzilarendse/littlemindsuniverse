@@ -114,3 +114,13 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 
 - Follow-up verification note: the temporary local run exercised an equivalent five-assertion Node contract harness against a mirrored copy of the SQL; the repository's committed test file has not yet been run from a full checkout. A direct Git clone could not resolve github.com in the local runtime.
 - GitHub PR #112 now points to commit `9fcfdffd5e8d0cbc152801347fbd6eaa77aa7f90`; PR remains open, draft and unmerged. GitHub Actions checks `verify`, `verify-android` and `verify-package-deploy` were observed in progress; Vercel Preview Comments check succeeded. These CI jobs are not yet a pass at this checkpoint.
+
+## Local RLS fixture checkpoint — 2026-11-17
+
+- Added `tests/sql/rooms-rls-fixture.sql`, a disposable transaction-wrapped PostgreSQL fixture using synthetic identities only. It mirrors the minimal contract of the existing learner access helper and exercises learner-self, verified guardian, unverified guardian, active classroom teacher, unrelated teacher, published-only catalogue, anon grants and direct-write denial. Ends with ROLLBACK.
+- Added `tests/room-backend-rls-fixture.test.mjs` static guard tests and updated `docs/LOCAL-BACKEND-DEV-20261117.md` with the exact local psql command.
+- Test repair: initial isolated test run exposed a brittle test assertion requiring the SQL file to start directly with BEGIN despite the required safety comment header. Fixed assertion to locate BEGIN after the comment. This was a test-harness defect, not a migration failure.
+- Verification: 8/8 Node static contract tests passed in a temporary isolated mirror of the committed migration/fixture files. This is not execution of PostgreSQL SQL or proof of actual RLS runtime behavior.
+- Environment rechecked: `psql`, `postgres`, `initdb`, `pg_ctl`, Docker, Podman and Supabase CLI are unavailable. GitHub clone is also unavailable from the local runtime due DNS/network restrictions. No local database was started.
+- No live database reads or writes were made in this continuation; no paid infrastructure created.
+- Next: provision a free local PostgreSQL runtime outside this restricted container or use a user-controlled local machine, run the fixture exactly as documented, then acquire a sanitized full LMU schema-only baseline before full migration-chain testing.
