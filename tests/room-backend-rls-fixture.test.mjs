@@ -9,7 +9,7 @@ const fixture = fs.readFileSync(
 
 test('local SQL fixture is isolated and rolls back all seeded data', () => {
   assert.match(fixture, /\bbegin;/i);
-  assert.match(fixture, /do \\$\\$/i);
+  assert.ok(fixture.includes('do $'));
   assert.match(fixture, /current_database\(\) <> 'lmu_rooms_test'/i);
   assert.match(fixture, /inet_server_addr\(\).*127\.0\.0\.1/is);
   assert.match(fixture, /rollback;\s*$/i);
