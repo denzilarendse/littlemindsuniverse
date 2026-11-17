@@ -227,3 +227,20 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - No schema changes were made. No room migrations were applied because the LMU baseline prerequisites (profiles, learners, roles, and access helper) are not yet present.
 - Test target is now ready for a reviewed baseline restore. The outstanding blocker is still the owner-controlled schema-only export from production; no production DB connection string is exposed through the connected tooling, and secrets must not be pasted into chat.
 - Next: obtain the reviewed `database/baselines/lmu-production-schema.sql` artifact, inspect and split into safe ordered chunks if required, restore only to this empty isolated PG17 target, then apply room migrations and run the full compatibility matrix.
+
+
+## Android CI continuation — 2026-11-17 20:xx SAST
+
+- Re-scanned current project handover, custom orchestrator instructions, branch ledger, Android checkpoint, PR #112 and current PR-head workflow runs.
+- Current PR head `c5a2ed67977e76376ffe32814d1f06e1eec97280` has four completed workflow runs:
+  - Android verification `44147682085`: `verify-android` PASS and `verify-emulator` PASS (API 36).
+  - Room database verification `44147682076`: disposable PostgreSQL 17 migration/RLS role-matrix fixture PASS.
+  - Release verification `44147682051`: repository `verify` PASS (dependency audit, lint, tests, production build and artifact checks).
+  - Public release packaging `44147682072`: packaging PASS and unsigned Android release candidate uploaded. Owner signing and Netlify production deployment steps were SKIPPED.
+- Latest pilot debug APK artifact: `14357631883`, name `littlemindsuniverse-pilot-debug-apk`, SHA-256 artifact digest `574d422987ca60978a71595441c2ddf971736fe5a3ec4166c812fac7f836614a`, expires 2026-12-17. This is an unsigned debug/pilot build, not a Play Store release.
+- Updated PR #112 description to remove stale local Java/JAVA_HOME build-blocker wording and accurately state latest CI results and release limitations. PR remains open, draft, unmerged and mergeable.
+- Added `docs/checkpoints/LMU-DEVELOPMENT-20261117.md` in commit `8fc84fd14fe991dd6019baa640b1de0fd3ff1e9d`.
+- No production deployment, merge, signing operation, database migration, test-project schema change or production data mutation occurred.
+- Physical-device testing remains outstanding; emulator PASS is not a substitute. The existing APK is available for owner-controlled installation on a physical Android device.
+- Authoritative production schema-only export and sanitized manifest remain absent. The isolated Free PostgreSQL 17 project remains empty. Do not apply room migrations until the reviewed baseline is restored and parity verified.
+- Next: continue low-risk Android/application readiness and prepare physical-device validation. Keep live room persistence disabled until baseline/schema/security gates pass.
