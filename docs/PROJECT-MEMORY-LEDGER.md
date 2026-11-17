@@ -124,3 +124,10 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - Environment rechecked: `psql`, `postgres`, `initdb`, `pg_ctl`, Docker, Podman and Supabase CLI are unavailable. GitHub clone is also unavailable from the local runtime due DNS/network restrictions. No local database was started.
 - No live database reads or writes were made in this continuation; no paid infrastructure created.
 - Next: provision a free local PostgreSQL runtime outside this restricted container or use a user-controlled local machine, run the fixture exactly as documented, then acquire a sanitized full LMU schema-only baseline before full migration-chain testing.
+
+## Fixture safety and static-test correction — 2026-11-17
+
+- Hardened `tests/sql/rooms-rls-fixture.sql`: it now refuses to run unless `current_database() = 'lmu_rooms_test'` and the PostgreSQL server is reached over loopback or a local Unix socket. The documented command creates and targets that dedicated local database.
+- Corrected static fixture assertions for the SQL safety-comment wording and dollar-quoted DO blocks. The earlier failures were brittle assertions in the test harness; no SQL execution occurred.
+- Re-ran the isolated Node test mirror after these fixes: 8 tests passed, 0 failed. This remains static text/contract verification only; actual PostgreSQL parsing and RLS execution are still unverified because database binaries are absent.
+- The committed fixture is transaction-wrapped and ends in ROLLBACK; its safety guard is an additional defence, not permission to run it against any hosted database.
