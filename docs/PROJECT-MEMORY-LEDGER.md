@@ -200,3 +200,14 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - Local container has Node 22 and Java 21 but no `psql`, `pg_dump`, `postgres`, `initdb`, Docker or Podman. `apt-get update` timed out; no local PG installation was completed. A free hosted PostgreSQL 17 test target is being brought online instead.
 - Verification: export script `bash -n` PASS; no schema export or migration replay performed yet.
 - Next: (1) wait for the isolated Free PostgreSQL 17 project to become healthy; (2) obtain the owner-controlled schema-only dump using the new script; (3) review the dump locally for secrets, data statements, grants, extension dependencies and Supabase-managed object references; (4) supply the reviewed dump as a repository artifact; (5) restore it only to the isolated test project; (6) apply the two room migrations in order and run SQL/RLS/privilege compatibility checks; (7) compare catalog metadata against production. Do not apply any migration to production.
+
+
+## PostgreSQL 17 CI environment checkpoint — 2026-11-17 19:20 SAST
+
+- Upgraded `.github/workflows/rooms-database-verification.yml` disposable PostgreSQL service from `postgres:16` to `postgres:17`, so the free GitHub-hosted runner provides a clean, disposable PostgreSQL 17 environment on every PR verification run. No persistent paid infrastructure is required.
+- Commit: `6b76e60ea001eb86c3c4460a6556f8f512dab128`.
+- New PR run `44135396421` (LMU local room database verification) was observed in progress at container initialization. It runs the room migration fixture and authorization matrix on PostgreSQL 17; results are pending.
+- New PR run `44135396370` (public-release) is triggered by `pull_request`. The workflow YAML confirms production Android signing and Netlify deployment steps are guarded to run only on `push` to `main`; therefore those production actions are intentionally skipped for this PR run. No production deployment is authorized or expected.
+- The existing Free Supabase test project `klfvrawkieyqefbpzywq` remains `COMING_UP` after restore request. It reports PostgreSQL 17.11.0.011. Database operations still return unavailable while starting.
+- Full schema baseline replay remains blocked until the owner-controlled export script is run with a local database connection URL and the reviewed schema-only SQL is made available. The GitHub-hosted PostgreSQL 17 fixture is not a substitute for the complete production baseline.
+- Current scope: no live DB writes, no schema migrations applied to hosted Supabase, no production deploy, no merge.
