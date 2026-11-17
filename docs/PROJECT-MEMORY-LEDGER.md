@@ -131,3 +131,12 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - Corrected static fixture assertions for the SQL safety-comment wording and dollar-quoted DO blocks. The earlier failures were brittle assertions in the test harness; no SQL execution occurred.
 - Re-ran the isolated Node test mirror after these fixes: 8 tests passed, 0 failed. This remains static text/contract verification only; actual PostgreSQL parsing and RLS execution are still unverified because database binaries are absent.
 - The committed fixture is transaction-wrapped and ends in ROLLBACK; its safety guard is an additional defence, not permission to run it against any hosted database.
+
+## PostgreSQL execution checkpoint — 2026-11-17
+
+- Added `.github/workflows/rooms-database-verification.yml`: pull-request path-triggered + manual workflow provisions an ephemeral PostgreSQL 16 service; no Supabase secrets, hosted DB, migrations or deployments are used.
+- Executed the real SQL migration and RLS fixture successfully in GitHub Actions on a disposable PostgreSQL 16 instance. Check: `Disposable PostgreSQL RLS fixture` SUCCESS on commit `bf5033837d3b7470ef89abd41b20cfb3d2bdf56b`. The eight Node contract/static fixture tests also passed in that job. The database fixture exercises learner self, verified guardian, unverified guardian, active classroom teacher, unrelated teacher, published-only catalogue, anon SELECT denial and direct activity INSERT denial; fixture transaction rolls back.
+- Two CI issues were discovered and corrected from actual logs: (1) SQL DO delimiters had been malformed in portions of the fixture; (2) GitHub's isolated Docker service connects over a private bridge address rather than loopback, so the safety guard was expanded to permit RFC1918 private addresses while still requiring the dedicated `lmu_rooms_test` database. A later test caught a literal escaped-newline defect in that guard; it was replaced with real SQL newlines. Final PostgreSQL job passed after corrections.
+- Full repository `verify` check passed on the same commit. `verify-package-deploy` and `verify-android` were still running at the last observation; no deployment or merge was performed.
+- This is a successful test of the scoped synthetic fixture and room migration, NOT a full LMU schema migration chain test and NOT a live Supabase verification.
+- No live database reads/writes, paid branch, production deploy or merge were performed.
