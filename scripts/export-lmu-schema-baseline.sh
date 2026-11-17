@@ -9,9 +9,9 @@ command -v supabase >/dev/null 2>&1 || { echo "Supabase CLI is required." >&2; e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$ROOT/database/baselines"
 OUT="$OUT_DIR/lmu-production-schema.sql"
+mkdir -p "$OUT_DIR"
 TMP="$(mktemp "$OUT_DIR/.lmu-schema.XXXXXX.sql")"
 trap 'rm -f "$TMP"' EXIT
-mkdir -p "$OUT_DIR"
 
 HELP="$(supabase db dump --help 2>&1 || true)"
 if grep -q -- '--db-url' <<<"$HELP"; then
