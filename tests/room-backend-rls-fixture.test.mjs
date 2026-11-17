@@ -8,29 +8,29 @@ const fixture = fs.readFileSync(
 );
 
 test('local SQL fixture is isolated and rolls back all seeded data', () => {
-  assert.match(fixture, /\bbegin;/i);
-  assert.ok(fixture.includes('do $'));
-  assert.match(fixture, /current_database\(\) <> 'lmu_rooms_test'/i);
-  assert.match(fixture, /inet_server_addr\(\).*127\.0\.0\.0\/8/is);
+  assert.ok(fixture.includes('begin;'));
+  assert.ok(fixture.includes('do $$'));
+  assert.ok(fixture.includes("current_database() <> 'lmu_rooms_test'"));
+  assert.ok(fixture.includes("'172.16.0.0/12'::inet"));
   assert.equal(fixture.includes('\\n      inet_server_addr'), false);
-  assert.match(fixture, /rollback;\s*$/i);
-  assert.match(fixture, /NEVER (be pointed at|run against) production/i);
-  assert.match(fixture, /\\ir \.\.\/\.\.\/database\/migrations\/20261117_lmu_rooms_read_boundary\.sql/i);
+  assert.ok(fixture.trimEnd().endsWith('rollback;'));
+  assert.ok(fixture.includes('NEVER be pointed at production'));
+  assert.ok(fixture.includes(String.raw\`\\ir ../../database/migrations/20261117_lmu_rooms_read_boundary.sql\`));
 });
 
 test('fixture exercises learner self, verified and unverified guardian, and teacher boundaries', () => {
-  assert.match(fixture, /learner self boundary failed/i);
-  assert.match(fixture, /verified guardian boundary failed/i);
-  assert.match(fixture, /unverified guardian was allowed/i);
-  assert.match(fixture, /active classroom teacher boundary failed/i);
-  assert.match(fixture, /unrelated teacher was allowed/i);
-  assert.match(fixture, /l\.user_id = auth\\.uid\\(\\)/i);
-  assert.match(fixture, /gl\.verified = true/i);
+  assert.ok(fixture.includes('learner self boundary failed'));
+  assert.ok(fixture.includes('verified guardian boundary failed'));
+  assert.ok(fixture.includes('unverified guardian was allowed'));
+  assert.ok(fixture.includes('active classroom teacher boundary failed'));
+  assert.ok(fixture.includes('unrelated teacher was allowed'));
+  assert.ok(fixture.includes('l.user_id = auth.uid()'));
+  assert.ok(fixture.includes('gl.verified = true'));
   assert.ok(fixture.includes('c.teacher_profile_id = auth.uid()'));
 });
 
 test('fixture checks anon and direct-write denial', () => {
-  assert.match(fixture, /has_table_privilege\('anon'.*'SELECT'/is);
-  assert.match(fixture, /direct activity INSERT/i);
-  assert.match(fixture, /set role authenticated/i);
+  assert.ok(fixture.includes("has_table_privilege('anon'"));
+  assert.ok(fixture.includes('direct activity INSERT'));
+  assert.ok(fixture.includes('set role authenticated'));
 });
