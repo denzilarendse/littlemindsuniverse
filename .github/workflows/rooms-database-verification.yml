@@ -3,7 +3,7 @@ name: LMU local room database verification
 on:
   pull_request:
     paths:
-      - 'database/migrations/20261117_lmu_rooms_read_boundary.sql'
+      - 'database/migrations/20261117_lmu_rooms_*.sql'
       - 'tests/sql/rooms-rls-fixture.sql'
       - 'tests/room-backend-*.test.mjs'
       - '.github/workflows/rooms-database-verification.yml'
@@ -45,6 +45,6 @@ jobs:
       - name: Create disposable local database
         run: createdb lmu_rooms_test
       - name: Run room backend static contract tests
-        run: node --test tests/room-backend-contract.test.mjs tests/room-backend-rls-fixture.test.mjs
+        run: node --test tests/room-backend-*.test.mjs
       - name: Execute SQL migration and RLS role matrix
         run: psql -X -v ON_ERROR_STOP=1 -d lmu_rooms_test -f tests/sql/rooms-rls-fixture.sql
