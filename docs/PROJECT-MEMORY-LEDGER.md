@@ -140,3 +140,12 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - Full repository `verify` check passed on the same commit. `verify-package-deploy` and `verify-android` were still running at the last observation; no deployment or merge was performed.
 - This is a successful test of the scoped synthetic fixture and room migration, NOT a full LMU schema migration chain test and NOT a live Supabase verification.
 - No live database reads/writes, paid branch, production deploy or merge were performed.
+
+## Canonical learner-access parity checkpoint — 2026-11-17
+
+- Compared `public.can_access_learner(uuid)` against the source migration `database/migrations/20260920_teacher_learner_read_access.sql`.
+- Corrected the disposable PostgreSQL fixture to mirror the canonical helper exactly: learner self via `learners.user_id = auth.uid()`; guardian via verified `guardian_learner_links`; teacher via active classroom + active membership. The fixture no longer adds its own extra learner-active predicates that the canonical helper does not contain.
+- Added static assertions that the fixture's helper matches those three canonical relationship conditions.
+- Final scoped PostgreSQL 16 CI job and all eight room contract/fixture tests passed on commit `03d32a9998c7fc5418088f63af5b63a1e40bce45`. This confirms the room migration parses and the synthetic role matrix passes against a fixture that mirrors the canonical helper source.
+- On that commit, repository `verify` and `verify-package-deploy` passed; Android verification was still running at last observation. No production deploy was triggered by this PR check; PR remains draft/unmerged.
+- Scope remains only PlayWorld + StoryVerse read-boundary foundation. This does not validate the full LMU migration chain or hosted Supabase RLS.
