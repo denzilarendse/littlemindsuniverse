@@ -11,7 +11,8 @@ test('local SQL fixture is isolated and rolls back all seeded data', () => {
   assert.match(fixture, /\bbegin;/i);
   assert.ok(fixture.includes('do $'));
   assert.match(fixture, /current_database\(\) <> 'lmu_rooms_test'/i);
-  assert.match(fixture, /inet_server_addr\(\).*127\.0\.0\.0\/8/is);\n  assert.equal(fixture.includes('\\\\n      inet_server_addr'), false);
+  assert.match(fixture, /inet_server_addr\(\).*127\.0\.0\.0\/8/is);
+  assert.equal(fixture.includes('\\n      inet_server_addr'), false);
   assert.match(fixture, /rollback;\s*$/i);
   assert.match(fixture, /NEVER (be pointed at|run against) production/i);
   assert.match(fixture, /\\ir \.\.\/\.\.\/database\/migrations\/20261117_lmu_rooms_read_boundary\.sql/i);
