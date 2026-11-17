@@ -34,6 +34,9 @@ begin
   end if;
 
   if p_learner_id is null
+     or p_content_item_id is null
+     or p_room_key is null
+     or p_event_type is null
      or p_room_key not in ('playworld', 'storyverse')
      or p_event_type not in ('activity_started', 'activity_completed') then
     raise exception using errcode = '22023', message = 'invalid room activity parameters';
