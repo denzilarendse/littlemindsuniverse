@@ -4,11 +4,12 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source=fs.readFileSync(new URL('../assets/blueprint-rooms.js',import.meta.url),'utf8');
-function createRooms(){
+function createRooms(buttons=[]){
   const values=new Map();
   const localStorage={getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value),removeItem:key=>values.delete(key)};
   const window={};
-  vm.runInNewContext(source,{window,localStorage,Date,WeakSet,JSON,Math,Number,String,Object,Array,RegExp,console});
+  const document={querySelectorAll:selector=>selector==='[data-room-action]'?buttons:[],querySelector:()=>null,getElementById:()=>null};
+  vm.runInNewContext(source,{window,localStorage,document,Date,WeakSet,JSON,Math,Number,String,Object,Array,RegExp,console});
   return {rooms:window.LMU_ROOMS,values};
 }
 const demo={mode:'demo',role:'learner',stage:'discovery',learner:{},mastery:[]};
@@ -81,4 +82,24 @@ test('demo progress survives a profile-role reset without leaking into live mode
   state.mastery=[];
   rooms.refreshProgress({...state,mode:'live'});
   assert.equal(state.mastery.length,0);
+});
+
+
+test('Maths Race completes a game and writes to the shared demo mastery record',()=>{
+  const handlers=[];
+  const button=(dataset)=>({dataset,addEventListener:(name,fn)=>handlers.push({dataset,fn})});
+  const buttons=[
+    button({roomAction:'game-start',game:'maths-race'}),
+    button({roomAction:'game-answer',answer:'1'}),
+    button({roomAction:'game-answer',answer:'1'}),
+    button({roomAction:'game-answer',answer:'1'})
+  ];
+  const {rooms,values}=createRooms(buttons);
+  const state={mode:'demo',role:'learner',stage:'discovery',learner:{},mastery:[],view:'playworld'};
+  rooms.wire(state);
+  for(const item of handlers)item.fn();
+  assert.ok(state.mastery.some(x=>x.subject==='Mathematics'&&x.evidence_count===1));
+  const saved=JSON.parse(values.get('lmu-blueprint-room-demo-v1'));
+  assert.equal(saved.gameResults[0].score,3);
+  assert.equal(saved.gameResults[0].label,'Maths Race');
 });
