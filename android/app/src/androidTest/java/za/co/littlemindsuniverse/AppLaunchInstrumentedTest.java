@@ -1,15 +1,14 @@
 package za.co.littlemindsuniverse;
 
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import androidx.core.content.ContextCompat;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -26,9 +25,38 @@ public class AppLaunchInstrumentedTest {
     public ActivityScenarioRule<MainActivity> activityRule =
         new ActivityScenarioRule<>(MainActivity.class);
 
+    private WebView findWebView(View view) {
+        if (view instanceof WebView) {
+            return (WebView) view;
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int index = 0; index < group.getChildCount(); index++) {
+                WebView found = findWebView(group.getChildAt(index));
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void assertWebViewIsLaidOut() {
+        activityRule.getScenario().onActivity(activity -> {
+            View content = activity.findViewById(android.R.id.content);
+            WebView webView = findWebView(content);
+            assertNotNull("Capacitor WebView must exist in the activity content", webView);
+            assertTrue("WebView must be attached to the window", webView.isAttachedToWindow());
+            assertTrue("WebView must be visible", webView.isShown());
+            assertTrue("WebView must have a laid-out width", webView.getWidth() > 0);
+            assertTrue("WebView must have a laid-out height", webView.getHeight() > 0);
+        });
+    }
+
     @Test
     public void mainActivityLaunchesAndDisplaysCapacitorWebView() {
-        onView(isAssignableFrom(WebView.class)).check(matches(isDisplayed()));
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        assertWebViewIsLaidOut();
     }
 
     @Test
@@ -43,13 +71,15 @@ public class AppLaunchInstrumentedTest {
     @Test
     public void webViewRemainsDisplayedAcrossLandscapeAndPortraitChanges() {
         activityRule.getScenario().onActivity(activity ->
-            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+            activity.setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
         );
-        onView(isAssignableFrom(WebView.class)).check(matches(isDisplayed()));
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        assertWebViewIsLaidOut();
 
         activityRule.getScenario().onActivity(activity ->
-            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+            activity.setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
         );
-        onView(isAssignableFrom(WebView.class)).check(matches(isDisplayed()));
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        assertWebViewIsLaidOut();
     }
 }
