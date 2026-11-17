@@ -41,12 +41,17 @@ as $$
 $$;
 
 create table public.profiles (
-  id uuid primary key
+  id uuid primary key,
+  role text not null default 'parent',
+  preferred_language text default 'en'
 );
 create table public.learners (
   id uuid primary key,
   user_id uuid not null references public.profiles(id),
-  active boolean not null default true
+  active boolean not null default true,
+  stage_code text not null default 'EE24',
+  home_language text,
+  learning_language text
 );
 create table public.guardian_learner_links (
   guardian_profile_id uuid not null references public.profiles(id),
@@ -94,13 +99,13 @@ as $$
     );
 $$;
 
-insert into public.profiles(id) values
- ('10000000-0000-4000-8000-000000000001'),
- ('10000000-0000-4000-8000-000000000002'),
- ('10000000-0000-4000-8000-000000000003'),
- ('10000000-0000-4000-8000-000000000004'),
- ('10000000-0000-4000-8000-000000000005'),
- ('10000000-0000-4000-8000-000000000006');
+insert into public.profiles(id, role) values
+ ('10000000-0000-4000-8000-000000000001','learner'),
+ ('10000000-0000-4000-8000-000000000002','learner'),
+ ('10000000-0000-4000-8000-000000000003','parent'),
+ ('10000000-0000-4000-8000-000000000004','parent'),
+ ('10000000-0000-4000-8000-000000000005','teacher'),
+ ('10000000-0000-4000-8000-000000000006','teacher');
 
 insert into public.learners(id,user_id) values
  ('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001'),
@@ -116,6 +121,7 @@ insert into public.classroom_members(classroom_id,learner_id,status) values
  ('30000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','active');
 
 \ir ../../database/migrations/20261117_lmu_rooms_read_boundary.sql
+\ir ../../database/migrations/20261117_lmu_rooms_activity_write_rpc.sql
 
 insert into public.room_content_items(
  id,room_key,content_key,version,locale,content_type,payload,status,created_by,approved_by,published_at
@@ -146,6 +152,19 @@ begin
   if (select count(*) from public.room_content_items) <> 1 then
     raise exception 'published catalogue boundary failed';
   end if;
+  perform public.record_room_activity(
+    '20000000-0000-4000-8000-000000000001', 'playworld',
+    '40000000-0000-4000-8000-000000000001', 'activity_completed',
+    '{"score":4,"completed":true}', 120
+  );
+  if not exists (
+    select 1 from public.room_activity_events
+    where actor_profile_id = auth.uid()
+      and learner_id = '20000000-0000-4000-8000-000000000001'
+      and result = '{"score":4,"completed":true}'::jsonb
+  ) then
+    raise exception 'learner RPC did not derive actor or persist event';
+  end if;
   if has_table_privilege(current_user,'public.room_activity_events','INSERT') then
     raise exception 'authenticated role unexpectedly has direct activity INSERT';
   end if;
@@ -155,11 +174,21 @@ reset role;
 -- Verified guardian: sees linked learner event.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
-do $$ begin
-  if (select count(*) from public.room_activity_events) <> 1 then
+do $
+begin
+  if (select count(*) from public.room_activity_events) <> 2 then
     raise exception 'verified guardian boundary failed';
   end if;
-end $$;
+  begin
+    perform public.record_room_activity(
+      '20000000-0000-4000-8000-000000000001', 'playworld',
+      '40000000-0000-4000-8000-000000000001', 'activity_completed', '{}'::jsonb, null
+    );
+    raise exception 'guardian unexpectedly wrote as learner';
+  exception when insufficient_privilege then
+    null;
+  end;
+end $;
 reset role;
 
 -- Unverified guardian: sees no learner event.
@@ -175,11 +204,21 @@ reset role;
 -- Active classroom teacher: sees learner in active classroom.
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000005',false);
-do $$ begin
-  if (select count(*) from public.room_activity_events) <> 1 then
+do $
+begin
+  if (select count(*) from public.room_activity_events) <> 2 then
     raise exception 'active classroom teacher boundary failed';
   end if;
-end $$;
+  begin
+    perform public.record_room_activity(
+      '20000000-0000-4000-8000-000000000001', 'playworld',
+      '40000000-0000-4000-8000-000000000001', 'activity_completed', '{}'::jsonb, null
+    );
+    raise exception 'teacher unexpectedly wrote as learner';
+  exception when insufficient_privilege then
+    null;
+  end;
+end $;
 reset role;
 
 -- Unrelated teacher: sees no learner event.
@@ -190,6 +229,33 @@ do $$ begin
     raise exception 'unrelated teacher was allowed to read learner event';
   end if;
 end $$;
+reset role;
+
+-- Invalid result metadata and unpublished content are rejected.
+set role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+do $
+begin
+  begin
+    perform public.record_room_activity(
+      '20000000-0000-4000-8000-000000000001', 'playworld',
+      '40000000-0000-4000-8000-000000000001', 'activity_completed',
+      '{"free_text":"not allowed"}'::jsonb, null
+    );
+    raise exception 'free-text result unexpectedly accepted';
+  exception when invalid_parameter_value then
+    null;
+  end;
+  begin
+    perform public.record_room_activity(
+      '20000000-0000-4000-8000-000000000001', 'storyverse',
+      '40000000-0000-4000-8000-000000000002', 'activity_completed', '{}'::jsonb, null
+    );
+    raise exception 'draft content unexpectedly accepted';
+  exception when invalid_parameter_value then
+    null;
+  end;
+end $;
 reset role;
 
 -- Anonymous has no table SELECT grants.
