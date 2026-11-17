@@ -306,3 +306,33 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 1. Observe CI for commit `037dbe7efc4481b66a8e4c3a8afb42e96f64b4fb`. If the revised emulator tests pass, retain the change; if not, inspect the next failure log and correct only the root cause.
 2. Do not distribute the new artifact as fully verified until emulator verification passes. The existing pilot APK can be used for manual device checks, but physical-device testing remains outstanding.
 3. Continue backend baseline recovery only with an owner-supplied schema-only export and sanitised manifest; keep the test target empty until then.
+
+
+## Continuation checkpoint — 2026-11-17 20:5x SAST
+
+### Android verification continuation
+- Re-scanned current project ledger, Android validation plan, workflow run `44152121586`, release verification `44152121517`, public release `44152121672`, PostgreSQL fixture `44152121669`, and isolated Supabase test project.
+- The revised Android test commit `037dbe7efc4481b66a8e4c3a8afb42e96f64b4fb` passed the full Android build job: dependency audit, web source checks, Capacitor sync, frozen identity/SDK/permission assertions, lint, unit tests, instrumentation compilation, API 36 bundles and pilot APK generation all PASS.
+- The revised emulator job is still executing its API 36 emulator test step. It is not yet verified PASS or FAIL at this checkpoint.
+- Latest APK artifact from that build: artifact ID `14359541834`, ZIP digest `7db57f26a3733a9a6fadbed7eedf24d37a5203aaeae10e67724a72881327b093`. Downloaded and extracted locally to `/mnt/data/lmu-android-037dbe7/app-debug.apk`; APK size 4,238,778 bytes; SHA-256 `72db16968cc54dec148101e0d0c99b7001ec852e4d59d7cd4bea39a39b3e49e2`; ZIP integrity PASS. This is a fresh build generated from the test-fix commit, but emulator acceptance remains pending.
+- Updated physical-device test plan with the current artifact and hash: `docs/checkpoints/LMU-ANDROID-PHYSICAL-TEST-PLAN-20261117.md`, commit `7926ab6a2063e3fddd3d949bde401d10776466a7`.
+- Release verification run `44152121517`: PASS.
+- PostgreSQL disposable room RLS fixture run `44152121669`: PASS.
+- Public release packaging run `44152121672`: workflow PASS; signing material unavailable, so signing steps and production deployment were correctly skipped. Unsigned candidate uploaded; this is not a production release.
+- The user-provided APK at `/mnt/data/lmu-current-apk/app-debug.apk` is the prior artifact with SHA-256 `e5198c10a1d17835147dae554dda47089b810a4fcd6d87b3a5d409d467e14503`. Do not confuse it with the newer downloaded build at `/mnt/data/lmu-android-037dbe7/app-debug.apk`.
+- No physical Android device is attached to the tool environment. Physical install/functional testing remains NOT RUN.
+
+### Backend
+- Isolated Free test project `klfvrawkieyqefbpzywq`: ACTIVE_HEALTHY, PostgreSQL 17.11.0.011; read-only public/private table inventory empty.
+- No authoritative schema-only baseline export or completed manifest has been supplied. No restore or hosted DB migration performed.
+- PostgreSQL fixture validates scoped room RLS/migration behavior against synthetic fixture, not full production baseline parity.
+
+### Release controls
+- No production signing, merge, production deploy, hosted migration or production data change performed.
+- PR #112 remains draft/unmerged. Continue to keep production and irreversible steps approval-gated.
+
+### Next phase brief
+1. Poll Android workflow `44152121586` until the emulator job completes; inspect its result and logs if failed.
+2. If emulator PASS, make latest pilot APK available for physical-device installation and await real-device test evidence; if fail, diagnose and repair test/app root cause.
+3. Continue product QA on the current branch, but do not represent the product as fully complete: backend baseline, live room integration, legal/security review, physical-device acceptance and production signing remain release blockers.
+4. Obtain the owner-controlled sanitized schema-only dump and manifest; restore only into isolated PG17 test environment after review.
