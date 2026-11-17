@@ -111,3 +111,6 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - Not run: full `npm run check`, SQL parser/database execution, RLS role-matrix tests, Supabase CLI, Docker/Podman. Environment has Node.js 22 and Java 21; `psql`, Supabase CLI, Docker and Podman are absent.
 - Important limitation: existing database migrations are documented as deltas, not a zero-to-one bootstrap. A sanitized baseline/local fixture is required before a full local PostgreSQL run.
 - No UI client adapter or write RPC was added; live room activity remains disabled. Demo behavior remains unchanged.
+
+- Follow-up verification note: the temporary local run exercised an equivalent five-assertion Node contract harness against a mirrored copy of the SQL; the repository's committed test file has not yet been run from a full checkout. A direct Git clone could not resolve github.com in the local runtime.
+- GitHub PR #112 now points to commit `9fcfdffd5e8d0cbc152801347fbd6eaa77aa7f90`; PR remains open, draft and unmerged. GitHub Actions checks `verify`, `verify-android` and `verify-package-deploy` were observed in progress; Vercel Preview Comments check succeeded. These CI jobs are not yet a pass at this checkpoint.
