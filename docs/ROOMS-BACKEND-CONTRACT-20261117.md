@@ -156,3 +156,11 @@ Before implementing a child PIN:
 - Security advisor snapshot: 14 RLS-enabled tables without policies, 94 authenticated-executable SECURITY DEFINER functions, leaked-password protection disabled, pg_net in public.
 - No migration applied, no live data modified, no production deployment performed.
 - Next slice: convert this reviewed contract into a local/disposable-branch migration + role-matrix tests; do not touch production until review and explicit approval.
+
+## 11. Activity RPC implementation checkpoint — 2026-11-17
+
+The next migration is implemented on the development branch as `database/migrations/20261117_lmu_rooms_activity_write_rpc.sql`. It defines `public.record_room_activity(...)` as a narrowly granted SECURITY DEFINER function with an empty search_path. It accepts learner id, room key, content item id, event type, bounded result JSON and optional duration only. It does not accept actor identity or event timestamp.
+
+Authorization is deliberately narrower than read access: only an active learner row whose `user_id = auth.uid()` and whose linked profile role is `learner` can write. Verified guardians and active classroom teachers retain read access but cannot write as the learner. The RPC checks published content, room match, stage compatibility and locale language compatibility. It accepts only compact scalar keys (`score`, `correct_count`, `total_count`, `attempts`, `progress`, `outcome`, `completed`); rejects free text, nested data and unknown keys; caps duration at 7,200 seconds; and serializes a 30-events-per-minute actor rate check with a transaction advisory lock. Actor and timestamps are database-derived. Direct table writes remain denied.
+
+The disposable PostgreSQL fixture now includes the RPC and positive/negative role cases. This migration is still development-branch code only. Do not apply to the live project until CI, full migration-chain compatibility, Supabase advisor review and explicit release approval are complete. Current result keys are a deliberately small initial contract; formal mastery/qualification is not updated by this RPC.
