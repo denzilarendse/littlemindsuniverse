@@ -14,7 +14,7 @@ begin
   end if;
 end $;
 
-do $$
+do $
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
     create role anon nologin;
