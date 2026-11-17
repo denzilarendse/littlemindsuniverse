@@ -211,3 +211,10 @@ Implement the backend contract in a local or disposable Supabase branch, startin
 - The existing Free Supabase test project `klfvrawkieyqefbpzywq` remains `COMING_UP` after restore request. It reports PostgreSQL 17.11.0.011. Database operations still return unavailable while starting.
 - Full schema baseline replay remains blocked until the owner-controlled export script is run with a local database connection URL and the reviewed schema-only SQL is made available. The GitHub-hosted PostgreSQL 17 fixture is not a substitute for the complete production baseline.
 - Current scope: no live DB writes, no schema migrations applied to hosted Supabase, no production deploy, no merge.
+
+
+### PostgreSQL 17 disposable fixture result — 2026-11-17 19:24 SAST
+- GitHub Actions run `44135396421` for commit `6b76e60ea001eb86c3c4460a6556f8f512dab128` completed SUCCESS.
+- The GitHub-hosted disposable PostgreSQL 17 service initialized successfully; database creation passed; room backend static contract tests passed; SQL migration and RLS role-matrix fixture passed; cleanup completed.
+- This verifies the existing room fixture on PostgreSQL 17, not a replay of the full LMU production schema baseline. Full-chain replay remains BLOCKED pending owner-controlled schema export.
+- Supabase Free test project remains `COMING_UP`; it is not yet queryable. No migration was applied to it.
