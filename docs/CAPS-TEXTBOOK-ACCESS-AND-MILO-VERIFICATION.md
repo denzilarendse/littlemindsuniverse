@@ -65,3 +65,14 @@ Official page references:
 - https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent.aspx
 
 The National Catalogue must still be reconciled grade-by-grade and subject-by-subject for publisher-approved materials that are not listed as state-owned digital books.
+
+The source seed now covers 11 DBE discovery endpoints, including:
+- LTSM National Catalogue (publisher-approved titles by grade/phase).
+- Digital Content and state-owned textbook listings.
+- CAPS policy statements and amendments.
+- Rainbow Workbooks.
+- Grade 12 Mind the Gap study guides.
+- Foundation Phase graded readers and big books.
+- Incremental Introduction of African Languages resources.
+
+The catalogue records 18 known resource groups from page headings and resource listings. The discovery report separately records each page's link count and deduplicated official download candidates. A link candidate is not counted as a verified PDF until the safe retrieval adapter successfully checks the bytes, and no resource is marked AI-processable until its individual rights evidence is reviewed.
