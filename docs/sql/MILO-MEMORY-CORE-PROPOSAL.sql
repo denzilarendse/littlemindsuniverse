@@ -39,7 +39,7 @@ create table public.learner_memory_items (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique(id,learner_id),
-  check ((status = 'confirmed') = (confirmed_at is not null and confirmed_by is not null))
+  check (status <> 'confirmed' or (confirmed_at is not null and confirmed_by is not null))
 );
 
 create unique index learner_memory_items_one_current_key
@@ -105,7 +105,7 @@ as $$
 declare v_role text; v_learner_id uuid; v_row public.learner_memory_items;
 begin
   select role into v_role from public.profiles where id=p_actor_profile_id;
-  if v_role not in ('learner','teacher','parent') then
+  if v_role is null or v_role not in ('learner','teacher','parent') then
     raise exception 'actor cannot propose learner memory' using errcode='42501';
   end if;
   v_learner_id := (p_input->>'learnerId')::uuid;
@@ -139,7 +139,7 @@ as $$
 declare v_role text; v_old public.learner_memory_items; v_row public.learner_memory_items;
 begin
   select role into v_role from public.profiles where id=p_actor_profile_id;
-  if v_role <> 'teacher' then raise exception 'teacher approval required' using errcode='42501'; end if;
+  if v_role is distinct from 'teacher' then raise exception 'teacher approval required' using errcode='42501'; end if;
   select * into v_old from public.learner_memory_items where id=p_memory_item_id for update;
   if not found or v_old.status not in ('proposed','confirmed') then
     raise exception 'memory item cannot be confirmed' using errcode='40001';
@@ -193,10 +193,10 @@ declare v_role text; v_old public.learner_memory_items; v_row public.learner_mem
 begin
   select role into v_role from public.profiles where id=p_actor_profile_id;
   if p_event_type='expire' then
-    if v_role <> 'admin' then raise exception 'system expiry authority required' using errcode='42501'; end if;
+    if v_role is distinct from 'admin' then raise exception 'system expiry authority required' using errcode='42501'; end if;
     v_status := 'expired';
   elsif p_event_type='dispute' then
-    if v_role not in ('learner','parent','teacher') then raise exception 'actor cannot dispute memory' using errcode='42501'; end if;
+    if v_role is null or v_role not in ('learner','parent','teacher') then raise exception 'actor cannot dispute memory' using errcode='42501'; end if;
     v_status := 'disputed';
   elsif p_event_type='withdraw' then
     if v_role not in ('learner','parent','teacher') then raise exception 'actor cannot withdraw memory' using errcode='42501'; end if;
