@@ -76,3 +76,7 @@ The source seed now covers 11 DBE discovery endpoints, including:
 - Incremental Introduction of African Languages resources.
 
 The catalogue records 18 known resource groups from page headings and resource listings. The discovery report separately records each page's link count and deduplicated official download candidates. A link candidate is not counted as a verified PDF until the safe retrieval adapter successfully checks the bytes, and no resource is marked AI-processable until its individual rights evidence is reviewed.
+
+## Live sample retrieval probe
+
+CI now performs a non-persistent retrieval probe against one official DBE Grade 10 Business Studies learner-book LinkClick resource using the same `fetchCapsPdf` adapter intended for Milo. It verifies redirect allowlisting, PDF magic bytes, size limit and SHA-256, writes only a small JSON evidence report, and deliberately does not retain or rehost the PDF. The probe is non-blocking if the DBE host is temporarily unavailable; inspect its report rather than treating a network timeout as a code failure.
