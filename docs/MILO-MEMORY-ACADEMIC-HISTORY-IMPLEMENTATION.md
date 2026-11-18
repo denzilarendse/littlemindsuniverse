@@ -7,7 +7,7 @@ Adapter-driven prototype only. It is not connected to `/api/milo`, Supabase, pro
 - `memory-validation.js`: category/source allowlists, bounded JSON values, confidence range, UUID and state validation; rejects sensitive-key patterns.
 - `memory-service.js`: propose, confirm, update, dispute, withdraw and expire operations. Writes and append-only events must share one repository transaction.
 - `academic-history-service.js`: scoped aggregation of the existing submission, review, mastery, Milo session/event, assistance, verification, recommendation and report sources.
-- `context-orchestrator.js`: bounded confirmed memory, academic evidence, independent/assisted distinction and curriculum objective provenance.\n- `supabase-adapters.js`: server-only PostgREST reads for existing academic evidence and RPC calls for atomic memory writes; never imported by browser code.
+- `context-orchestrator.js`: bounded confirmed memory, academic evidence, independent/assisted distinction and curriculum objective provenance.\n- `supabase-adapters.js`: server-only PostgREST reads for existing academic evidence and RPC calls for atomic memory writes; never imported by browser code.\n- `authorizer.js`: fail-closed role/action gate requiring injected learner-ownership, teacher-classroom, parent-consent and trusted-service resolvers.
 
 ## Adapter contract
 Memory repository: atomic server RPC methods `milo_memory_propose`, `milo_memory_confirm`, `milo_memory_update`, and `milo_memory_transition`; each database function must update the projection and append its event in the same PostgreSQL transaction. Reads use server-only `adminGet`.
@@ -80,3 +80,13 @@ A server-only Supabase adapter is now implemented on the draft branch. No memory
 - The production project was not queried or modified in this phase.
 - Blocking integration dependency: a trusted `canAccessLearner` implementation must validate learner ownership, teacher classroom access, and parent/guardian relationship + consent before any service-role operation. The current API service-role helper bypasses RLS, so an injected authorizer is mandatory. Parent memory reads remain denied.
 - Subject-specific academic history is not implemented; do not use the subject parameter as an access-control filter.
+
+
+## Authorization contract
+- `createMiloAuthorizer` fails construction if any resolver is missing; it has no permissive fallback.
+- Learner: active own-learner ownership resolver only; cannot confirm or update memory.
+- Teacher: active classroom access resolver gates academic history and teacher memory actions.
+- Parent: verified relationship + applicable consent resolver gates academic history/proposals/disputes; parent memory reads are denied.
+- Service: trusted service resolver gates expiry only.
+- Admin: denied learner-memory/academic-history access by default.
+- The resolvers are policy injection points, not yet bound to production database helper functions. Do not connect this authorizer until those functions and their signatures are verified from the restored isolated baseline.
