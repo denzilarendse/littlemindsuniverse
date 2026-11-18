@@ -26,6 +26,11 @@ trap 'rm -f "$tmp_file"' EXIT
 echo "Exporting schema only. No data or custom roles are requested."
 supabase db dump --db-url "$SUPABASE_DB_URL" -f "$tmp_file"
 
+if [[ ! -s "$tmp_file" ]]; then
+  echo "Schema dump is empty; refusing to retain it." >&2
+  exit 4
+fi
+
 # A schema-only pg_dump must not contain COPY data blocks.
 if grep -Eq '^COPY .* FROM stdin;' "$tmp_file"; then
   echo "Unexpected data COPY block detected; refusing to retain this dump." >&2
