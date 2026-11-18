@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { extractOfficialLinks, extractDownloadCandidates } from '../scripts/discover-dbe-caps-resources.mjs';
+import { extractOfficialLinks, extractDownloadCandidates, discoverDbeResources } from '../scripts/discover-dbe-caps-resources.mjs';
 import { fetchCapsPdf, validateCapsDocumentMetadata } from '../api/_lib/milo-document-access.js';
 
 test('DBE link discovery accepts official HTTPS resources and rejects unrelated hosts', () => {
@@ -21,6 +21,32 @@ test('DBE download links are deduplicated by official file ticket and retain des
   const candidates = extractDownloadCandidates(links);
   assert.equal(candidates.length, 2);
   assert.equal(candidates[0].title, 'Grade 4 Mathematics Learner Book');
+});
+
+
+test('DBE source discovery retries transient failures and records successful attempts', async () => {
+  let calls = 0;
+  const catalogue = {
+    catalogueVersion: 'test',
+    officialSources: [{ id: 'test-dbe', title: 'Test DBE', url: 'https://www.education.gov.za/test.aspx' }]
+  };
+  const report = await discoverDbeResources({
+    catalogue,
+    fetchImpl: async url => {
+      calls += 1;
+      if (calls === 1) throw new Error('temporary timeout');
+      return {
+        ok: true,
+        status: 200,
+        url,
+        text: async () => '<a href="/book.pdf">Learner Book</a>'
+      };
+    }
+  });
+  assert.equal(calls, 2);
+  assert.equal(report.reachableSources, 1);
+  assert.equal(report.results[0].attempts, 2);
+  assert.equal(report.results[0].candidateDownloads, 1);
 });
 
 test('Milo document adapter validates HTTPS, host and PDF signature before accepting bytes', async () => {
