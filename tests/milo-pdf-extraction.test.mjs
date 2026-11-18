@@ -41,7 +41,8 @@ const resource = {
   language: 'English',
   sourceUrl: 'https://education.gov.za/fixture/sample.pdf',
   rightsStatus: 'teacher-authorised',
-  rightsEvidenceUrl: 'https://education.gov.za/fixture/rights'
+  rightsEvidenceUrl: 'https://education.gov.za/fixture/rights',
+  aiProcessingAllowed: true
 };
 
 test('extracts each PDF page separately and preserves document provenance', async () => {
@@ -79,6 +80,12 @@ test('rejects invalid, empty and oversized input before parsing', async () => {
   await assert.rejects(() => extractMiloPdfPages(makePdf(['A sufficiently long fixture page for the size check.']), {
     resource, maxBytes: 8
   }), /size limit/);
+});
+
+test('requires explicit per-resource AI-processing permission', async () => {
+  await assert.rejects(() => extractMiloPdfPages(makePdf(['A sufficiently long fixture page for rights testing.']), {
+    resource: { ...resource, aiProcessingAllowed: false }
+  }), /explicit AI-processing permission/);
 });
 
 test('requires complete provenance before extraction', async () => {
