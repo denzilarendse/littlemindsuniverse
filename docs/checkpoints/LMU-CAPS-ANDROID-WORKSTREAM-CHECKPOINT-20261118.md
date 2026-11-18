@@ -119,3 +119,7 @@ Live sample retrieval result:
 - Final DBE-hosted PDF: 47,352,074 bytes; SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`.
 - Artifact ID `14397484063`; artifact digest `sha256:48871cfd3231e0eb05f7aa2a154aa087cf7baf23f35de69f719b3e653fa81280`.
 - The file was not stored or rehosted. This confirms byte-level access only; extraction/OCR and Milo context injection remain outstanding.
+
+Additional Android evidence:
+- Run `44237036250` completed the Android build job SUCCESS, including static Play readiness checks and APK/AAB packaging; its companion emulator job was queued at last inspection.
+- Full LMU feature branch emulator evidence remains historical run `44152670183` PASS; only an Android instrumentation test file differs from `main` in the compare, not the app Gradle/manifest configuration.
