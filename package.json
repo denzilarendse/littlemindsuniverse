@@ -22,7 +22,8 @@
     "verify:play-production": "node scripts/verify-connect-play-production.mjs"
   },
   "dependencies": {
-    "@capacitor/core": "8.5.2"
+    "@capacitor/core": "8.5.2",
+    "pdf-parse": "2.4.5"
   },
   "devDependencies": {
     "@capacitor/android": "8.5.2",

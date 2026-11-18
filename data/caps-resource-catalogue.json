@@ -1,0 +1,835 @@
+{
+  "catalogueVersion": "2026.1",
+  "jurisdiction": "ZA",
+  "curriculum": "CAPS",
+  "status": "discovery-seed-not-complete",
+  "policy": {
+    "preferOfficialSources": true,
+    "downloadAndRehostByDefault": false,
+    "requirePerResourceRightsReview": true,
+    "requireVersionAndLastChecked": true,
+    "neverInferMissingTextbooks": true
+  },
+  "officialSources": [
+    {
+      "id": "dbe-ltsm-hub",
+      "title": "DBE Learning and Teaching Support Materials",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29.aspx",
+      "purpose": "National catalogues and official learning and teaching support material discovery",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [],
+      "resourceTypes": [
+        "national-catalogue",
+        "learner-material",
+        "teacher-material"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-digital-content",
+      "title": "DBE Digital Content",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent.aspx",
+      "purpose": "Digital learner books, teacher guides, workbooks and interactive resources",
+      "grades": [
+        "4",
+        "5",
+        "6",
+        "10"
+      ],
+      "subjects": [
+        "Natural Sciences and Technology",
+        "Technical Mathematics",
+        "Technical Science"
+      ],
+      "resourceTypes": [
+        "learner-book",
+        "teacher-guide",
+        "workbook",
+        "interactive-resource"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-state-owned-textbooks",
+      "title": "DBE State-owned Textbooks",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/State-owned-textbooks.aspx",
+      "purpose": "Digitised state-owned textbooks available for free download and printing",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Business Studies"
+      ],
+      "resourceTypes": [
+        "learner-book",
+        "textbook"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-state-owned-grade-4-9",
+      "title": "DBE State-owned Textbooks Grades 4–9",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade4TO9.aspx",
+      "purpose": "State-owned textbooks and learning resources for Grades 4–9",
+      "grades": [
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Mathematics",
+        "Natural Sciences",
+        "Technology"
+      ],
+      "resourceTypes": [
+        "learner-book",
+        "teacher-guide",
+        "interactive-resource"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-state-owned-grade-10-12",
+      "title": "DBE State-owned Textbooks Grades 10–12",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade10to12.aspx",
+      "purpose": "State-owned FET textbooks including Mathematics and Physical Sciences",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Mathematics",
+        "Physical Sciences"
+      ],
+      "resourceTypes": [
+        "learner-book",
+        "teacher-guide",
+        "textbook"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-caps-policy-statements",
+      "title": "DBE CAPS Curriculum and Assessment Policy Statements",
+      "url": "https://www.education.gov.za/Curriculum/CurriculumAssessmentPolicyStatements(CAPS).aspx",
+      "purpose": "Authoritative curriculum policy statements, subject requirements and amendments",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [],
+      "resourceTypes": [
+        "curriculum-policy",
+        "assessment-policy",
+        "amendment"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-workbooks",
+      "title": "DBE Rainbow Workbooks",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/Workbooks.aspx",
+      "purpose": "CAPS-aligned learner workbooks and supporting practice resources",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resourceTypes": [
+        "workbook"
+      ],
+      "status": "source-discovery"
+    },
+    {
+      "id": "dbe-mind-the-gap",
+      "title": "DBE Mind the Gap Study Guides",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/MindtheGapStudyGuides.aspx",
+      "purpose": "Grade 12 CAPS-aligned subject and language study guides",
+      "grades": [
+        "12"
+      ],
+      "subjects": [
+        "Accounting",
+        "Economics",
+        "Life Sciences",
+        "Geography",
+        "Mathematics",
+        "Mathematical Literacy",
+        "Physical Sciences",
+        "Languages"
+      ],
+      "resourceTypes": [
+        "study-guide",
+        "audio-resource"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-graded-readers",
+      "title": "DBE Graded Readers and Big Books",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/GradedReadersandBigBookHL.aspx",
+      "purpose": "Foundation Phase storybooks, big books and graded readers in official languages",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3"
+      ],
+      "subjects": [
+        "Home Language",
+        "Reading",
+        "Literacy"
+      ],
+      "resourceTypes": [
+        "big-book",
+        "graded-reader",
+        "storybook"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-iial-resources",
+      "title": "DBE Incremental Introduction of African Languages Resources",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/IIALResources.aspx",
+      "purpose": "Foundation Phase additional-language teaching and learning resources",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3"
+      ],
+      "subjects": [
+        "Languages"
+      ],
+      "resourceTypes": [
+        "learner-resource",
+        "teacher-resource"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-ltsm-national-catalogue",
+      "title": "DBE LTSM National Catalogue",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/LTSMNationalCatalogue.aspx",
+      "purpose": "Nationally approved learning and teaching material catalogues by grade and phase",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [],
+      "resourceTypes": [
+        "approved-textbook-catalogue",
+        "publisher-resource"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-workbooks-2026-terms-1-2",
+      "title": "DBE 2026 Workbooks Terms 1 and 2",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/2026Workbooks1.aspx",
+      "purpose": "Current-year workbook downloads and grade/subject coverage for Terms 1 and 2",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resourceTypes": [
+        "workbook"
+      ],
+      "status": "source-discovery"
+    },
+    {
+      "id": "dbe-workbooks-2026-terms-3-4",
+      "title": "DBE 2026 Workbooks Terms 3 and 4",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/2026WorkbooksTerm3and4.aspx",
+      "purpose": "Current-year workbook downloads and grade/subject coverage for Terms 3 and 4",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resourceTypes": [
+        "workbook"
+      ],
+      "status": "source-discovery"
+    },
+    {
+      "id": "dbe-at-the-crossroads",
+      "title": "DBE At the Crossroads Textbooks",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/AttheCrossroadsTextbooks.aspx",
+      "purpose": "Life Skills and Life Orientation textbooks and teacher guides",
+      "grades": [
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Life Skills",
+        "Life Orientation"
+      ],
+      "resourceTypes": [
+        "textbook",
+        "teacher-guide",
+        "bookmarks"
+      ],
+      "status": "source-verified-page"
+    }
+  ],
+  "coverageRules": [
+    "A source page is not proof that every grade/subject textbook exists.",
+    "Each individual resource must have its own title, grade, subject, language, resource type, publisher/owner, canonical source URL, version, publication date when available, rights status, checksum, last-checked timestamp and retrieval status.",
+    "Use DBE National Catalogue entries to identify approved commercial titles where a state-owned digital book is not listed.",
+    "Do not label a grade/subject pair complete until an authoritative CAPS document and an eligible resource have both been mapped.",
+    "Do not mirror or redistribute a resource until its specific licence or DBE permission permits that use.",
+    "Known resource groups are transcribed from DBE page headings and link labels; they are not a claim that every volume has been downloaded, OCR-checked or licensed for AI processing."
+  ],
+  "knownResourceGroups": [
+    {
+      "id": "fp-mathematics-grades-4-6",
+      "grades": [
+        "4",
+        "5",
+        "6"
+      ],
+      "subjects": [
+        "Mathematics"
+      ],
+      "resources": [
+        "Learner Book"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-state-owned-grade-4-9",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "ip-natural-sciences-technology-grades-4-6",
+      "grades": [
+        "4",
+        "5",
+        "6"
+      ],
+      "subjects": [
+        "Natural Sciences and Technology"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-4-9",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "sp-mathematics-grades-7-9",
+      "grades": [
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Mathematics"
+      ],
+      "resources": [
+        "Learner Book"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-state-owned-grade-4-9",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "sp-natural-sciences-grades-7-9",
+      "grades": [
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Natural Sciences"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-state-owned-grade-4-9",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "sp-technology-grades-7-9",
+      "grades": [
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Technology"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-state-owned-grade-4-9",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-business-studies-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Business Studies"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide",
+        "Digital Book",
+        "HTML5"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-mathematical-literacy-grade-10",
+      "grades": [
+        "10"
+      ],
+      "subjects": [
+        "Mathematical Literacy"
+      ],
+      "resources": [
+        "Learner Guide",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-agricultural-technology-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Agricultural Technology"
+      ],
+      "resources": [
+        "Learner Book"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-cat-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Computer Applications Technology"
+      ],
+      "resources": [
+        "Practical Learner Book",
+        "Theory Learner Book",
+        "Teacher Guide",
+        "Web Book"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-it-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Information Technology"
+      ],
+      "resources": [
+        "Practical Learner Book",
+        "Theory Learner Book",
+        "Teacher Guide",
+        "Web Book"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-hospitality-studies-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Hospitality Studies"
+      ],
+      "resources": [
+        "Digital Curriculum by Term",
+        "Video Resources"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-life-sciences-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Life Sciences"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-mathematics-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Mathematics"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-physical-sciences-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Physical Sciences"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-technical-mathematics-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Technical Mathematics"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "fet-technical-science-grades-10-12",
+      "grades": [
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Technical Science"
+      ],
+      "resources": [
+        "Learner Book",
+        "Teacher Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans"
+      ],
+      "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "mind-the-gap-grade-12-subject-guides",
+      "grades": [
+        "12"
+      ],
+      "subjects": [
+        "Accounting",
+        "Economics",
+        "Life Sciences",
+        "Geography",
+        "Mathematics",
+        "Mathematical Literacy",
+        "Physical Sciences"
+      ],
+      "resources": [
+        "CAPS-aligned Study Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans",
+        "African Home Languages (varies by title)"
+      ],
+      "sourceId": "dbe-mind-the-gap",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "foundation-big-books-and-graded-readers",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3"
+      ],
+      "subjects": [
+        "Home Language",
+        "Reading",
+        "Literacy"
+      ],
+      "resources": [
+        "Big Books",
+        "Graded Readers"
+      ],
+      "languages": [
+        "Afrikaans",
+        "English",
+        "isiNdebele",
+        "isiXhosa",
+        "isiZulu",
+        "Sepedi",
+        "Sesotho",
+        "Setswana",
+        "siSwati",
+        "Tshivenda",
+        "Xitsonga"
+      ],
+      "sourceId": "dbe-graded-readers",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "life-skills-grades-4-6",
+      "grades": [
+        "4",
+        "5",
+        "6"
+      ],
+      "subjects": [
+        "Life Skills"
+      ],
+      "resources": [
+        "Textbook Book 1",
+        "Textbook Book 2",
+        "Teacher Guide",
+        "Bookmarks"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-at-the-crossroads",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "life-orientation-grades-7-12",
+      "grades": [
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Life Orientation"
+      ],
+      "resources": [
+        "Textbook",
+        "Teacher Guide",
+        "Bookmarks"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-at-the-crossroads",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "rainbow-workbooks-2026",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resources": [
+        "2026 Terms 1 and 2 Workbooks",
+        "2026 Terms 3 and 4 Workbooks"
+      ],
+      "languages": [
+        "Official language editions where supplied"
+      ],
+      "sourceId": "dbe-workbooks-2026-terms-1-2",
+      "status": "listed-through-current-year-index-pages"
+    }
+  ]
+}

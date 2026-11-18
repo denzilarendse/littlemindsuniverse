@@ -1,0 +1,100 @@
+# CAPS Textbook Access and Milo Verification
+
+**Status:** First implementation slice; catalogue discovery and safe PDF retrieval contract added. Full curriculum coverage and model-context integration remain open.
+
+## Official source inventory
+
+The initial catalogue is in `data/caps-resource-catalogue.json`. It points to the Department of Basic Education (DBE) LTSM hub, Digital Content, State-owned Textbooks pages, grade-specific state-owned textbook pages and CAPS policy statements.
+
+The DBE Digital Content and state-owned textbook pages expose a useful but non-uniform subset of resources. They are discovery sources, not proof that all 13 grades, all subjects and all language streams have a free state-owned textbook. Use the National Catalogue to discover approved titles where the DBE does not publish a state-owned digital copy.
+
+## Resource ingestion contract
+
+Each resource record must include:
+- Stable resource ID, title, grade, subject, language and resource type.
+- Canonical source URL and original publisher/owner.
+- Rights status and evidence.
+- CAPS document/version and topic mapping where known.
+- Publication/version date and last-checked timestamp.
+- MIME type, byte length and SHA-256 after retrieval.
+- Retrieval status and extraction status kept separately.
+
+Do not mirror or redistribute a textbook based solely on the fact that a download link is publicly reachable. Retain source attribution and respect the rights/terms for each item.
+
+## Implemented
+
+- `api/_lib/milo-document-access.js` validates HTTPS and an explicit DBE host allowlist, follows redirects only within that allowlist, enforces a byte limit, verifies the PDF signature and calculates SHA-256.
+- `scripts/discover-dbe-caps-resources.mjs` discovers links on the official DBE source pages and emits a discovery report. It does not download or rehost books.
+- Automated tests cover link allowlisting, PDF signature, redirect host, size limits and metadata rights status.
+
+## Not yet implemented
+
+- PDF text extraction, OCR for scanned pages, table/equation/diagram extraction.
+- A durable document store or vector index.
+- Per-page/chunk citations and retrieval evaluation.
+- Connecting retrieved textbook context into `api/milo.js` model prompts.
+- Full grade/subject/language coverage matrix and publisher-rights audit.
+- Live hosted Milo end-to-end tests.
+
+The current Milo route is a tutor orchestration endpoint and has no verified textbook retrieval/context injection path. Do not claim that Milo can already read the PDFs. The safe retrieval adapter is a prerequisite, not proof of comprehension.
+
+## Commands
+
+```bash
+node scripts/discover-dbe-caps-resources.mjs
+node --test tests/caps-resource-access.test.mjs
+node --test tests/android-play-readiness.test.mjs
+```
+
+The discovery script writes a timestamped JSON report under `artifacts/`; do not commit generated textbook files or large PDFs.
+
+## Verified DBE catalogue coverage examples (18 November 2026)
+
+The DBE pages currently list resources across a broader set than the first seed:
+- Grades 4–6: Mathematics learner books; Natural Sciences and Technology learner books and teacher guides, including English and Afrikaans listings.
+- Grades 7–9: Mathematics, Natural Sciences and Technology learner/teacher resources, plus interactive difficult-concept resources.
+- Grades 10–12: Business Studies, Life Sciences, Mathematics, Physical Sciences, Technical Mathematics, Technical Science, CAT, IT, Agricultural Technology and related digital resources.
+- Grade 10: Mathematical Literacy learner/teacher material.
+- Grade 10–12: Hospitality Studies digital curriculum and video resources.
+
+These are page-listed resource groups, not yet individually ingested items. Some source files are large: DBE listings include PDFs around 100 MB. The retrieval adapter default cap was raised to 128 MiB and timeout to 120 seconds to accommodate large official source files. Per-resource retrieval still needs size, checksum and actual PDF-signature evidence.
+
+Official page references:
+- https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade4TO9.aspx
+- https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade10to12.aspx
+- https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent.aspx
+
+The National Catalogue must still be reconciled grade-by-grade and subject-by-subject for publisher-approved materials that are not listed as state-owned digital books.
+
+The source seed now covers 14 DBE discovery endpoints, including:
+- LTSM National Catalogue (publisher-approved titles by grade/phase).
+- Digital Content and state-owned textbook listings.
+- CAPS policy statements and amendments.
+- Rainbow Workbooks.
+- Grade 12 Mind the Gap study guides.
+- Foundation Phase graded readers and big books.
+- Incremental Introduction of African Languages resources.
+
+The catalogue records 21 known resource groups from page headings and resource listings. The discovery report separately records each page's link count and deduplicated official download candidates. A link candidate is not counted as a verified PDF until the safe retrieval adapter successfully checks the bytes, and no resource is marked AI-processable until its individual rights evidence is reviewed.
+
+## Live sample retrieval probe
+
+CI now performs a non-persistent retrieval probe against one official DBE Grade 10 Business Studies learner-book LinkClick resource using the same `fetchCapsPdf` adapter intended for Milo. It verifies redirect allowlisting, PDF magic bytes, size limit and SHA-256, writes only a small JSON evidence report, and deliberately does not retain or rehost the PDF. The probe is non-blocking if the DBE host is temporarily unavailable; inspect its report rather than treating a network timeout as a code failure.
+
+Additional sources now include the current 2026 workbook term pages and the DBE At the Crossroads Life Skills/Life Orientation textbook catalogue (Grades 4–12). The earlier 11/11 discovery result predates these three additions; the new 14-source discovery run must pass before the expanded catalogue is marked reachable.
+
+### Live PDF retrieval result
+
+- Workflow run: `44237036172` completed successfully.
+- DBE Grade 10 Business Studies Learner Book (English) was fetched from the official DBE LinkClick resource and redirected to a DBE-hosted PDF.
+- Result: `retrieved-pdf-signature-valid`, HTTP content type `application/pdf`, 47,352,074 bytes, SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`.
+- Artifact ID: `14397484063`; artifact digest `sha256:48871cfd3231e0eb05f7aa2a154aa087cf7baf23f35de69f719b3e653fa81280`.
+- The PDF was fetched in memory for the probe only; `stored: false`. This verifies source retrieval and PDF signature, not text extraction, OCR, indexing or Milo answer quality.
+
+### Expanded 14-source catalogue verification
+
+- Workflow run `44237271156` completed successfully on the 14-source catalogue.
+- Result: **14/14 official DBE source pages reachable**, each on the first attempt.
+- The report contains 1,583 per-source download-candidate entries; these are not 1,583 globally unique resources and have not all been individually fetched or PDF-validated.
+- The same run repeated the live Grade 10 Business Studies PDF probe successfully (47,352,074 bytes; SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`).
+- Evidence artifact ID: `14398425996`; SHA-256 digest: `256b24941636fb38690784bdc80bf336af3e20e9b3141f923fbea1b555162cd2`.
