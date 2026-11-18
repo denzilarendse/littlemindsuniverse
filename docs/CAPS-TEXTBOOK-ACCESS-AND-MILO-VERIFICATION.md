@@ -66,7 +66,7 @@ Official page references:
 
 The National Catalogue must still be reconciled grade-by-grade and subject-by-subject for publisher-approved materials that are not listed as state-owned digital books.
 
-The source seed now covers 11 DBE discovery endpoints, including:
+The source seed now covers 14 DBE discovery endpoints, including:
 - LTSM National Catalogue (publisher-approved titles by grade/phase).
 - Digital Content and state-owned textbook listings.
 - CAPS policy statements and amendments.
@@ -75,8 +75,10 @@ The source seed now covers 11 DBE discovery endpoints, including:
 - Foundation Phase graded readers and big books.
 - Incremental Introduction of African Languages resources.
 
-The catalogue records 18 known resource groups from page headings and resource listings. The discovery report separately records each page's link count and deduplicated official download candidates. A link candidate is not counted as a verified PDF until the safe retrieval adapter successfully checks the bytes, and no resource is marked AI-processable until its individual rights evidence is reviewed.
+The catalogue records 21 known resource groups from page headings and resource listings. The discovery report separately records each page's link count and deduplicated official download candidates. A link candidate is not counted as a verified PDF until the safe retrieval adapter successfully checks the bytes, and no resource is marked AI-processable until its individual rights evidence is reviewed.
 
 ## Live sample retrieval probe
 
 CI now performs a non-persistent retrieval probe against one official DBE Grade 10 Business Studies learner-book LinkClick resource using the same `fetchCapsPdf` adapter intended for Milo. It verifies redirect allowlisting, PDF magic bytes, size limit and SHA-256, writes only a small JSON evidence report, and deliberately does not retain or rehost the PDF. The probe is non-blocking if the DBE host is temporarily unavailable; inspect its report rather than treating a network timeout as a code failure.
+
+Additional sources now include the current 2026 workbook term pages and the DBE At the Crossroads Life Skills/Life Orientation textbook catalogue (Grades 4–12). The earlier 11/11 discovery result predates these three additions; the new 14-source discovery run must pass before the expanded catalogue is marked reachable.
