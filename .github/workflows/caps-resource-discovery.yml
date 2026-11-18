@@ -2,7 +2,7 @@ name: caps-resource-discovery
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'production/**']
     paths:
       - 'data/caps-resource-catalogue.json'
       - 'scripts/discover-dbe-caps-resources.mjs'
