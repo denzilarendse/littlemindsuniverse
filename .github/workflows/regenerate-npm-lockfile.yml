@@ -15,7 +15,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: production/caps-textbook-android-readiness-main-20261118
-          token: \${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
