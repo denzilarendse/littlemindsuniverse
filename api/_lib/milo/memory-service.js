@@ -1,5 +1,5 @@
 import {assertUuid,assertMemoryTransition,validateMemoryInput,MiloValidationError} from './memory-validation.js';
-export function createMiloMemoryService({repository,authorizer,clock=()=>new Date()}){if(!repository?.transitionMemory||!repository?.proposeMemory||!authorizer?.canAccessLearner)throw new TypeError('Atomic Supabase repository and authorizer required');
+export function createMiloMemoryService({repository,authorizer}){if(!repository?.transitionMemory||!repository?.proposeMemory||!authorizer?.canAccessLearner)throw new TypeError('Atomic Supabase repository and authorizer required');
 const actorOk=a=>{if(!a?.profileId||!['learner','teacher','parent','admin','service'].includes(a.role))throw new MiloValidationError('Authenticated actor required',401);assertUuid(a.profileId,'actor profile id');};
 async function access(actor,learnerId,action){actorOk(actor);assertUuid(learnerId,'learner id');if(!await authorizer.canAccessLearner({actor,learnerId,action}))throw new MiloValidationError('Access denied',403);}
 function canReadItem(actor,item){if(item.status!=='confirmed')return ['teacher','service'].includes(actor.role);if(item.visibilityScope==='teacher_only')return ['teacher','service'].includes(actor.role);if(item.visibilityScope==='learner_only')return actor.role==='learner';return ['learner','teacher'].includes(actor.role);}
