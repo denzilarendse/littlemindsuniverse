@@ -36,6 +36,15 @@ Subject-specific academic-history API is intentionally unavailable (HTTP 501) un
 
 The current `adminGet` / `adminRpc` server adapter uses a privileged server key and bypasses ordinary RLS. The application authorizer is therefore a hard prerequisite, not optional defense in depth. It must be verified against authoritative LMU relationship/consent helper functions before integration.
 
+## Schema baseline recovery finding
+A historical branch, `draven/phase2-schema-inventory-2026-11-05`, contains the read-only Phase 2 schema investigation. It records 45 curated migration files versus 97 live migration-ledger entries, with 6 exact filename matches, 32 possible mappings and 59 unmatched entries. The historical `database/README.md` explicitly says the files are a curated delta, not an empty-database bootstrap. The report records 62 public tables, one private table, 69 RLS policies, 140 functions, 18 triggers, 202 indexes and 362 constraints.
+
+The same report says the test project is empty and recommends an owner-controlled schema-only export. A safe local exporter and owner runbook are now included:
+- `scripts/export-lmu-schema-baseline.sh`
+- `docs/SCHEMA-BASELINE-OWNER-RUNBOOK.md`
+
+The exporter uses Supabase CLI `db dump`, never `db pull`/push/reset, requests no data or custom roles, refuses overwrite, uses restrictive permissions, rejects a COPY data block, and writes a SHA-256 manifest. It is not run from this chat because the owner must keep the database URL on their own machine. The CLI's default dump excludes managed Auth/Storage and extension schemas; those customisations and extension/job configuration need separate review.
+
 ## SQL proposal — NOT A MIGRATION
 The complete PostgreSQL 17 schema, constraints, indexes, append-only event trigger, privilege revocations, RLS enablement and service-role-only SECURITY INVOKER RPC functions are in `docs/sql/MILO-MEMORY-CORE-PROPOSAL.sql`.
 
