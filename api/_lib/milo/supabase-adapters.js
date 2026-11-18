@@ -30,7 +30,7 @@ async recommendationDecisions(a){const recs=await rows(get,'milo_recommendations
 weeklyReports:a=>rows(get,'weekly_reports','id,classroom_id,learner_id,teacher_profile_id,week_start,status,summary,strengths,next_steps,home_support,approved_at,created_at,updated_at',filters(a.learnerId,a,'week_start'),'week_start.desc')
 };}
 export function createSupabaseMiloMemoryRepository({get=adminGet,rpc=adminRpc}={}){if(typeof get!=='function'||typeof rpc!=='function')throw new TypeError('Supabase server adapters required');return {
-async getMemoryItem(memoryItemId){uuid(memoryItemId);const found=await rows(get,'learner_memory_items','*',[eq('id',memoryItemId)]);return mapMemory(found[0]||null);},
+async getMemoryItem(memoryItemId){uuid(memoryItemId);const found=await rows(get,'learner_memory_items','id,learner_id,memory_key,status,visibility_scope',[eq('id',memoryItemId)]);return mapMemory(found[0]||null);},
 async listMemoryItems({learnerId,includeInactive=false}){const filters=[eq('learner_id',uuid(learnerId))];if(!includeInactive)filters.push('status=in.(proposed,confirmed,disputed)');return (await rows(get,'learner_memory_items','*',filters,'updated_at.desc')).map(mapMemory);},
 async listMemoryEvents({learnerId,memoryItemId=null}){const filters=[eq('learner_id',uuid(learnerId))];if(memoryItemId)filters.push(eq('memory_item_id',uuid(memoryItemId)));return rows(get,'learner_memory_events','*',filters,'occurred_at.desc');},
 async proposeMemory({actorProfileId,input,reason}){uuid(actorProfileId);return mapRpcMemory(await rpc('milo_memory_propose',{p_actor_profile_id:actorProfileId,p_input:input,p_reason:String(reason||'').slice(0,500)}));},
