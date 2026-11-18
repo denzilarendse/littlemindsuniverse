@@ -113,3 +113,9 @@ Outstanding Android gates:
 No production data has been modified. No migration has been applied. No release key or credential was requested or stored. No production deployment or Play Store publication has occurred. PR #114 remains draft and unmerged.
 
 The expanded 14-source catalogue was committed after the last 11/11 discovery report. Its full 14-source reachability run is pending and must be checked before marking the expanded inventory verified.
+
+Live sample retrieval result:
+- Workflow run `44237036172` passed the DBE Grade 10 Business Studies English learner-book PDF retrieval probe.
+- Final DBE-hosted PDF: 47,352,074 bytes; SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`.
+- Artifact ID `14397484063`; artifact digest `sha256:48871cfd3231e0eb05f7aa2a154aa087cf7baf23f35de69f719b3e653fa81280`.
+- The file was not stored or rehosted. This confirms byte-level access only; extraction/OCR and Milo context injection remain outstanding.
