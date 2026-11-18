@@ -36,3 +36,18 @@
 8. Confirm meaningful native/application functionality beyond a basic website WebView, especially for child audiences.
 
 A passing static baseline is not a Play approval guarantee. No Play Store submission is being made.
+
+## Additional policy review findings
+
+- The repository already includes a public privacy policy (`privacy.html`) and a browser-accessible account/data deletion request page (`account-data-request.html`). Existing `tests/privacy-play-readiness.test.mjs` checks the policy, request mechanism, authenticated RPC usage, in-app links and privacy resource build inclusion. These are code-level checks; the Play Console Data safety and account deletion declarations still need owner completion and live-flow verification.
+- The app serves children and older users, so the Families policy is in scope if any child age group is selected in Target Audience. The policy requires accurate target-audience, Data safety and content-rating answers and says a child-targeted app must not merely provide a website WebView.
+- The current native Android entry point is a Capacitor BridgeActivity and most application functionality is web-delivered. The app has real learning workflows, role controls, offline/PWA behaviour and Milo features, but we have not yet established that Google Play will regard the mobile experience as sufficiently differentiated from a simple website WebView. Treat this as a HIGH review risk until a reviewer-oriented feature audit and, if needed, additional native functionality are verified.
+- The RECORD_AUDIO declaration is optional-feature related and must be requested only at the point of use, with appropriate guardian/child controls and a graceful denial path. Static manifest checks do not prove runtime permission UX.
+
+## Readiness classification
+
+- Engineering source baseline: PASS (subject to current CI).
+- Play policy preflight: PARTIAL.
+- Physical-device quality: NOT TESTED.
+- Signed Play upload artifact: NOT READY.
+- Google Play approval: NOT PREDICTABLE from CI; only Google Play review can decide.
