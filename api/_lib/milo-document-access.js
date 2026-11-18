@@ -41,6 +41,7 @@ export async function fetchCapsPdf(sourceUrl, {
     const location = response.headers?.get?.('location');
     if (!location) throw new Error('Resource redirect did not include a destination');
     current = assertAllowedHttpsUrl(new URL(location, current).href, allowedHosts);
+    if (response.body) await response.body.cancel().catch(() => {});
   }
   if (!response?.ok) throw new Error('Resource request failed with HTTP ' + (response?.status ?? 'unknown'));
   const finalUrl = assertAllowedHttpsUrl(response.url || current.href, allowedHosts);
