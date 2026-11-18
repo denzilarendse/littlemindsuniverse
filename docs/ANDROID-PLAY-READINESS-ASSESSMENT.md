@@ -51,3 +51,8 @@ A passing static baseline is not a Play approval guarantee. No Play Store submis
 - Physical-device quality: NOT TESTED.
 - Signed Play upload artifact: NOT READY.
 - Google Play approval: NOT PREDICTABLE from CI; only Google Play review can decide.
+
+## Latest CI checkpoint
+
+- Android workflow run `44237036250` completed its `verify-android` build job successfully, including the static Play baseline preflight and production bundle/APK packaging. The companion API 36 emulator job was queued at the time of this note.
+- The existing LMU feature branch `production/lmu-blueprint-room-shell-20261117` previously passed full Android build and emulator verification in run `44152670183`. The compare against `main` shows no Android Gradle/manifest configuration changes on that feature branch; only an instrumentation test file differs.
