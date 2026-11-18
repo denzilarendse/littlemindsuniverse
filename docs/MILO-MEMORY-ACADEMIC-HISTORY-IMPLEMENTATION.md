@@ -27,9 +27,11 @@ Subject-specific academic-history API is intentionally unavailable (HTTP 501) un
 ## Authorization contract
 - Learner: active ownership resolver; may read/propose/dispute/withdraw own memory, never confirm/update.
 - Teacher: active classroom-access resolver; may read and perform teacher memory decisions only for accessible learners.
-- Parent: verified relationship and applicable consent resolver; may access permitted academic history or propose/dispute/withdraw, but parent memory reads remain denied.
-- Service: trusted service resolver; expiry action only.
+- Parent: all actions are currently denied pending a source-backed policy for consent and permitted academic-history fields.
+- Service: trusted service resolver; expiry action only. The current Supabase adapter returns false for service actors.
 - Admin: denied learner academic-history and memory access by default.
+- `createSupabaseMiloAuthorizer` verifies learner ownership against active `learners` rows and delegates teacher access to authenticated `can_access_learner(p_learner_id)` using the request JWT.
+- The helper signature was recovered from historical branch `reconcile-milo-live-migration-20261006`, file `database/migrations/20260920_teacher_learner_read_access.sql`. That branch's own database README says its migrations are a curated delta, not a complete bootstrap; verify the helper against the restored current baseline before use.
 - All resolvers are mandatory at authorizer construction; missing resolver means construction fails. The authorizer is not yet wired to `/api/milo`.
 
 The current `adminGet` / `adminRpc` server adapter uses a privileged server key and bypasses ordinary RLS. The application authorizer is therefore a hard prerequisite, not optional defense in depth. It must be verified against authoritative LMU relationship/consent helper functions before integration.
