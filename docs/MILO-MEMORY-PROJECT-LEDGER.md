@@ -56,11 +56,11 @@ Historical branch draven/phase2-schema-inventory-2026-11-05 contains the read-on
 - Local shell syntax: bash -n PASS.
 - Owner-exporter static tests under Node's native runner: 3/3 passed.
 - Earlier repository-native GitHub Actions head 115e30ba582f96305449d9210773c83cfa725f46: dependency audit, lint, full test suite, production build and deployable-artifact hygiene passed.
-- Latest head 5331f967ca02cda30aa2e9f5046983dd3bcfe61e: release-verification, public-release packaging and Android verification running at last inspection. Do not claim latest-head native CI passed until all three conclude.
+- Latest head 48dde4bcbd12f8b924c03baed3b0b90f2c565e99: release-verification PASS (npm ci, dependency audit, lint, full npm test, production build and artifact hygiene). Public-release Android packaging and Android verification remained in progress at last inspection.
 - Vercel preview checks on recent heads succeeded; no production deploy.
 
 ## In progress
-- Latest PR head CI verification.
+- Public-release Android packaging and Android verification for the latest head.
 - Owner-run schema-only dump is prepared but not executed; owner keeps the DB URL locally.
 - No isolated PostgreSQL schema baseline or memory migration has been applied.
 
