@@ -82,3 +82,11 @@ The catalogue records 21 known resource groups from page headings and resource l
 CI now performs a non-persistent retrieval probe against one official DBE Grade 10 Business Studies learner-book LinkClick resource using the same `fetchCapsPdf` adapter intended for Milo. It verifies redirect allowlisting, PDF magic bytes, size limit and SHA-256, writes only a small JSON evidence report, and deliberately does not retain or rehost the PDF. The probe is non-blocking if the DBE host is temporarily unavailable; inspect its report rather than treating a network timeout as a code failure.
 
 Additional sources now include the current 2026 workbook term pages and the DBE At the Crossroads Life Skills/Life Orientation textbook catalogue (Grades 4–12). The earlier 11/11 discovery result predates these three additions; the new 14-source discovery run must pass before the expanded catalogue is marked reachable.
+
+### Live PDF retrieval result
+
+- Workflow run: `44237036172` completed successfully.
+- DBE Grade 10 Business Studies Learner Book (English) was fetched from the official DBE LinkClick resource and redirected to a DBE-hosted PDF.
+- Result: `retrieved-pdf-signature-valid`, HTTP content type `application/pdf`, 47,352,074 bytes, SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`.
+- Artifact ID: `14397484063`; artifact digest `sha256:48871cfd3231e0eb05f7aa2a154aa087cf7baf23f35de69f719b3e653fa81280`.
+- The PDF was fetched in memory for the probe only; `stored: false`. This verifies source retrieval and PDF signature, not text extraction, OCR, indexing or Milo answer quality.
