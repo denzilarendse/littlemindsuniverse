@@ -1,0 +1,82 @@
+{
+  "catalogueVersion": "2026.1",
+  "jurisdiction": "ZA",
+  "curriculum": "CAPS",
+  "status": "discovery-seed-not-complete",
+  "policy": {
+    "preferOfficialSources": true,
+    "downloadAndRehostByDefault": false,
+    "requirePerResourceRightsReview": true,
+    "requireVersionAndLastChecked": true,
+    "neverInferMissingTextbooks": true
+  },
+  "officialSources": [
+    {
+      "id": "dbe-ltsm-hub",
+      "title": "DBE Learning and Teaching Support Materials",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29.aspx",
+      "purpose": "National catalogues and official learning and teaching support material discovery",
+      "grades": ["R", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+      "subjects": [],
+      "resourceTypes": ["national-catalogue", "learner-material", "teacher-material"],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-digital-content",
+      "title": "DBE Digital Content",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent.aspx",
+      "purpose": "Digital learner books, teacher guides, workbooks and interactive resources",
+      "grades": ["4", "5", "6", "10"],
+      "subjects": ["Natural Sciences and Technology", "Technical Mathematics", "Technical Science"],
+      "resourceTypes": ["learner-book", "teacher-guide", "workbook", "interactive-resource"],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-state-owned-textbooks",
+      "title": "DBE State-owned Textbooks",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/State-owned-textbooks.aspx",
+      "purpose": "Digitised state-owned textbooks available for free download and printing",
+      "grades": ["10", "11", "12"],
+      "subjects": ["Business Studies"],
+      "resourceTypes": ["learner-book", "textbook"],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-state-owned-grade-4-9",
+      "title": "DBE State-owned Textbooks Grades 4–9",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade4TO9.aspx",
+      "purpose": "State-owned textbooks and learning resources for Grades 4–9",
+      "grades": ["4", "5", "6", "7", "8", "9"],
+      "subjects": ["Mathematics", "Natural Sciences", "Technology"],
+      "resourceTypes": ["learner-book", "teacher-guide", "interactive-resource"],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-state-owned-grade-10-12",
+      "title": "DBE State-owned Textbooks Grades 10–12",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade10to12.aspx",
+      "purpose": "State-owned FET textbooks including Mathematics and Physical Sciences",
+      "grades": ["10", "11", "12"],
+      "subjects": ["Mathematics", "Physical Sciences"],
+      "resourceTypes": ["learner-book", "teacher-guide", "textbook"],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-caps-policy-statements",
+      "title": "DBE CAPS Curriculum and Assessment Policy Statements",
+      "url": "https://www.education.gov.za/Curriculum/CurriculumAssessmentPolicyStatements(CAPS).aspx",
+      "purpose": "Authoritative curriculum policy statements, subject requirements and amendments",
+      "grades": ["R", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+      "subjects": [],
+      "resourceTypes": ["curriculum-policy", "assessment-policy", "amendment"],
+      "status": "source-verified-page"
+    }
+  ],
+  "coverageRules": [
+    "A source page is not proof that every grade/subject textbook exists.",
+    "Each individual resource must have its own title, grade, subject, language, resource type, publisher/owner, canonical source URL, version, publication date when available, rights status, checksum, last-checked timestamp and retrieval status.",
+    "Use DBE National Catalogue entries to identify approved commercial titles where a state-owned digital book is not listed.",
+    "Do not label a grade/subject pair complete until an authoritative CAPS document and an eligible resource have both been mapped.",
+    "Do not mirror or redistribute a resource until its specific licence or DBE permission permits that use."
+  ]
+}
