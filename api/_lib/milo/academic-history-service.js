@@ -1,0 +1,14 @@
+import {assertUuid,MiloValidationError} from './memory-validation.js';
+const sources=['submissions','reviews','masteryEvidence','masterySnapshots','learningSessions','learningEvents','assistanceEvents','verificationCycles','verificationObservations','recommendations','recommendationDecisions','weeklyReports'];
+export function createAcademicHistoryService({repository,authorizer}){if(!repository||!authorizer?.canAccessLearner)throw new TypeError('Repository and authorizer required');
+async function load({actor,learnerId,from,to,subject}){if(!actor?.profileId||!['learner','teacher','guardian','admin','service'].includes(actor.role))throw new MiloValidationError('Authenticated actor required',401);assertUuid(actor.profileId,'actor profile id');assertUuid(learnerId,'learner id');if(!await authorizer.canAccessLearner({actor,learnerId,action:'read_academic_history'}))throw new MiloValidationError('Access denied',403);const filter={learnerId,from:from||null,to:to||null,subject:subject||null};const pairs=await Promise.all(sources.map(async key=>{if(typeof repository[key]!=='function')throw new TypeError('Missing history adapter: '+key);const rows=await repository[key](filter);return [key,Array.isArray(rows)?rows:[]];}));return Object.fromEntries(pairs);}
+return {
+getLearnerAcademicHistory:load,
+getLearnerSubjectHistory(args){return load(args);},
+async getObjectiveProgress({actor,learnerId,skillId}){assertUuid(skillId,'skill id');const d=await load({actor,learnerId});const match=r=>String(r.skillId||r.skill_id)===skillId;return {skillId,mastery:d.masterySnapshots.filter(match),evidence:d.masteryEvidence.filter(match),submissions:d.submissions.filter(match)};},
+async getLearningEvidence(args){const d=await load(args);return {submissions:d.submissions,reviews:d.reviews,masteryEvidence:d.masteryEvidence,verificationObservations:d.verificationObservations};},
+async getInterventionHistory(args){const d=await load(args);return {recommendations:d.recommendations,recommendationDecisions:d.recommendationDecisions,assistanceEvents:d.assistanceEvents};},
+async getMasteryTrajectory(args){const d=await load(args);return {masterySnapshots:d.masterySnapshots,masteryEvidence:d.masteryEvidence,verificationCycles:d.verificationCycles,verificationObservations:d.verificationObservations};},
+async getTeacherDecisionHistory(args){return (await load(args)).recommendationDecisions;},
+async getAcademicHistorySummary(args){const d=await load(args);const latest=d.masteryEvidence.reduce((v,r)=>{const t=r.observedAt||r.observed_at||r.createdAt||r.created_at;return t&&(!v||t>v)?t:v;},null);return {sourceCounts:Object.fromEntries(sources.map(k=>[k,d[k].length])),latestEvidenceAt:latest,missingSources:sources.filter(k=>d[k]==null)};}
+};}
