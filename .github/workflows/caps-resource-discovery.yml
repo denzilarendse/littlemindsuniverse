@@ -30,11 +30,16 @@ jobs:
         run: node --test tests/caps-resource-access.test.mjs
       - name: Discover official DBE resources
         run: node scripts/discover-dbe-caps-resources.mjs
+      - name: Verify a sample official DBE textbook PDF
+        run: node scripts/verify-dbe-sample-document.mjs
+        continue-on-error: true
       - name: Upload DBE source discovery report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: dbe-caps-resource-discovery
-          path: artifacts/dbe-caps-resource-discovery.json
+          path: |
+            artifacts/dbe-caps-resource-discovery.json
+            artifacts/dbe-sample-document-access.json
           if-no-files-found: error
           retention-days: 30
