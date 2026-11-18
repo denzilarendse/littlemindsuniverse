@@ -22,8 +22,8 @@ function assertAllowedHttpsUrl(value, allowedHosts = DBE_RESOURCE_HOSTS) {
 export async function fetchCapsPdf(sourceUrl, {
   fetchImpl = fetch,
   allowedHosts = DBE_RESOURCE_HOSTS,
-  maxBytes = 40 * 1024 * 1024,
-  timeoutMs = 20000,
+  maxBytes = 128 * 1024 * 1024,
+  timeoutMs = 120000,
   maxRedirects = 3
 } = {}) {
   let current = assertAllowedHttpsUrl(sourceUrl, allowedHosts);
