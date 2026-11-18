@@ -129,3 +129,5 @@ Expanded catalogue verification now complete:
 - The discovery report records 1,583 per-source candidate entries (not globally unique or individually verified PDFs).
 - The sample Grade 10 Business Studies PDF probe passed again: 47,352,074 bytes; SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`.
 - Evidence artifact ID `14398425996`; digest `sha256:256b24941636fb38690784bdc80bf336af3e20e9b3141f923fbea1b555162cd2`.
+
+- Additional Play policy HIGH risk: Google Play's 2026 policy clarifications apply User Data requirements to third-party AI integrations. Verify Milo's configured provider child-directed eligibility, limited-use, disclosures, guardian/age-appropriate consent, retention and Data safety declarations before submission.
