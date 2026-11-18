@@ -90,3 +90,11 @@ Additional sources now include the current 2026 workbook term pages and the DBE 
 - Result: `retrieved-pdf-signature-valid`, HTTP content type `application/pdf`, 47,352,074 bytes, SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`.
 - Artifact ID: `14397484063`; artifact digest `sha256:48871cfd3231e0eb05f7aa2a154aa087cf7baf23f35de69f719b3e653fa81280`.
 - The PDF was fetched in memory for the probe only; `stored: false`. This verifies source retrieval and PDF signature, not text extraction, OCR, indexing or Milo answer quality.
+
+### Expanded 14-source catalogue verification
+
+- Workflow run `44237271156` completed successfully on the 14-source catalogue.
+- Result: **14/14 official DBE source pages reachable**, each on the first attempt.
+- The report contains 1,583 per-source download-candidate entries; these are not 1,583 globally unique resources and have not all been individually fetched or PDF-validated.
+- The same run repeated the live Grade 10 Business Studies PDF probe successfully (47,352,074 bytes; SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`).
+- Evidence artifact ID: `14398425996`; SHA-256 digest: `256b24941636fb38690784bdc80bf336af3e20e9b3141f923fbea1b555162cd2`.
