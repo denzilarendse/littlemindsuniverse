@@ -47,3 +47,21 @@ node --test tests/android-play-readiness.test.mjs
 ```
 
 The discovery script writes a timestamped JSON report under `artifacts/`; do not commit generated textbook files or large PDFs.
+
+## Verified DBE catalogue coverage examples (18 November 2026)
+
+The DBE pages currently list resources across a broader set than the first seed:
+- Grades 4–6: Mathematics learner books; Natural Sciences and Technology learner books and teacher guides, including English and Afrikaans listings.
+- Grades 7–9: Mathematics, Natural Sciences and Technology learner/teacher resources, plus interactive difficult-concept resources.
+- Grades 10–12: Business Studies, Life Sciences, Mathematics, Physical Sciences, Technical Mathematics, Technical Science, CAT, IT, Agricultural Technology and related digital resources.
+- Grade 10: Mathematical Literacy learner/teacher material.
+- Grade 10–12: Hospitality Studies digital curriculum and video resources.
+
+These are page-listed resource groups, not yet individually ingested items. Some source files are large: DBE listings include PDFs around 100 MB. The retrieval adapter default cap was raised to 128 MiB and timeout to 120 seconds to accommodate large official source files. Per-resource retrieval still needs size, checksum and actual PDF-signature evidence.
+
+Official page references:
+- https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade4TO9.aspx
+- https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent/StateOwnedTextbooksGrade10to12.aspx
+- https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/DigitalContent.aspx
+
+The National Catalogue must still be reconciled grade-by-grade and subject-by-subject for publisher-approved materials that are not listed as state-owned digital books.
