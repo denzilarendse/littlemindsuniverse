@@ -12,7 +12,7 @@ test('DBE link discovery accepts official HTTPS resources and rejects unrelated 
 });
 
 test('Milo document adapter validates HTTPS, host and PDF signature before accepting bytes', async () => {
-  const pdf = Buffer.from('%PDF-1.7\\nfixture');
+  const pdf = Buffer.from('%PDF-1.7\nfixture');
   const response = {
     ok: true,
     status: 200,
@@ -25,7 +25,21 @@ test('Milo document adapter validates HTTPS, host and PDF signature before accep
   assert.match(result.sha256, /^[a-f0-9]{64}$/);
   await assert.rejects(() => fetchCapsPdf('http://www.education.gov.za/book.pdf'), /HTTPS/);
   await assert.rejects(() => fetchCapsPdf('https://evil.example/book.pdf'), /allowlist/);
-  await assert.rejects(() => fetchCapsPdf(response.url, { fetchImpl: async () => ({ ...response, url: 'https://evil.example/redirect.pdf' }) }), /allowlist/);
+});
+
+test('Milo rejects an external redirect before making a request to the redirected host', async () => {
+  const calls = [];
+  const redirect = {
+    ok: false,
+    status: 302,
+    url: 'https://www.education.gov.za/redirect',
+    headers: new Headers({ location: 'https://evil.example/collect.pdf' })
+  };
+  await assert.rejects(
+    () => fetchCapsPdf('https://www.education.gov.za/start.pdf', { fetchImpl: async url => { calls.push(url); return redirect; } }),
+    /allowlist/
+  );
+  assert.deepEqual(calls, ['https://www.education.gov.za/start.pdf']);
 });
 
 test('Milo document adapter rejects HTML masquerading as a textbook and oversized resources', async () => {
@@ -43,9 +57,21 @@ test('Milo document adapter rejects HTML masquerading as a textbook and oversize
   await assert.rejects(() => fetchCapsPdf(pdfResponse.url, { maxBytes: 100, fetchImpl: async () => pdfResponse }), /size limit/);
 });
 
-test('Milo requires curriculum resource metadata and an explicit approved rights status', () => {
-  const base = { id: 'dbe-grade4-maths', title: 'Grade 4 Mathematics', grade: '4', subject: 'Mathematics', language: 'English', resourceType: 'learner-book', sourceUrl: 'https://www.education.gov.za/book.pdf', rightsStatus: 'dbe-public-download' };
+test('Milo requires resource metadata, rights evidence and explicit AI-processing approval', () => {
+  const base = {
+    id: 'dbe-grade4-maths',
+    title: 'Grade 4 Mathematics',
+    grade: '4',
+    subject: 'Mathematics',
+    language: 'English',
+    resourceType: 'learner-book',
+    sourceUrl: 'https://www.education.gov.za/book.pdf',
+    rightsStatus: 'dbe-public-download',
+    rightsEvidenceUrl: 'https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/State-owned-textbooks.aspx',
+    aiProcessingAllowed: true
+  };
   assert.equal(validateCapsDocumentMetadata(base), true);
   assert.throws(() => validateCapsDocumentMetadata({ ...base, rightsStatus: 'unknown' }), /rights status/);
   assert.throws(() => validateCapsDocumentMetadata({ ...base, language: '' }), /metadata missing/);
+  assert.throws(() => validateCapsDocumentMetadata({ ...base, aiProcessingAllowed: false }), /AI processing/);
 });
