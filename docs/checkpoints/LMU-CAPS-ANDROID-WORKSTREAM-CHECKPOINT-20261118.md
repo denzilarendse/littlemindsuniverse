@@ -23,14 +23,14 @@ Files:
 - `docs/CAPS-TEXTBOOK-ACCESS-AND-MILO-VERIFICATION.md`
 - `.github/workflows/caps-resource-discovery.yml`
 
-The catalogue currently has 11 official DBE discovery endpoints and 18 known resource groups, including:
+The catalogue currently has 14 official DBE discovery endpoints and 21 known resource groups, including:
 - CAPS policy statements and amendments.
 - LTSM National Catalogue and state-owned textbook catalogues.
 - Digital Content.
 - Grades 4–6 Mathematics and Natural Sciences & Technology.
 - Grades 7–9 Mathematics, Natural Sciences and Technology.
 - FET Business Studies, Life Sciences, Mathematics, Physical Sciences, Mathematical Literacy, CAT, IT, Agricultural Technology, Hospitality Studies, Technical Mathematics and Technical Science.
-- Rainbow Workbooks, Grade 12 Mind the Gap study guides, Foundation Phase graded readers/big books and IIAL resources.
+- Rainbow Workbooks (including current 2026 term pages), Grade 12 Mind the Gap study guides, Foundation Phase graded readers/big books, IIAL resources and At the Crossroads Life Skills/Life Orientation textbooks (Grades 4–12).
 
 Discovery evidence:
 - Workflow run `44236914649` completed successfully on commit `ed82231c74c51b3fd0025dc0892250c919fcb23a`.
@@ -111,3 +111,5 @@ Outstanding Android gates:
 ## Safety and release boundary
 
 No production data has been modified. No migration has been applied. No release key or credential was requested or stored. No production deployment or Play Store publication has occurred. PR #114 remains draft and unmerged.
+
+The expanded 14-source catalogue was committed after the last 11/11 discovery report. Its full 14-source reachability run is pending and must be checked before marking the expanded inventory verified.
