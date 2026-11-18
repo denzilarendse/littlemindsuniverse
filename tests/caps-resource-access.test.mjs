@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { extractOfficialLinks, extractDownloadCandidates, discoverDbeResources } from '../scripts/discover-dbe-caps-resources.mjs';
-import { fetchCapsPdf, validateCapsDocumentMetadata } from '../api/_lib/milo-document-access.js';
+import { fetchCapsPdf, fetchAuthorisedCapsPdf, validateCapsDocumentMetadata } from '../api/_lib/milo-document-access.js';
 
 test('DBE link discovery accepts official HTTPS resources and rejects unrelated hosts', () => {
   const html = '<a href="/files/book.pdf">Learner Book</a><a href="https://evil.example/book.pdf">Bad</a><a href="http://education.gov.za/book.pdf">Insecure</a>';
@@ -93,6 +93,44 @@ test('Milo document adapter rejects HTML masquerading as a textbook and oversize
     arrayBuffer: async () => Buffer.from('%PDF-1.7')
   };
   await assert.rejects(() => fetchCapsPdf(pdfResponse.url, { maxBytes: 100, fetchImpl: async () => pdfResponse }), /size limit/);
+});
+
+
+test('authorised ingestion checks rights before fetching and supports approved publisher hosts', async () => {
+  let calls = 0;
+  const pdf = Buffer.from('%PDF-1.7\\nfixture');
+  const response = {
+    ok: true, status: 200, url: 'https://publisher.example/book.pdf',
+    headers: new Headers({ 'content-type': 'application/pdf' }),
+    arrayBuffer: async () => pdf
+  };
+  const resource = {
+    id: 'publisher-grade10-resource',
+    title: 'Approved Grade 10 Resource',
+    grade: '10',
+    subject: 'Business Studies',
+    language: 'English',
+    resourceType: 'learner-book',
+    sourceUrl: response.url,
+    rightsStatus: 'publisher-authorised',
+    rightsEvidenceUrl: 'https://publisher.example/ai-processing-terms',
+    aiProcessingAllowed: true
+  };
+  const result = await fetchAuthorisedCapsPdf(resource, {
+    allowedHosts: ['publisher.example'],
+    fetchImpl: async () => { calls += 1; return response; }
+  });
+  assert.equal(result.resourceId, resource.id);
+  assert.equal(calls, 1);
+  calls = 0;
+  await assert.rejects(
+    () => fetchAuthorisedCapsPdf({ ...resource, aiProcessingAllowed: false }, {
+      allowedHosts: ['publisher.example'],
+      fetchImpl: async () => { calls += 1; return response; }
+    }),
+    /AI processing/
+  );
+  assert.equal(calls, 0);
 });
 
 test('Milo requires resource metadata, rights evidence and explicit AI-processing approval', () => {
