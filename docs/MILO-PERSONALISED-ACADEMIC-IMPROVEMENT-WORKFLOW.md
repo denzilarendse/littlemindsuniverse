@@ -278,3 +278,12 @@ The first implementation slice is acceptable only when tests demonstrate:
 8. QA and pilot — teacher-authored scenarios, fairness checks, security review and supervised pilot.
 
 Do not start production database migrations until the authoritative sanitised schema-only baseline and migration chain are recovered and reviewed. Do not deploy to production or use real learner data for the initial implementation.
+
+
+## Teaching-first learner interaction (Milo is not an answer bot)
+
+The weekly improvement cycle is powered by a teaching-first interaction. When a learner asks a school question, Milo should normally interpret the objective, diagnose prior understanding, teach the concept, demonstrate a comparable but different worked example, generate a fresh example for the learner to attempt, evaluate the learner's method and reasoning, adapt its explanation or hints, and then check independent transfer.
+
+Milo must not confuse answer delivery with learning. A correct response after a full solution has been shown is not independent evidence of mastery. Evidence records should note the support level used (independent, cue, hint, scaffold or worked example) and whether the learner later succeeded on a new task without equivalent support. For active/restricted assessments, Milo provides conceptual support and analogous practice rather than completing the assessed answer. Complete solutions remain appropriate when the task is explicitly to study a worked example or when a teacher/parent is asking for information.
+
+The learner should become more independent over time. Milo's success is measured by demonstrated learner improvement and transfer, not the number of answers it supplies. Detailed interaction contract: [Milo Teaching Intelligence and Learner Agency](MILO-TEACHING-INTELLIGENCE-AND-LEARNER-AGENCY.md). Grade-specific objectives and prerequisite links are governed by [Milo Progressive Curriculum Intelligence](MILO-PROGRESSIVE-CURRICULUM-INTELLIGENCE.md).
