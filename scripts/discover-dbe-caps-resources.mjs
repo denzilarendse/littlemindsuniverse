@@ -25,7 +25,7 @@ export function extractDownloadCandidates(links) {
     let url;
     try { url = new URL(link.url); } catch { continue; }
     const ticket = url.searchParams.get('fileticket');
-    if (!ticket && !/\\.pdf(?:$|[?#])/i.test(url.href)) continue;
+    if (!ticket && !/\.pdf(?:$|[?#])/i.test(url.href)) continue;
     const key = ticket || url.href;
     const existing = candidates.get(key);
     if (!existing || (existing.title.toLowerCase() === 'download' && link.title.toLowerCase() !== 'download')) {
@@ -53,10 +53,12 @@ export async function discoverDbeResources({ fetchImpl = fetch, catalogue } = {}
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const html = await response.text();
       const links = extractOfficialLinks(html, finalUrl.href);
+      const downloadCandidates = extractDownloadCandidates(links);
       result.status = 'reachable';
       result.finalUrl = finalUrl.href;
       result.linkCount = links.length;
-      result.candidateDownloads = links.filter(link => /\.pdf(?:$|[?#])|fileticket=|forcedownload=true/i.test(link.url)).length;
+      result.candidateDownloads = downloadCandidates.length;
+      result.downloadCandidates = downloadCandidates;
       result.links = links;
     } catch (error) {
       result.status = 'failed';
@@ -79,7 +81,7 @@ async function main() {
   await fs.mkdir(new URL('../artifacts/', import.meta.url), { recursive: true });
   await fs.writeFile(new URL('../' + output.replace(/^\//, ''), import.meta.url), JSON.stringify(report, null, 2) + '\n');
   console.log('DBE resource discovery: ' + report.reachableSources + '/' + report.sourceCount + ' official source pages reachable');
-  for (const item of report.results) console.log('- ' + item.id + ': ' + item.status + '; ' + item.linkCount + ' links; ' + item.candidateDownloads + ' download candidates');
+  for (const item of report.results) console.log('- ' + item.id + ': ' + item.status + '; ' + item.linkCount + ' links; ' + item.candidateDownloads + ' unique download candidates');
   if (report.reachableSources !== report.sourceCount) process.exitCode = 1;
 }
 
