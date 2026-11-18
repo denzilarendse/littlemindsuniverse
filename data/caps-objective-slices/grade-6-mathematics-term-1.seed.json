@@ -1,0 +1,163 @@
+{
+  "schemaVersion": "1.0.0",
+  "recordSetId": "za-caps-ip-grade-6-mathematics-term-1-seed",
+  "recordSetStatus": "seed_extracted_needs_curriculum_specialist_review",
+  "jurisdiction": "ZA",
+  "curriculum": "CAPS",
+  "phase": "Intermediate Phase",
+  "grade": 6,
+  "subject": {
+    "name": "Mathematics",
+    "languageOfSource": "English"
+  },
+  "term": 1,
+  "source": {
+    "authority": "South African Department of Basic Education",
+    "documentTitle": "Curriculum and Assessment Policy Statement: Mathematics Grades 4–6",
+    "publicationYear": 2011,
+    "isbn": "978-1-4315-0491-6",
+    "canonicalUrl": "https://www.education.gov.za/Portals/0/CD/National%20Curriculum%20Statements%20and%20Vocational/CAPS%20IP%20%20MATHEMATICS%20GR%204-6%20web.pdf",
+    "officialCapsIndexUrl": "https://www.education.gov.za/Curriculum/CurriculumAssessmentPolicyStatements%28CAPS%29/CAPSIntermediate.aspx",
+    "sourcePages": [
+      213,
+      214,
+      215,
+      218
+    ],
+    "checkedAt": "2026-11-18",
+    "authorityNote": "Official DBE CAPS subject document. Its cover/copyright information identifies the document as a 2011 publication. Confirm current amendments and policy status before treating this seed as production-authoritative."
+  },
+  "records": [
+    {
+      "id": "ZA-CAPS-MATH-IP-G06-T1-MENTAL-MATH-01",
+      "status": "seed_extracted_needs_review",
+      "contentArea": "Numbers, Operations and Relationships",
+      "topic": "Mental Mathematics",
+      "suggestedDuration": {
+        "value": 8,
+        "unit": "hours",
+        "sourcePage": 212
+      },
+      "frequency": {
+        "description": "10 minutes every day",
+        "sourcePage": 213
+      },
+      "skills": [
+        "Addition and subtraction facts involving units and multiples of 10, 100 and 1 000",
+        "Multiplication of whole numbers to at least 12 × 12",
+        "Multiplication facts involving units and tens by multiples of 10, 100, 1 000 and 100 000",
+        "Order, compare and represent numbers up to at least 9-digit numbers",
+        "Represent prime numbers to at least 100",
+        "Recognise place value in whole numbers up to at least 9-digit numbers",
+        "Round off to the nearest 5, 10, 100 and 1 000",
+        "Use estimation and a range of written and mental calculation techniques to perform and check calculations"
+      ],
+      "teachingGuidance": [
+        "Develop mental Mathematics systematically rather than using random daily calculations.",
+        "Integrate mental Mathematics with concepts and techniques taught in the main lesson.",
+        "Keep number ranges lower in Term 1 and increase them during the year.",
+        "At the start of the year, number ranges and techniques may be based on Grade 5 learning."
+      ],
+      "sourceRefs": [
+        {
+          "page": 212,
+          "section": "Time allocation per topic: Grade 6"
+        },
+        {
+          "page": 213,
+          "section": "3.3.3 Clarification of content for Grade 6 — Grade 6 Term 1"
+        }
+      ],
+      "mappingNote": "These are extracted topic-level skills and teaching notes, not a complete assessment rubric or a fully decomposed list of individual learning objectives."
+    },
+    {
+      "id": "ZA-CAPS-MATH-IP-G06-T1-WHOLE-NUMBERS-PLACE-VALUE-01",
+      "status": "seed_extracted_needs_review",
+      "contentArea": "Numbers, Operations and Relationships",
+      "topic": "1.1 Whole numbers — counting, ordering, representing and place value of digits",
+      "suggestedDuration": {
+        "value": 2,
+        "unit": "hours",
+        "sourcePage": 212
+      },
+      "skills": [
+        "Order, compare and represent numbers up to at least 9-digit numbers",
+        "Represent prime numbers to at least 100",
+        "Recognise place value of digits in whole numbers up to at least 9-digit numbers",
+        "Round off to the nearest 5, 10, 100 and 1 000"
+      ],
+      "prerequisiteAndProgressionNotes": [
+        "Learners should be proficient in Grade 5-level counting.",
+        "Term 1 should revise and consolidate work from Grade 5.",
+        "Counting should use varied representations and apparatus, not only verbal counting.",
+        "Place-value representations include number names, place-value or flash cards, and expanded notation."
+      ],
+      "suggestedTeachingApparatus": [
+        "Counters",
+        "Counting beads",
+        "Number grids",
+        "Structured, semi-structured and empty number lines",
+        "Place-value cards",
+        "Dienes blocks"
+      ],
+      "sourceRefs": [
+        {
+          "page": 212,
+          "section": "Time allocation per topic: Grade 6"
+        },
+        {
+          "page": 215,
+          "section": "Grade 6 Term 1 — Topic 1.1 Whole numbers"
+        }
+      ],
+      "mappingNote": "The CAPS clarification notes include a narrower place-value range in one explanatory paragraph while the stated skill outcome specifies up to at least 9-digit numbers. Preserve both statements and flag for specialist interpretation rather than silently reconciling them."
+    },
+    {
+      "id": "ZA-CAPS-MATH-IP-G06-T1-NUMBER-SENTENCES-01",
+      "status": "seed_extracted_needs_review",
+      "contentArea": "Patterns, Functions and Algebra",
+      "topic": "2.1 Number sentences (introduction to algebraic expressions)",
+      "suggestedDuration": {
+        "value": 3,
+        "unit": "hours",
+        "sourcePage": 212
+      },
+      "skills": [
+        "Write number sentences to describe problem situations",
+        "Solve and complete number sentences by inspection",
+        "Solve and complete number sentences by trial and improvement",
+        "Check solutions by substitution"
+      ],
+      "teachingGuidance": [
+        "Use number sentences as preparation for writing algebraic equations.",
+        "Connect number sentences with verbal problems, diagrams and flow diagrams.",
+        "Use equivalent statements to build understanding of calculation steps.",
+        "Use number sentences to support multiple operations with and without brackets and the order of operations."
+      ],
+      "sourceRefs": [
+        {
+          "page": 212,
+          "section": "Time allocation per topic: Grade 6"
+        },
+        {
+          "page": 218,
+          "section": "Grade 6 Term 1 — Topic 2.1 Number sentences"
+        }
+      ],
+      "mappingNote": "This record preserves the CAPS description and teaching notes. It does not prescribe a Milo-generated sequence, mastery threshold or assessment weight."
+    }
+  ],
+  "governance": {
+    "use": "curriculum_reference_seed_only",
+    "aiProcessingRights": "Official policy text source; confirm applicable terms and permitted extraction/storage/indexing before production ingestion.",
+    "teacherAuthorityRequired": true,
+    "masteryThresholds": "Not defined in this seed. Must be mapped to applicable policy, validated rubric or teacher-approved criteria.",
+    "generatedExercises": "Must be created as drafts and reviewed under the Milo teacher-approval workflow.",
+    "doNotInfer": [
+      "Do not infer a learner's grade from age.",
+      "Do not treat topic duration as an individual mastery threshold.",
+      "Do not treat this seed as a complete Grade 6 Mathematics Term 1 syllabus.",
+      "Do not silently resolve source inconsistencies."
+    ]
+  }
+}
