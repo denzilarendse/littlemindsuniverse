@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { extractOfficialLinks } from '../scripts/discover-dbe-caps-resources.mjs';
+import { extractOfficialLinks, extractDownloadCandidates } from '../scripts/discover-dbe-caps-resources.mjs';
 import { fetchCapsPdf, validateCapsDocumentMetadata } from '../api/_lib/milo-document-access.js';
 
 test('DBE link discovery accepts official HTTPS resources and rejects unrelated hosts', () => {
@@ -9,6 +9,18 @@ test('DBE link discovery accepts official HTTPS resources and rejects unrelated 
   assert.equal(links.length, 1);
   assert.equal(links[0].title, 'Learner Book');
   assert.equal(links[0].url, 'https://www.education.gov.za/files/book.pdf');
+});
+
+
+test('DBE download links are deduplicated by official file ticket and retain descriptive labels', () => {
+  const links = [
+    { title: 'Grade 4 Mathematics Learner Book', url: 'https://www.education.gov.za/LinkClick.aspx?fileticket=abc123' },
+    { title: 'Download', url: 'https://www.education.gov.za/LinkClick.aspx?fileticket=abc123&forcedownload=true' },
+    { title: 'Teacher Guide', url: 'https://www.education.gov.za/LinkClick.aspx?fileticket=def456' }
+  ];
+  const candidates = extractDownloadCandidates(links);
+  assert.equal(candidates.length, 2);
+  assert.equal(candidates[0].title, 'Grade 4 Mathematics Learner Book');
 });
 
 test('Milo document adapter validates HTTPS, host and PDF signature before accepting bytes', async () => {
