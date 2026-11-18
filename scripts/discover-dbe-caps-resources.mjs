@@ -35,35 +35,47 @@ export function extractDownloadCandidates(links) {
   return [...candidates.values()];
 }
 
-export async function discoverDbeResources({ fetchImpl = fetch, catalogue } = {}) {
+export async function discoverDbeResources({ fetchImpl = fetch, catalogue, maxAttempts = 3 } = {}) {
   const sourceCatalogue = catalogue || JSON.parse(await fs.readFile(cataloguePath, 'utf8'));
   const results = [];
   for (const source of sourceCatalogue.officialSources) {
-    const result = { id: source.id, title: source.title, url: source.url, status: 'not-checked', linkCount: 0, candidateDownloads: 0 };
-    try {
-      const response = await fetchImpl(source.url, {
-        redirect: 'follow',
-        signal: AbortSignal.timeout(15000),
-        headers: { accept: 'text/html' }
-      });
-      const finalUrl = new URL(response.url || source.url);
-      if (finalUrl.protocol !== 'https:' || !ALLOWED_HOSTS.includes(finalUrl.hostname.toLowerCase())) {
-        throw new Error('Source redirected outside the official DBE resource allowlist');
+    const result = { id: source.id, title: source.title, url: source.url, status: 'not-checked', attempts: 0, linkCount: 0, candidateDownloads: 0 };
+    let lastError = null;
+    let successfulPage = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      result.attempts = attempt;
+      try {
+        const response = await fetchImpl(source.url, {
+          redirect: 'follow',
+          signal: AbortSignal.timeout(15000),
+          headers: { accept: 'text/html' }
+        });
+        const finalUrl = new URL(response.url || source.url);
+        if (finalUrl.protocol !== 'https:' || !ALLOWED_HOSTS.includes(finalUrl.hostname.toLowerCase())) {
+          throw new Error('Source redirected outside the official DBE resource allowlist');
+        }
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        successfulPage = { finalUrl, html: await response.text() };
+        break;
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxAttempts) await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const html = await response.text();
-      const links = extractOfficialLinks(html, finalUrl.href);
-      const downloadCandidates = extractDownloadCandidates(links);
-      result.status = 'reachable';
-      result.finalUrl = finalUrl.href;
-      result.linkCount = links.length;
-      result.candidateDownloads = downloadCandidates.length;
-      result.downloadCandidates = downloadCandidates;
-      result.links = links;
-    } catch (error) {
-      result.status = 'failed';
-      result.error = String(error?.message || error).slice(0, 240);
     }
+    if (!successfulPage) {
+      result.status = 'failed';
+      result.error = String(lastError?.message || lastError || 'Source fetch failed').slice(0, 240);
+      results.push(result);
+      continue;
+    }
+    const links = extractOfficialLinks(successfulPage.html, successfulPage.finalUrl.href);
+    const downloadCandidates = extractDownloadCandidates(links);
+    result.status = 'reachable';
+    result.finalUrl = successfulPage.finalUrl.href;
+    result.linkCount = links.length;
+    result.candidateDownloads = downloadCandidates.length;
+    result.downloadCandidates = downloadCandidates;
+    result.links = links;
     results.push(result);
   }
   return {
@@ -81,7 +93,7 @@ async function main() {
   await fs.mkdir(new URL('../artifacts/', import.meta.url), { recursive: true });
   await fs.writeFile(new URL('../' + output.replace(/^\//, ''), import.meta.url), JSON.stringify(report, null, 2) + '\n');
   console.log('DBE resource discovery: ' + report.reachableSources + '/' + report.sourceCount + ' official source pages reachable');
-  for (const item of report.results) console.log('- ' + item.id + ': ' + item.status + '; ' + item.linkCount + ' links; ' + item.candidateDownloads + ' unique download candidates');
+  for (const item of report.results) console.log('- ' + item.id + ': ' + item.status + '; attempts=' + item.attempts + '; ' + item.linkCount + ' links; ' + item.candidateDownloads + ' unique download candidates');
   if (report.reachableSources !== report.sourceCount) process.exitCode = 1;
 }
 
