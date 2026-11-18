@@ -123,3 +123,9 @@ Live sample retrieval result:
 Additional Android evidence:
 - Run `44237036250` completed the Android build job SUCCESS, including static Play readiness checks and APK/AAB packaging; its companion emulator job was queued at last inspection.
 - Full LMU feature branch emulator evidence remains historical run `44152670183` PASS; only an Android instrumentation test file differs from `main` in the compare, not the app Gradle/manifest configuration.
+
+Expanded catalogue verification now complete:
+- Run `44237271156` passed with 14/14 DBE source pages reachable on first attempt.
+- The discovery report records 1,583 per-source candidate entries (not globally unique or individually verified PDFs).
+- The sample Grade 10 Business Studies PDF probe passed again: 47,352,074 bytes; SHA-256 `bd18fbc397dbbba5f056efb751a691e90df855466ed1ea0423284c4f123742cc`.
+- Evidence artifact ID `14398425996`; digest `sha256:256b24941636fb38690784bdc80bf336af3e20e9b3141f923fbea1b555162cd2`.
