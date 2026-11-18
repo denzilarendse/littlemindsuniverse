@@ -23,17 +23,27 @@ export async function fetchCapsPdf(sourceUrl, {
   fetchImpl = fetch,
   allowedHosts = DBE_RESOURCE_HOSTS,
   maxBytes = 40 * 1024 * 1024,
-  timeoutMs = 20000
+  timeoutMs = 20000,
+  maxRedirects = 3
 } = {}) {
-  const source = assertAllowedHttpsUrl(sourceUrl, allowedHosts);
-  const response = await fetchImpl(source.href, {
-    method: 'GET',
-    redirect: 'follow',
-    signal: AbortSignal.timeout(timeoutMs),
-    headers: { accept: 'application/pdf, application/octet-stream;q=0.9' }
-  });
-  const finalUrl = assertAllowedHttpsUrl(response.url || source.href, allowedHosts);
-  if (!response.ok) throw new Error(`Resource request failed with HTTP ${response.status}`);
+  let current = assertAllowedHttpsUrl(sourceUrl, allowedHosts);
+  const signal = AbortSignal.timeout(timeoutMs);
+  let response;
+  for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
+    response = await fetchImpl(current.href, {
+      method: 'GET',
+      redirect: 'manual',
+      signal,
+      headers: { accept: 'application/pdf, application/octet-stream;q=0.9' }
+    });
+    if (![301, 302, 303, 307, 308].includes(response.status)) break;
+    if (redirectCount === maxRedirects) throw new Error('Resource exceeded the redirect limit');
+    const location = response.headers?.get?.('location');
+    if (!location) throw new Error('Resource redirect did not include a destination');
+    current = assertAllowedHttpsUrl(new URL(location, current).href, allowedHosts);
+  }
+  if (!response?.ok) throw new Error('Resource request failed with HTTP ' + (response?.status ?? 'unknown'));
+  const finalUrl = assertAllowedHttpsUrl(response.url || current.href, allowedHosts);
   const declaredLength = Number(response.headers?.get?.('content-length') || 0);
   if (declaredLength > maxBytes) throw new Error('Resource exceeds the configured size limit');
   const bytes = Buffer.from(await response.arrayBuffer());
@@ -43,7 +53,7 @@ export async function fetchCapsPdf(sourceUrl, {
     throw new Error('Resource response is not a recognisable PDF document');
   }
   return Object.freeze({
-    sourceUrl: source.href,
+    sourceUrl: new URL(sourceUrl).href,
     finalUrl: finalUrl.href,
     contentType: response.headers?.get?.('content-type') || 'unknown',
     byteLength: bytes.length,
@@ -53,12 +63,16 @@ export async function fetchCapsPdf(sourceUrl, {
 }
 
 export function validateCapsDocumentMetadata(resource) {
-  const required = ['id', 'title', 'grade', 'subject', 'language', 'resourceType', 'sourceUrl', 'rightsStatus'];
+  const required = ['id', 'title', 'grade', 'subject', 'language', 'resourceType', 'sourceUrl', 'rightsStatus', 'rightsEvidenceUrl'];
   const missing = required.filter(key => !String(resource?.[key] ?? '').trim());
-  if (missing.length) throw new Error(`CAPS resource metadata missing: ${missing.join(', ')}`);
+  if (missing.length) throw new Error('CAPS resource metadata missing: ' + missing.join(', '));
   assertAllowedHttpsUrl(resource.sourceUrl);
+  assertAllowedHttpsUrl(resource.rightsEvidenceUrl);
   if (!['dbe-public-download', 'open-licence', 'publisher-authorised', 'teacher-authorised'].includes(resource.rightsStatus)) {
     throw new Error('CAPS resource rights status is not approved for retrieval');
+  }
+  if (resource.aiProcessingAllowed !== true) {
+    throw new Error('AI processing requires explicit per-resource rights confirmation');
   }
   return true;
 }
