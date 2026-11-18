@@ -31,6 +31,7 @@ jobs:
       - name: Discover official DBE resources
         run: node scripts/discover-dbe-caps-resources.mjs
       - name: Upload DBE source discovery report
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: dbe-caps-resource-discovery
