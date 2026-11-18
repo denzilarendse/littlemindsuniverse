@@ -17,6 +17,8 @@ async function rows(get, table, select, filters, order) {
   if (!Array.isArray(result)) throw new MiloValidationError('Unexpected database response for ' + table, 502);
   return result;
 }
+function mapMemory(row) { if (!row) return null; return { ...row, learnerId:row.learner_id, memoryKey:row.memory_key, category:row.memory_category, value:row.memory_value, sourceType:row.source_type, sourceReference:row.source_reference, visibilityScope:row.visibility_scope, confirmedBy:row.confirmed_by, confirmedAt:row.confirmed_at, expiresAt:row.expires_at, createdAt:row.created_at, updatedAt:row.updated_at }; }
+function mapRpcMemory(result) { const row=unwrapRpc(result); return row && typeof row==='object' ? mapMemory(row) : row; }
 function ids(items) { return [...new Set(items.map(x => x?.id).filter(x => typeof x === 'string' && /^[0-9a-f-]{36}$/i.test(x)))]; }
 function unwrapRpc(result) { return Array.isArray(result) && result.length === 1 ? result[0] : result; }
 
@@ -39,7 +41,7 @@ export function createSupabaseAcademicHistoryRepository({ get = adminGet } = {})
       if (!submissionIds.length) return [];
       return rows(get, 'submission_reviews',
         'id,submission_id,teacher_profile_id,mastery_judgement,misconception,teacher_feedback,recommended_next_step,independent_evidence,misconception_code,misconception_note,created_at',
-        [list('submission_id', submissionIds)], 'created_at.desc');
+        [list('submission_id', reviewIds)], 'created_at.desc');
     },
     masteryEvidence: args => rows(get, 'mastery_evidence',
       'id,learner_id,skill_id,learning_item_id,submission_id,review_id,judgement,assistance_level,independent_evidence,misconception,misconception_code,misconception_note,observed_at,created_at',
@@ -68,7 +70,7 @@ export function createSupabaseAcademicHistoryRepository({ get = adminGet } = {})
       if (!verificationCycleIds.length) return [];
       return rows(get, 'learning_verification_observations',
         'id,cycle_id,stage,source_event_id,source_mastery_evidence_id,result,independence,assistance_level,novel_context,teacher_profile_id,observed_at',
-        [list('cycle_id', verificationCycleIds)], 'observed_at.desc');
+        [list('cycle_id', cycleIds)], 'observed_at.desc');
     },
     async recommendations({ learnerId }) {
       const result = await rows(get, 'milo_recommendations',
@@ -96,12 +98,12 @@ export function createSupabaseMiloMemoryRepository({ get = adminGet, rpc = admin
     async getMemoryItem(memoryItemId) {
       uuid(memoryItemId);
       const found = await rows(get, 'learner_memory_items', '*', [eq('id', memoryItemId)]);
-      return found[0] || null;
+      return mapMemory(found[0] || null);
     },
     async listMemoryItems({ learnerId, includeInactive = false }) {
       const filters = [eq('learner_id', uuid(learnerId))];
       if (!includeInactive) filters.push('status=in.(proposed,confirmed,disputed)');
-      return rows(get, 'learner_memory_items', '*', filters, 'updated_at.desc');
+      return (await rows(get, 'learner_memory_items', '*', filters, 'updated_at.desc')).map(mapMemory);
     },
     async listMemoryEvents({ learnerId, memoryItemId = null }) {
       const filters = [eq('learner_id', uuid(learnerId))];
@@ -110,19 +112,19 @@ export function createSupabaseMiloMemoryRepository({ get = adminGet, rpc = admin
     },
     async proposeMemory({ actorProfileId, input, reason }) {
       uuid(actorProfileId);
-      return unwrapRpc(await rpc('milo_memory_propose', {
+      return mapRpcMemory(await rpc('milo_memory_propose', {
         p_actor_profile_id: actorProfileId, p_input: input, p_reason: String(reason || '').slice(0, 500)
       }));
     },
     async confirmMemory({ actorProfileId, memoryItemId, reason }) {
       uuid(actorProfileId); uuid(memoryItemId);
-      return unwrapRpc(await rpc('milo_memory_confirm', {
+      return mapRpcMemory(await rpc('milo_memory_confirm', {
         p_actor_profile_id: actorProfileId, p_memory_item_id: memoryItemId, p_reason: String(reason || '').slice(0, 500)
       }));
     },
     async updateMemory({ actorProfileId, memoryItemId, input, reason }) {
       uuid(actorProfileId); uuid(memoryItemId);
-      return unwrapRpc(await rpc('milo_memory_update', {
+      return mapRpcMemory(await rpc('milo_memory_update', {
         p_actor_profile_id: actorProfileId, p_memory_item_id: memoryItemId, p_input: input, p_reason: String(reason || '').slice(0, 500)
       }));
     },
@@ -130,7 +132,7 @@ export function createSupabaseMiloMemoryRepository({ get = adminGet, rpc = admin
       uuid(actorProfileId); uuid(memoryItemId);
       const rpcName = { dispute: 'milo_memory_dispute', withdraw: 'milo_memory_withdraw', expire: 'milo_memory_expire' }[eventType];
       if (!rpcName) throw new MiloValidationError('Unsupported memory transition');
-      return unwrapRpc(await rpc(rpcName, {
+      return mapRpcMemory(await rpc(rpcName, {
         p_actor_profile_id: actorProfileId, p_memory_item_id: memoryItemId, p_reason: String(reason || '').slice(0, 500)
       }));
     }
