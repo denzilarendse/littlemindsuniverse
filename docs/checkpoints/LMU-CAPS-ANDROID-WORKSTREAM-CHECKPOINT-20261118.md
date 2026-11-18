@@ -33,9 +33,11 @@ The catalogue currently has 11 official DBE discovery endpoints and 18 known res
 - Rainbow Workbooks, Grade 12 Mind the Gap study guides, Foundation Phase graded readers/big books and IIAL resources.
 
 Discovery evidence:
-- Workflow run `44236853075` completed successfully on commit `1b3e980c7969871653d53a64e2f2c427048efbd8`.
-- All 11/11 source pages were reachable in that run.
-- Artifact ID: `14398375077`; SHA-256 digest: `02973d9ff4251916715e7362ad2a9715a9624942bc798d2963e863ef0a36fd7b`.
+- Workflow run `44236914649` completed successfully on commit `ed82231c74c51b3fd0025dc0892250c919fcb23a`.
+- All 11/11 source pages were reachable in one attempt each.
+- The report records 1,199 per-source download-candidate entries (not 1,199 unique global files and not 1,199 verified PDFs).
+- Artifact ID: `14397583027`; SHA-256 digest: `77fbdf7e4c5d93b4e5472f5b7d8045acaf9cb929064233a8ca0823c0995bcb7f`.
+- Earlier discovery runs `44236853075` and `44236914649` both confirmed 11/11 sources reachable.
 - Counts are link/download candidates, not a count of verified PDFs or complete textbook coverage.
 - The discovery runner now retries transient source failures and retains the JSON report even when a source is temporarily unavailable.
 
@@ -46,7 +48,7 @@ Safe retrieval adapter:
 - PDF signature verification and SHA-256 calculation.
 - Metadata requires a source, grade, subject, language, resource type, rights status, rights evidence and explicit per-resource AI-processing approval.
 - No PDF is persisted or rehosted by this first slice.
-- A live sample DBE Grade 10 Business Studies learner-book retrieval probe has been added to CI. Its final evidence report is pending the current workflow run.
+- A live sample DBE Grade 10 Business Studies learner-book retrieval probe has been added to CI. Its final evidence report is pending the workflow run on the latest branch head.
 
 Important limitation:
 - The production Milo route (`api/milo.js`) does not yet retrieve textbook chunks or inject source-grounded document context into the model request.
@@ -62,7 +64,7 @@ Files:
 - `docs/ANDROID-PLAY-READINESS-ASSESSMENT.md`
 - `.github/workflows/android-verification.yml`
 
-Static baseline verified by Android CI:
+Static baseline verified by Android CI in run `44236853047`:
 - minSdk 24.
 - compileSdk 36 / targetSdk 36.
 - Stable application ID `za.co.littlemindsuniverse`.
@@ -74,7 +76,7 @@ Static baseline verified by Android CI:
 Previously verified evidence:
 - Android build and API 36 emulator instrumentation/launch passed in historical runs `44152121586` and `44152670183`.
 - Existing privacy tests verify public privacy policy, browser-based account/data deletion request mechanism, authenticated request RPCs, and in-app privacy links.
-- The Android workflow builds unsigned release-candidate AABs and a pilot debug APK. This does not establish signed release readiness.
+- Android native build job `verify-android` completed SUCCESS in run `44236853047`, including the static preflight, lint/unit/instrumentation compile checks, APK and unsigned AAB packaging. Its API 36 emulator job was still queued at last inspection. The workflow builds unsigned release-candidate AABs and a pilot debug APK. This does not establish signed release readiness.
 
 Outstanding Android gates:
 - Physical device matrix P01–P24 not yet performed.
@@ -90,7 +92,7 @@ Outstanding Android gates:
 - Official DBE source discovery: 11/11 reachable on the cited successful run.
 - Safe PDF adapter unit tests: passed in earlier CI run; current retry/redirect refinements are being re-run.
 - Android static readiness preflight: PASS.
-- Repository full lint/test/build: earlier run `44236853065` passed on the initial implementation slice; latest code changes are queued for re-verification.
+- Repository full lint/test/build: run `44236914617` passed on commit `ed82231c74c51b3fd0025dc0892250c919fcb23a`; subsequent sample-probe changes are queued for re-verification.
 - Android lint/unit/instrumentation compile and API 36 emulator: latest run still in progress at last inspection.
 - Physical-device QA: NOT RUN.
 - Milo PDF text extraction and source-grounded answer evaluation: NOT IMPLEMENTED.
