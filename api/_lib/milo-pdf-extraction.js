@@ -40,6 +40,9 @@ export async function extractMiloPdfPages(pdfBytes, {
     rightsStatus: requiredText(resource?.rightsStatus, 'resource.rightsStatus'),
     rightsEvidenceUrl: requiredText(resource?.rightsEvidenceUrl, 'resource.rightsEvidenceUrl')
   };
+  if (resource?.aiProcessingAllowed !== true) {
+    throw new Error('Document extraction requires explicit AI-processing permission');
+  }
 
   const bytes = Buffer.isBuffer(pdfBytes) ? pdfBytes : Buffer.from(pdfBytes ?? []);
   if (!bytes.length) throw new Error('PDF document is empty');
