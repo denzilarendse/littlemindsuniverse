@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "1.0.0",
+  "reportId": "milo-curriculum-fet-grade-10-12-v1.0-comparison",
+  "sourceSet": {
+    "name": "Milo Curriculum",
+    "version": "milo-curriculum-v1.0",
+    "files": [
+      "grade-10.json",
+      "grade-11.json",
+      "grade-12.json"
+    ],
+    "origin": "User-uploaded grade R–12 JSON archive",
+    "checkedAt": "2026-11-18"
+  },
+  "scope": {
+    "grades": [
+      10,
+      11,
+      12
+    ],
+    "phase": "Further Education and Training Phase",
+    "languages": [
+      "en",
+      "af",
+      "xh"
+    ],
+    "subjectEntriesPerGrade": 20,
+    "topicRecordsPerGrade": 21
+  },
+  "findings": {
+    "subjectCodesIdentical": true,
+    "topicCountsIdentical": true,
+    "gradeSpecificTopicIdPrefixes": true,
+    "metadataDifferences": [
+      "grade",
+      "grade_label"
+    ],
+    "assessmentNotesIdentical": true,
+    "subjectNamesIdentical": true,
+    "subjectOverview": {
+      "recordsDiffer": 20,
+      "interpretation": "Each overview substitutes the grade number; the educational description is otherwise the same."
+    },
+    "topicFields": {
+      "compared": [
+        "topic_names",
+        "caps_topic",
+        "cognitive_levels",
+        "learning_outcomes",
+        "key_concepts",
+        "key_vocabulary",
+        "common_errors",
+        "exercise_template"
+      ],
+      "totalTopicRecords": 21,
+      "capsTopicLabelDiffers": 21,
+      "learningOutcomesDiffer": 1,
+      "exerciseTemplateDiffers": 1,
+      "cognitiveLevelsDiffer": 0,
+      "keyConceptsDiffer": 0,
+      "keyVocabularyDiffer": 0,
+      "commonErrorsDiffer": 0,
+      "topicNamesDiffer": 0
+    },
+    "onlyInstructionalTextVariation": {
+      "subject": "Home Language",
+      "topicIds": [
+        "G10-HL-01",
+        "G11-HL-01",
+        "G12-HL-01"
+      ],
+      "fields": [
+        "learning_outcomes",
+        "exercise_template"
+      ],
+      "nature": "Grade number substituted in English, Afrikaans and isiXhosa strings; task/skill demand otherwise unchanged."
+    },
+    "conclusion": "The supplied FET files are grade-labelled variants of a largely shared summary, not evidence of verified Grade 10→11→12 learning progression."
+  },
+  "caveats": [
+    "This compares uploaded Milo Curriculum v1.0 summaries, not complete official CAPS Grade 10, 11 and 12 subject documents.",
+    "This does not establish that official CAPS requirements are identical across grades.",
+    "The 20 subject entries include aggregated subject groupings and are not necessarily 20 individual learner subject choices.",
+    "No exact CAPS document/page provenance or term-level objectives are supplied.",
+    "Generic FET assessment notes require current subject-specific policy verification.",
+    "Do not invent progression content to make the grades appear different."
+  ],
+  "treatment": {
+    "preserveOriginals": "Keep immutable source copies and checksums.",
+    "currentRecords": "Retain as source summaries, not authoritative grade-specific objectives.",
+    "normalizedModel": "Represent shared concepts once where appropriate; maintain distinct grade-specific objective nodes and reviewed progression links.",
+    "enrichment": "Populate from current official CAPS documents with title, version/date, page/section and specialist review.",
+    "reviewStates": [
+      "source_summary",
+      "mapped_needs_review",
+      "verified_by_subject_specialist",
+      "approved_for_teacher_use",
+      "superseded"
+    ]
+  }
+}
