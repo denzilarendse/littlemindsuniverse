@@ -29,3 +29,6 @@ downloads/*.apk
 
 # Standalone Connect native web payload is generated deterministically.
 android/connectapp/src/main/assets/
+
+# Owner-generated schema-only export; review locally before any controlled transfer.
+artifacts/lmu-schema-baseline/

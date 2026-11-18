@@ -1,0 +1,53 @@
+const categories = new Set(['learning_preference','language_preference','learning_goal','interest','support_strategy','strength','misconception_pattern']);
+const sources = new Set(['learner_statement','teacher_observation','guardian_statement','reviewed_submission','mastery_evidence','learning_event','teacher_decision']);
+const sensitive = /diagnos|disabilit|medical|health|relig|race|ethnic|sexual|politic|criminal|password|secret/i;
+const sensitiveText = /\b(?:diagnos(?:is|ed)|disabilit(?:y|ies)|medical|health|medication|autis(?:m|tic)|adhd|dyslex(?:ia|ic)|depress(?:ion|ed)|anxiet(?:y|ies)|religion|race|ethnic(?:ity)?|sexual(?:ity)?|political|criminal|password|secret)\b/i;
+export class MiloValidationError extends Error {
+  constructor(message,status=400){super(message);this.name='MiloValidationError';this.status=status;}
+}
+export function assertUuid(v,label='id'){
+  if(typeof v!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v))throw new MiloValidationError('Invalid '+label);
+  return v;
+}
+function inspect(v,d=0){
+  if(d>4)throw new MiloValidationError('Memory value too deeply nested');
+  if(v==null||typeof v==='boolean')return;
+  if(typeof v==='number'){if(!Number.isFinite(v))throw new MiloValidationError('Memory numbers must be finite');return;}
+  if(typeof v==='string'){
+    if(v.length>500)throw new MiloValidationError('Memory text too long');
+    if(sensitiveText.test(v))throw new MiloValidationError('Sensitive personal information is not supported in learner memory');
+    return;
+  }
+  if(Array.isArray(v)){if(v.length>20)throw new MiloValidationError('Memory list too large');v.forEach(x=>inspect(x,d+1));return;}
+  if(typeof v==='object'&&Object.getPrototypeOf(v)===Object.prototype){
+    for(const [k,x] of Object.entries(v)){if(sensitive.test(k))throw new MiloValidationError('Sensitive memory categories are not supported');inspect(x,d+1);}
+    return;
+  }
+  throw new MiloValidationError('Memory value must be JSON data');
+}
+export function validateMemoryInput(x){
+  if(!x||typeof x!=='object'||Array.isArray(x))throw new MiloValidationError('Memory input required');
+  assertUuid(x.learnerId,'learner id');
+  if(typeof x.memoryKey!=='string'||!/^[a-z][a-z0-9_.-]{1,79}$/.test(x.memoryKey))throw new MiloValidationError('Invalid memory key');
+  if(!categories.has(x.category)||!sources.has(x.sourceType))throw new MiloValidationError('Unsupported memory category or source');
+  if(!['learner_and_teacher','teacher_only','learner_only'].includes(x.visibilityScope||'learner_and_teacher'))throw new MiloValidationError('Unsupported visibility');
+  if(typeof x.confidence!=='number')throw new MiloValidationError('Confidence must be a number');
+  const confidence=x.confidence;
+  if(!Number.isFinite(confidence)||confidence<0||confidence>1)throw new MiloValidationError('Confidence must be between 0 and 1');
+  if(!x.value||typeof x.value!=='object'||Array.isArray(x.value))throw new MiloValidationError('Memory value must be a JSON object');
+  inspect(x.value);
+  if(JSON.stringify(x.value).length>2000)throw new MiloValidationError('Memory value exceeds 2 KB');
+  const ref=x.sourceReference;
+  if(ref!=null){
+    if(typeof ref!=='object'||Array.isArray(ref)||Object.keys(ref).some(k=>!['id','kind','version'].includes(k)))throw new MiloValidationError('Invalid source reference');
+    if(ref.id!=null)assertUuid(ref.id,'source reference id');
+    if(ref.kind!=null&&!sources.has(ref.kind))throw new MiloValidationError('Unsupported source reference kind');
+    if(ref.version!=null&&(typeof ref.version!=='string'||ref.version.length>40))throw new MiloValidationError('Invalid source version');
+  }
+  return {...x,confidence,visibilityScope:x.visibilityScope||'learner_and_teacher'};
+}
+export function assertMemoryTransition(status,event){
+  const allowed={propose:['new'],confirm:['proposed','confirmed'],update:['proposed','confirmed'],dispute:['proposed','confirmed'],withdraw:['proposed','confirmed','disputed'],expire:['proposed','confirmed']};
+  if(!allowed[event]?.includes(status))throw new MiloValidationError('Memory state transition is not allowed',409);
+  return ({propose:'proposed',confirm:'confirmed',update:status,dispute:'disputed',withdraw:'withdrawn',expire:'expired'})[event];
+}
