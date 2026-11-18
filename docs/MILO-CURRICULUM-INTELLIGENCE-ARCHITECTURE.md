@@ -151,3 +151,18 @@ Milo's mastery outcomes are objective-specific: mastery demonstrated, mastery wi
 Teacher decisions (approve, edit, decline or request more evidence) are versioned and auditable. Only the exact teacher-approved plan, exercise or assessment version may be assigned or implemented. Milo reports evidence and recommendations; it does not autonomously finalise grades or teacher decisions.
 
 This workflow is a product specification. Its implementation, teacher UI, learner evidence pipeline and live integration are not yet verified.
+
+
+## Progressive curriculum intelligence (MPCI)
+
+Milo must understand curriculum progression, not merely curriculum content. The cross-grade model distinguishes reusable shared concepts from grade-specific objectives and source-reviewed progression relationships. Grade-specific objectives remain distinct even when they refer to a shared concept. Progression edges are versioned and carry rationale, provenance and review status; inferred relationships remain hypotheses until reviewed.
+
+The first FET comparison of the uploaded Milo Curriculum v1.0 Grades 10–12 summaries found 20 subject entries and 21 topic records in each grade. Across 21 topic records, grade labels differ in all 21 CAPS topic labels; only one Home Language outcome and exercise template contain grade-substituted wording; the other compared instructional fields are identical. This is a finding about the uploaded summaries, not a claim about the complete official CAPS documents. See [MPCI architecture](MILO-PROGRESSIVE-CURRICULUM-INTELLIGENCE.md) and the machine-readable [FET comparison](../data/curriculum-validation/fet-grade-10-12-comparison.json).
+
+The uploaded summaries remain source summaries until mapped to current official CAPS documents, page/section references and subject-specialist review. Milo must not invent grade-specific content to fill gaps.
+
+## Teaching intelligence and learner agency
+
+Milo is not an answer bot. Its default learner interaction is: interpret the question → diagnose relevant understanding → teach the concept → demonstrate a separate comparable example → ask the learner to attempt a fresh example → evaluate reasoning and working → adapt explanation/support → check independent transfer. The goal is that learners become increasingly capable of solving unfamiliar problems without Milo.
+
+For practice and homework, Milo defaults to graduated hints, teaching and analogous examples rather than simply supplying the answer. It may provide complete solutions when pedagogically appropriate or when the request is an information task rather than learner assessment. Active/restricted assessment integrity must be preserved. A correct answer after Milo has supplied the solution is not independent mastery evidence. See [Milo Teaching Intelligence and Learner Agency](MILO-TEACHING-INTELLIGENCE-AND-LEARNER-AGENCY.md).
