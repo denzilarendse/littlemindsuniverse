@@ -155,6 +155,127 @@
         "amendment"
       ],
       "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-workbooks",
+      "title": "DBE Rainbow Workbooks",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/Workbooks.aspx",
+      "purpose": "CAPS-aligned learner workbooks and supporting practice resources",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resourceTypes": [
+        "workbook"
+      ],
+      "status": "source-discovery"
+    },
+    {
+      "id": "dbe-mind-the-gap",
+      "title": "DBE Mind the Gap Study Guides",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/MindtheGapStudyGuides.aspx",
+      "purpose": "Grade 12 CAPS-aligned subject and language study guides",
+      "grades": [
+        "12"
+      ],
+      "subjects": [
+        "Accounting",
+        "Economics",
+        "Life Sciences",
+        "Geography",
+        "Mathematics",
+        "Mathematical Literacy",
+        "Physical Sciences",
+        "Languages"
+      ],
+      "resourceTypes": [
+        "study-guide",
+        "audio-resource"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-graded-readers",
+      "title": "DBE Graded Readers and Big Books",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/GradedReadersandBigBookHL.aspx",
+      "purpose": "Foundation Phase storybooks, big books and graded readers in official languages",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3"
+      ],
+      "subjects": [
+        "Home Language",
+        "Reading",
+        "Literacy"
+      ],
+      "resourceTypes": [
+        "big-book",
+        "graded-reader",
+        "storybook"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-iial-resources",
+      "title": "DBE Incremental Introduction of African Languages Resources",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/IIALResources.aspx",
+      "purpose": "Foundation Phase additional-language teaching and learning resources",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3"
+      ],
+      "subjects": [
+        "Languages"
+      ],
+      "resourceTypes": [
+        "learner-resource",
+        "teacher-resource"
+      ],
+      "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-ltsm-national-catalogue",
+      "title": "DBE LTSM National Catalogue",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/LTSMNationalCatalogue.aspx",
+      "purpose": "Nationally approved learning and teaching material catalogues by grade and phase",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [],
+      "resourceTypes": [
+        "approved-textbook-catalogue",
+        "publisher-resource"
+      ],
+      "status": "source-verified-page"
     }
   ],
   "coverageRules": [
@@ -494,6 +615,64 @@
         "Afrikaans"
       ],
       "sourceId": "dbe-state-owned-grade-10-12",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "mind-the-gap-grade-12-subject-guides",
+      "grades": [
+        "12"
+      ],
+      "subjects": [
+        "Accounting",
+        "Economics",
+        "Life Sciences",
+        "Geography",
+        "Mathematics",
+        "Mathematical Literacy",
+        "Physical Sciences"
+      ],
+      "resources": [
+        "CAPS-aligned Study Guide"
+      ],
+      "languages": [
+        "English",
+        "Afrikaans",
+        "African Home Languages (varies by title)"
+      ],
+      "sourceId": "dbe-mind-the-gap",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "foundation-big-books-and-graded-readers",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3"
+      ],
+      "subjects": [
+        "Home Language",
+        "Reading",
+        "Literacy"
+      ],
+      "resources": [
+        "Big Books",
+        "Graded Readers"
+      ],
+      "languages": [
+        "Afrikaans",
+        "English",
+        "isiNdebele",
+        "isiXhosa",
+        "isiZulu",
+        "Sepedi",
+        "Sesotho",
+        "Setswana",
+        "siSwati",
+        "Tshivenda",
+        "itsonga"
+      ],
+      "sourceId": "dbe-graded-readers",
       "status": "listed-on-dbe-page"
     }
   ]
