@@ -17,7 +17,7 @@ export function inspectAndroidPlayBaseline({ variables, manifest, appGradle }) {
   const allowed = new Set(['android.permission.INTERNET', 'android.permission.RECORD_AUDIO']);
   add('permission-minimisation', permissions.every(permission => allowed.has(permission)), 'Declared permissions: ' + (permissions.join(', ') || 'none'));
   add('identity-stable', /applicationId\s+"za\.co\.littlemindsuniverse"/.test(appGradle), 'Application ID must remain stable');
-  add('release-signing-owner-controlled', /hasReleaseSigning/.test(appGradle), 'Signing is configured only when owner-controlled key.properties is supplied; signing itself is not verified here');
+  add('conditional-release-signing-path', /hasReleaseSigning/.test(appGradle), 'Conditional signing code path exists; no owner key or signed artifact is verified here');
   return checks;
 }
 
