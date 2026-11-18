@@ -20,5 +20,5 @@ test('schema baseline exporter protects credentials and output files', () => {
 });
 
 test('schema baseline exporter rejects an unexpected data COPY block', () => {
-  assert.match(script, /COPY \.* FROM stdin/);
+  assert.ok(script.includes("grep -Eq '^COPY .* FROM stdin;'"));
 });
