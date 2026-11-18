@@ -7,12 +7,17 @@ export const DBE_RESOURCE_HOSTS = Object.freeze([
   'www.dbecloud.org.za'
 ]);
 
-function assertAllowedHttpsUrl(value, allowedHosts = DBE_RESOURCE_HOSTS) {
+function assertHttpsUrl(value) {
   let url;
   try { url = new URL(String(value || '')); }
   catch { throw new Error('Resource URL is invalid'); }
   if (url.protocol !== 'https:') throw new Error('Resource URL must use HTTPS');
   if (url.username || url.password) throw new Error('Resource URL must not contain credentials');
+  return url;
+}
+
+function assertAllowedHttpsUrl(value, allowedHosts = DBE_RESOURCE_HOSTS) {
+  const url = assertHttpsUrl(value);
   if (!allowedHosts.includes(url.hostname.toLowerCase())) {
     throw new Error('Resource host is not in the approved DBE source allowlist');
   }
@@ -63,12 +68,12 @@ export async function fetchCapsPdf(sourceUrl, {
   });
 }
 
-export function validateCapsDocumentMetadata(resource) {
+export function validateCapsDocumentMetadata(resource, { allowedHosts = DBE_RESOURCE_HOSTS } = {}) {
   const required = ['id', 'title', 'grade', 'subject', 'language', 'resourceType', 'sourceUrl', 'rightsStatus', 'rightsEvidenceUrl'];
   const missing = required.filter(key => !String(resource?.[key] ?? '').trim());
   if (missing.length) throw new Error('CAPS resource metadata missing: ' + missing.join(', '));
-  assertAllowedHttpsUrl(resource.sourceUrl);
-  assertAllowedHttpsUrl(resource.rightsEvidenceUrl);
+  assertAllowedHttpsUrl(resource.sourceUrl, allowedHosts);
+  assertHttpsUrl(resource.rightsEvidenceUrl);
   if (!['dbe-public-download', 'open-licence', 'publisher-authorised', 'teacher-authorised'].includes(resource.rightsStatus)) {
     throw new Error('CAPS resource rights status is not approved for retrieval');
   }
@@ -76,4 +81,10 @@ export function validateCapsDocumentMetadata(resource) {
     throw new Error('AI processing requires explicit per-resource rights confirmation');
   }
   return true;
+}
+
+export async function fetchAuthorisedCapsPdf(resource, options = {}) {
+  validateCapsDocumentMetadata(resource, { allowedHosts: options.allowedHosts || DBE_RESOURCE_HOSTS });
+  const result = await fetchCapsPdf(resource.sourceUrl, options);
+  return Object.freeze({ ...result, resourceId: resource.id, title: resource.title, grade: resource.grade, subject: resource.subject, language: resource.language });
 }
