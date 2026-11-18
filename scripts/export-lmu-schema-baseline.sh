@@ -20,7 +20,7 @@ fi
 umask 077
 mkdir -p "$out_dir"
 chmod 700 "$out_dir"
-tmp_file="$(mktemp "$out_dir/.schema.XXXXXX.sql")"
+tmp_file="$(mktemp "$out_dir/.schema.XXXXXX")"
 trap 'rm -f "$tmp_file"' EXIT
 
 echo "Exporting schema only. No data or custom roles are requested."
