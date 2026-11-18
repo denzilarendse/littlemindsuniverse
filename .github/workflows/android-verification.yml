@@ -2,7 +2,7 @@ name: android-verification
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'production/**']
     paths:
       - 'android/**'
       - 'assets/**'
@@ -66,6 +66,9 @@ jobs:
 
       - name: Verify web source before native packaging
         run: npm run check
+
+      - name: Run Android Play readiness static preflight
+        run: node scripts/verify-android-play-readiness.mjs
 
       - name: Sync production web bundle into LMU Android
         run: npm run android:sync
