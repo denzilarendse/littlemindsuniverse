@@ -8,15 +8,15 @@ export function inspectAndroidPlayBaseline({ variables, manifest, appGradle }) {
   const min = sdk('minSdk');
   const compile = sdk('compileSdk');
   const target = sdk('targetSdk');
-  add('min-sdk', min >= 24, `minSdkVersion=${min}`);
-  add('target-sdk', target >= 36, `targetSdkVersion=${target}; policy baseline requires API 36 or higher`);
-  add('compile-sdk', compile >= target, `compileSdkVersion=${compile}`);
+  add('min-sdk', min >= 24, 'minSdkVersion=' + min);
+  add('target-sdk', target >= 36, 'targetSdkVersion=' + target + '; policy baseline requires API 36 or higher');
+  add('compile-sdk', compile >= target, 'compileSdkVersion=' + compile);
   add('backup-disabled', /android:allowBackup="false"/.test(manifest), 'Android backup must remain disabled for the current child-data design');
   add('cleartext-disabled', /android:usesCleartextTraffic="false"/.test(manifest), 'Cleartext HTTP traffic must remain disabled');
-  const permissions = [...manifest.matchAll(/<uses-permission\\s+android:name="([^"]+)"/g)].map(match => match[1]);
+  const permissions = [...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"/g)].map(match => match[1]);
   const allowed = new Set(['android.permission.INTERNET', 'android.permission.RECORD_AUDIO']);
-  add('permission-minimisation', permissions.every(permission => allowed.has(permission)), `Declared permissions: ${permissions.join(', ') || 'none'}`);
-  add('identity-stable', /applicationId\s+"za\\.co\\.littlemindsuniverse"/.test(appGradle), 'Application ID must remain stable');
+  add('permission-minimisation', permissions.every(permission => allowed.has(permission)), 'Declared permissions: ' + (permissions.join(', ') || 'none'));
+  add('identity-stable', /applicationId\s+"za\.co\.littlemindsuniverse"/.test(appGradle), 'Application ID must remain stable');
   add('release-signing-owner-controlled', /hasReleaseSigning/.test(appGradle), 'Signing is configured only when owner-controlled key.properties is supplied; signing itself is not verified here');
   return checks;
 }
@@ -28,9 +28,9 @@ async function main() {
     fs.readFile(new URL('../android/app/build.gradle', import.meta.url), 'utf8')
   ]);
   const checks = inspectAndroidPlayBaseline({ variables, manifest, appGradle });
-  for (const check of checks) console.log(`${check.status} ${check.id}: ${check.detail}`);
+  for (const check of checks) console.log(check.status + ' ' + check.id + ': ' + check.detail);
   const failed = checks.filter(check => check.status === 'FAIL');
-  console.log(failed.length ? `ANDROID BASELINE FAIL: ${failed.length} checks` : 'ANDROID POLICY BASELINE PASS; external Play Console/device/signing gates remain open.');
+  console.log(failed.length ? 'ANDROID BASELINE FAIL: ' + failed.length + ' checks' : 'ANDROID POLICY BASELINE PASS; external Play Console/device/signing gates remain open.');
   if (failed.length) process.exitCode = 1;
 }
 
