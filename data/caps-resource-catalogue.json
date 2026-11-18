@@ -276,6 +276,87 @@
         "publisher-resource"
       ],
       "status": "source-verified-page"
+    },
+    {
+      "id": "dbe-workbooks-2026-terms-1-2",
+      "title": "DBE 2026 Workbooks Terms 1 and 2",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/2026Workbooks1.aspx",
+      "purpose": "Current-year workbook downloads and grade/subject coverage for Terms 1 and 2",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resourceTypes": [
+        "workbook"
+      ],
+      "status": "source-discovery"
+    },
+    {
+      "id": "dbe-workbooks-2026-terms-3-4",
+      "title": "DBE 2026 Workbooks Terms 3 and 4",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/2026WorkbooksTerm3and4.aspx",
+      "purpose": "Current-year workbook downloads and grade/subject coverage for Terms 3 and 4",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resourceTypes": [
+        "workbook"
+      ],
+      "status": "source-discovery"
+    },
+    {
+      "id": "dbe-at-the-crossroads",
+      "title": "DBE At the Crossroads Textbooks",
+      "url": "https://www.education.gov.za/Curriculum/LearningandTeachingSupportMaterials%28LTSM%29/AttheCrossroadsTextbooks.aspx",
+      "purpose": "Life Skills and Life Orientation textbooks and teacher guides",
+      "grades": [
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Life Skills",
+        "Life Orientation"
+      ],
+      "resourceTypes": [
+        "textbook",
+        "teacher-guide",
+        "bookmarks"
+      ],
+      "status": "source-verified-page"
     }
   ],
   "coverageRules": [
@@ -674,6 +755,81 @@
       ],
       "sourceId": "dbe-graded-readers",
       "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "life-skills-grades-4-6",
+      "grades": [
+        "4",
+        "5",
+        "6"
+      ],
+      "subjects": [
+        "Life Skills"
+      ],
+      "resources": [
+        "Textbook Book 1",
+        "Textbook Book 2",
+        "Teacher Guide",
+        "Bookmarks"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-at-the-crossroads",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "life-orientation-grades-7-12",
+      "grades": [
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "subjects": [
+        "Life Orientation"
+      ],
+      "resources": [
+        "Textbook",
+        "Teacher Guide",
+        "Bookmarks"
+      ],
+      "languages": [
+        "English"
+      ],
+      "sourceId": "dbe-at-the-crossroads",
+      "status": "listed-on-dbe-page"
+    },
+    {
+      "id": "rainbow-workbooks-2026",
+      "grades": [
+        "R",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "subjects": [
+        "Languages",
+        "Mathematics",
+        "Life Skills"
+      ],
+      "resources": [
+        "2026 Terms 1 and 2 Workbooks",
+        "2026 Terms 3 and 4 Workbooks"
+      ],
+      "languages": [
+        "Official language editions where supplied"
+      ],
+      "sourceId": "dbe-workbooks-2026-terms-1-2",
+      "status": "listed-through-current-year-index-pages"
     }
   ]
 }
