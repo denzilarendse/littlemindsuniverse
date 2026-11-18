@@ -132,3 +132,22 @@ Each draft should contain:
 - No OCR, durable index, curriculum mapping database, retrieval endpoint, Milo prompt-context integration or teacher approval UI is yet verified.
 
 This architecture is the target design; it is not a claim that all five layers have been populated or implemented.
+
+
+## Personalised academic improvement and mastery workflow
+
+The five knowledge layers feed a teacher-governed weekly learning cycle. The detailed operating specification is maintained in [MILO-PERSONALISED-ACADEMIC-IMPROVEMENT-WORKFLOW.md](MILO-PERSONALISED-ACADEMIC-IMPROVEMENT-WORKFLOW.md).
+
+The weekly rhythm is:
+- **Monday–Thursday:** teach and practise individualised objectives, check evidence continuously, adapt difficulty and teaching strategy, and generate daily teacher progress reports.
+- **Friday:** revision and individual mock assessments drafted from each learner's accumulated evidence. The exact assessment and marking guidance require teacher approval before administration.
+- **Saturday:** protected rest day; no routine learner-facing tasks.
+- **Sunday:** final weekly mastery assessment, only when enabled by the school/teacher and approved before administration; then produce an objective-level weekly progress and recommendation report.
+
+The same classroom framework does not imply identical learner activities. Milo maintains an objective-specific profile and plan for each learner, based on verified evidence and prerequisite relationships. Difficulty may increase, hold or reduce; the day of the week never overrides the learner's evidence.
+
+Milo's mastery outcomes are objective-specific: mastery demonstrated, mastery within reach, further intervention required, or insufficient evidence. No universal percentage is hard-coded. The applicable CAPS policy, validated rubric or teacher-approved criteria must define the success standard.
+
+Teacher decisions (approve, edit, decline or request more evidence) are versioned and auditable. Only the exact teacher-approved plan, exercise or assessment version may be assigned or implemented. Milo reports evidence and recommendations; it does not autonomously finalise grades or teacher decisions.
+
+This workflow is a product specification. Its implementation, teacher UI, learner evidence pipeline and live integration are not yet verified.
