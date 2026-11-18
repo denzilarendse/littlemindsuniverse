@@ -3,14 +3,14 @@ set -euo pipefail
 
 # Read-only schema export. Never use db pull/db push/db reset here.
 # Supply the connection string in SUPABASE_DB_URL; it is never printed.
-: "\${SUPABASE_DB_URL:?Set SUPABASE_DB_URL in your local shell; do not commit or paste it}"
+: "${SUPABASE_DB_URL:?Set SUPABASE_DB_URL in your local shell; do not commit or paste it}"
 
 command -v supabase >/dev/null 2>&1 || { echo "Supabase CLI is required." >&2; exit 2; }
 command -v docker >/dev/null 2>&1 || { echo "Docker is required by supabase db dump." >&2; exit 2; }
 
-out_dir="\${SCHEMA_BASELINE_DIR:-artifacts/lmu-schema-baseline}"
-out_file="\${out_dir}/schema.sql"
-metadata_file="\${out_dir}/metadata.txt"
+out_dir="${SCHEMA_BASELINE_DIR:-artifacts/lmu-schema-baseline}"
+out_file="${out_dir}/schema.sql"
+metadata_file="${out_dir}/metadata.txt"
 
 if [[ -e "$out_file" || -e "$metadata_file" ]]; then
   echo "Refusing to overwrite an existing baseline artifact in $out_dir" >&2
