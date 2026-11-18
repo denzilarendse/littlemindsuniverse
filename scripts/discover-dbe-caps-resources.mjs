@@ -19,6 +19,22 @@ export function extractOfficialLinks(html, pageUrl) {
   return links;
 }
 
+export function extractDownloadCandidates(links) {
+  const candidates = new Map();
+  for (const link of links) {
+    let url;
+    try { url = new URL(link.url); } catch { continue; }
+    const ticket = url.searchParams.get('fileticket');
+    if (!ticket && !/\\.pdf(?:$|[?#])/i.test(url.href)) continue;
+    const key = ticket || url.href;
+    const existing = candidates.get(key);
+    if (!existing || (existing.title.toLowerCase() === 'download' && link.title.toLowerCase() !== 'download')) {
+      candidates.set(key, { title: link.title, url: link.url });
+    }
+  }
+  return [...candidates.values()];
+}
+
 export async function discoverDbeResources({ fetchImpl = fetch, catalogue } = {}) {
   const sourceCatalogue = catalogue || JSON.parse(await fs.readFile(cataloguePath, 'utf8'));
   const results = [];
