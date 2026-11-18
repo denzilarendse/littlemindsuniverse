@@ -5,7 +5,7 @@ async function load({actor,learnerId,from,to,subject}){if(!actor?.profileId||!['
 return {
 getLearnerAcademicHistory:load,
 getLearnerSubjectHistory(){throw new MiloValidationError('Subject-specific history is not available until curriculum subject provenance is verified',501);},
-async getObjectiveProgress({actor,learnerId,skillId}){assertUuid(skillId,'skill id');const d=await load({actor,learnerId});const match=r=>String(r.skillId||r.skill_id)===skillId;return {skillId,mastery:d.masterySnapshots.filter(match),evidence:d.masteryEvidence.filter(match),submissions:d.submissions.filter(match)};},
+async getObjectiveProgress({actor,learnerId,skillId}){assertUuid(skillId,'skill id');const d=await load({actor,learnerId});const match=r=>String(r.skillId||r.skill_id)===skillId;const evidence=d.masteryEvidence.filter(match);const itemIds=new Set(evidence.map(r=>r.learningItemId||r.learning_item_id).filter(Boolean));return {skillId,mastery:d.masterySnapshots.filter(match),evidence,submissions:d.submissions.filter(r=>itemIds.has(r.learningItemId||r.learning_item_id))};},
 async getLearningEvidence(args){const d=await load(args);return {submissions:d.submissions,reviews:d.reviews,masteryEvidence:d.masteryEvidence,verificationObservations:d.verificationObservations};},
 async getInterventionHistory(args){const d=await load(args);return {recommendations:d.recommendations,recommendationDecisions:d.recommendationDecisions,assistanceEvents:d.assistanceEvents};},
 async getMasteryTrajectory(args){const d=await load(args);return {masterySnapshots:d.masterySnapshots,masteryEvidence:d.masteryEvidence,verificationCycles:d.verificationCycles,verificationObservations:d.verificationObservations};},
