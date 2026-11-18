@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.littlemindsuniverse.co.za/schemas/milo-progressive-curriculum-record.schema.json",
+  "title": "Milo Progressive Curriculum Record",
+  "description": "Draft schema for versioned CAPS shared concepts, grade-specific objectives and reviewed progression relationships. Not an official CAPS schema.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/sharedConcept"
+    },
+    {
+      "$ref": "#/$defs/gradeObjective"
+    },
+    {
+      "$ref": "#/$defs/progressionEdge"
+    }
+  ],
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "required": [
+        "sourceId",
+        "documentTitle",
+        "authority",
+        "reviewStatus"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authority": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publicationDate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effectiveFrom": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effectiveTo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "canonicalUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "pageRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reviewStatus": {
+          "enum": [
+            "source_summary",
+            "mapped_needs_review",
+            "verified_by_subject_specialist",
+            "approved_for_teacher_use",
+            "superseded"
+          ]
+        },
+        "reviewerRole": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "sharedConcept": {
+      "type": "object",
+      "required": [
+        "recordType",
+        "id",
+        "curriculum",
+        "concept",
+        "languages",
+        "provenance"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "shared_concept"
+        },
+        "id": {
+          "type": "string"
+        },
+        "curriculum": {
+          "const": "ZA-CAPS"
+        },
+        "concept": {
+          "type": "object",
+          "required": [
+            "en"
+          ],
+          "properties": {
+            "en": {
+              "type": "string"
+            },
+            "af": {
+              "type": "string"
+            },
+            "xh": {
+              "type": "string"
+            }
+          }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "en",
+              "af",
+              "xh"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "relatedObjectiveIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gradeObjective": {
+      "type": "object",
+      "required": [
+        "recordType",
+        "id",
+        "curriculum",
+        "phase",
+        "grade",
+        "subjectCode",
+        "objectiveText",
+        "language",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "grade_objective"
+        },
+        "id": {
+          "type": "string"
+        },
+        "curriculum": {
+          "const": "ZA-CAPS"
+        },
+        "curriculumVersion": {
+          "type": "string"
+        },
+        "phase": {
+          "enum": [
+            "Foundation Phase",
+            "Intermediate Phase",
+            "Senior Phase",
+            "Further Education and Training Phase"
+          ]
+        },
+        "grade": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "subjectCode": {
+          "type": "string"
+        },
+        "term": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 4
+        },
+        "topicId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectiveText": {
+          "type": "string",
+          "minLength": 1
+        },
+        "language": {
+          "enum": [
+            "en",
+            "af",
+            "xh"
+          ]
+        },
+        "knowledge": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cognitiveDemand": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sharedConceptIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prerequisiteObjectiveIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "assessmentContext": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "enum": [
+            "source_summary",
+            "mapped_needs_review",
+            "verified_by_subject_specialist",
+            "approved_for_teacher_use",
+            "superseded"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "additionalProperties": false
+    },
+    "progressionEdge": {
+      "type": "object",
+      "required": [
+        "recordType",
+        "id",
+        "fromObjectiveId",
+        "toObjectiveId",
+        "relationship",
+        "rationale",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "recordType": {
+          "const": "progression_edge"
+        },
+        "id": {
+          "type": "string"
+        },
+        "fromObjectiveId": {
+          "type": "string"
+        },
+        "toObjectiveId": {
+          "type": "string"
+        },
+        "relationship": {
+          "enum": [
+            "prerequisite_of",
+            "develops_into",
+            "revisits",
+            "extends",
+            "applies_in",
+            "parallel_to"
+          ]
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "status": {
+          "enum": [
+            "hypothesis_needs_review",
+            "verified_by_subject_specialist",
+            "approved_for_teacher_use",
+            "superseded"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
