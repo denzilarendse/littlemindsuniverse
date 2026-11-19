@@ -122,3 +122,20 @@ Do not merge, deploy, change branch security settings, activate projects or appl
 
 ---
 This is a point-in-time foundation readiness record, not an approval to make high-impact changes.
+
+
+## 9. Live verification addendum — 2026-11-19
+
+After the initial record was written, current commit status contexts were checked for the inspected refs:
+
+| Ref | Current Vercel status context | Interpretation |
+|---|---|---|
+| main `91289ae8796af660c287a8f94936c94b383b9879` | SUCCESS | Vercel CI status is green for the main SHA; this does not prove Netlify production provenance or a live end-to-end release. |
+| PR #112 head `fe2f2548def02280960137ed9765f0300e545fba` | SUCCESS | Preview/CI status green; PR remains draft and unmerged. |
+| PR #114 head `7c60f1fc7b1ef12ceebcc63c27c5618cbd33bac2` | FAILURE | Status target reports Vercel build-rate-limit/upgrade route. This is not evidence of a source-code test failure; check GitHub Actions for the authoritative repository test result. |
+| PR #115 head `efcca89616ddb8dabf9192ce828ac5fa52646132` | SUCCESS | Preview/CI status green; PR remains draft and unmerged. |
+| PR #116 head `a5c53eadfd636a0953868418b1d44c91a648f08f` | FAILURE | Status target reports Vercel build-rate-limit/upgrade route. This is not evidence of a source-code test failure; check GitHub Actions for the authoritative repository test result. |
+
+The GitHub integration's read of `GET /repos/{owner}/{repo}/branches/main/protection` returned HTTP 403 (Resource not accessible by integration). Therefore, current branch-protection configuration could not be independently re-read through this connection. PR #108's earlier owner-side evidence reported `main.protected=false`; this remains an unresolved governance finding, not a freshly re-verified current value.
+
+These checks do not change the Phase 1 disposition. Phase 1 remains NOT COMPLETE.
